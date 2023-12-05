@@ -309,6 +309,45 @@ template <class _Ty>
 using remove_reference_t = typename remove_reference<_Ty>::type;
 
 
+// remove const.
+template <class _Ty>
+struct remove_const { using type = _Ty; };
+
+template <class _Ty>
+struct remove_const<const _Ty> { using type = _Ty; };
+
+template <class _Ty>
+using remove_const_t = typename remove_const<_Ty>::type;
+
+
+// remove volatile.
+template <class _Ty>
+struct remove_volatile { using type = _Ty; };
+
+template <class _Ty>
+struct remove_volatile<volatile _Ty> { using type = _Ty; };
+
+template <class _Ty>
+using remove_volatile_t = typename remove_volatile<_Ty>::type;
+
+
+// remove const & volatile.
+template <class _Ty>
+struct remove_cv { using type = _Ty; };
+
+template <class _Ty>
+struct remove_cv<const _Ty> { using type = _Ty; };
+
+template <class _Ty>
+struct remove_cv<volatile _Ty> { using type = _Ty; };
+
+template <class _Ty>
+struct remove_cv<const volatile _Ty> { using type = _Ty; };
+
+template <class _Ty>
+using remove_cv_t = typename remove_cv<_Ty>::type;
+
+
 // move.
 template <typename _Ty>
 typename remove_reference<_Ty>::type&& move(_Ty&& t) 
@@ -316,16 +355,81 @@ typename remove_reference<_Ty>::type&& move(_Ty&& t)
   return static_cast<typename remove_reference<_Ty>::type&&>(t);
 }
 
+
 // forward.
 template <typename _Ty>
-_Ty&& forward(typename std::remove_reference<_Ty>::type& t) {
+_Ty&& forward(typename tinySTL::remove_reference<_Ty>::type& t) {
   return static_cast<_Ty&&>(t);
 }
 
 template <typename _Ty>
-_Ty &&forward(typename std::remove_reference<_Ty>::type&& t) 
+_Ty &&forward(typename tinySTL::remove_reference<_Ty>::type&& t) 
 {
   return static_cast<_Ty&&>(t);
 }
+
+
+// is_integral
+template <class _Ty> struct _Is_integral : false_type {};
+
+template <> struct _Is_integral<bool> : true_type {};
+
+template <> struct _Is_integral<char> : true_type {};
+
+template <> struct _Is_integral<signed char> : true_type {};
+
+template <> struct _Is_integral<unsigned char> : true_type {};
+
+template <> struct _Is_integral<wchar_t> : true_type {};
+
+template <> struct _Is_integral<short> : true_type {};
+
+template <> struct _Is_integral<unsigned short> : true_type {};
+
+template <> struct _Is_integral<int> : true_type {};
+
+template <> struct _Is_integral<unsigned int> : true_type {};
+
+template <> struct _Is_integral<long> : true_type {};
+
+template <> struct _Is_integral<unsigned long> : true_type {};
+
+template <> struct _Is_integral<long long> : true_type {};
+
+template <> struct _Is_integral<unsigned long long> : true_type {};
+
+template <class _Ty>
+struct is_integral : tinySTL::_Is_integral<tinySTL::remove_cv_t<_Ty>>::type {};
+
+template <class _Ty>
+inline constexpr bool is_integral_v = is_integral<_Ty>::value;
+
+
+// is floating point.
+template <class _Ty>
+struct _Is_floating_point : false_type {};
+
+template <>
+struct _Is_floating_point<float> : true_type {};
+
+template <>
+struct _Is_floating_point<double> : true_type {};
+
+template <>
+struct _Is_floating_point<long double> : true_type {};
+
+template <class _Ty>
+struct is_floating_point : _Is_floating_point<remove_cv_t<_Ty>>::type {};
+
+template <class _Ty>
+inline constexpr bool is_floating_point_v = is_floating_point<_Ty>::value;
+
+
+// is_arithmetic
+template <class _Ty>
+struct is_arithmetic : bool_constant<is_integral_v<_Ty> || is_floating_point_v<_Ty>> {};
+
+template <class _Ty>
+inline constexpr bool is_arithmetic_v = is_arithmetic<_Ty>::value;
 
 }

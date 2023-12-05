@@ -18,14 +18,6 @@ inline void _Destroy(_Tp* __pointer) {
   __pointer->~_Tp();
 }
 
-// TODO: replace by is_arithmic.
-inline void _Destroy(char*, char*) {}
-inline void _Destroy(int*, int*) {}
-inline void _Destroy(long*, long*) {}
-inline void _Destroy(float*, float*) {}
-inline void _Destroy(double*, double*) {}
-inline void _Destroy(wchar_t*, wchar_t*) {}
-
 template <class _ForwardIterator>
 void
 __destroy_aux(_ForwardIterator __first, _ForwardIterator __last, false_type)
@@ -51,6 +43,10 @@ template <class _ForwardIterator>
 inline void _Destroy(_ForwardIterator __first, _ForwardIterator __last) {
   tinySTL::__destroy(__first, __last, value_type(__first));
 }
+
+template <class _ForwardIterator>
+requires tinySTL::is_arithmetic_v<_ForwardIterator>
+inline void _Destroy(_ForwardIterator __first, _ForwardIterator __last) {}
 
 
 template <class _T1, class... _Args>
