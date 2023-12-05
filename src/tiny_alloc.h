@@ -1,6 +1,7 @@
 // malloc_alloc_template, default_alloc_template, simple_alloc.
 
 #pragma once
+#include <string.h>
 
 // defination of throw bad alloc.
 #ifndef __THROW_BAD_ALLOC
@@ -156,6 +157,33 @@ class __default_alloc_template {
   static char* _S_start_free; // modify just at _S_chunk_alloc
   static char* _S_end_free;   // modify just at _S_chunk_alloc
   static size_t _S_heap_size;
+  static void** _S_malloc_ptr;
+  static size_t _S_malloc_ptr_size;
+  static size_t _S_malloc_ptr_cap;
+
+ private:
+  static void _S_add_malloc_ptr(void* __ptr) {
+    if (_S_malloc_ptr == 0) {
+      if (atexit(_S_mempool_free) != 0)
+        throw std::runtime_error("atexit");
+    }
+    if (_S_malloc_ptr_size == _S_malloc_ptr_cap) {
+      size_t __newlen = _S_malloc_ptr_cap == 0 ? 32 : _S_malloc_ptr_cap * 2;
+      void*  __newbuf = malloc_alloc::reallocate(_S_malloc_ptr, 0, __newlen * sizeof(void*));
+      _S_malloc_ptr = (void**)__newbuf;
+      _S_malloc_ptr_cap = __newlen;
+    }
+    _S_malloc_ptr[_S_malloc_ptr_size++] = __ptr;
+  }
+
+  static void _S_mempool_free(void) {
+    for (size_t i = 0; i < _S_malloc_ptr_size; i++) {
+      free(_S_malloc_ptr[i]);
+      _S_malloc_ptr[i] = 0;
+    }
+    free(_S_malloc_ptr);
+    _S_malloc_ptr = 0;
+  }
 
  public:
   static void* allocate(size_t __n) {
@@ -220,6 +248,15 @@ char* __default_alloc_template<__threads, __inst>::_S_end_free = 0;
 
 template <bool __threads, int __inst>
 size_t __default_alloc_template<__threads, __inst>::_S_heap_size = 0;
+
+template <bool __threads, int __inst>
+void** __default_alloc_template<__threads, __inst>::_S_malloc_ptr = 0;
+
+template <bool __threads, int __inst>
+size_t __default_alloc_template<__threads, __inst>::_S_malloc_ptr_size = 0;
+
+template <bool __threads, int __inst>
+size_t __default_alloc_template<__threads, __inst>::_S_malloc_ptr_cap = 0;
 
 template <bool __threads, int __inst>
 typename __default_alloc_template<__threads, __inst>::_Obj* volatile
@@ -294,6 +331,7 @@ _S_chunk_alloc(size_t __size, int& __nobjs) {
     }
 
     _S_start_free = (char*)malloc(__bytes_to_get);
+    _S_add_malloc_ptr(_S_start_free);
     if (0 == _S_start_free) {
       size_t __i;
       _Obj* volatile* __my_free_list;

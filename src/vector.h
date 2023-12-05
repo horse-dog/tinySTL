@@ -67,8 +67,8 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
   typedef typename _Base::allocator_type allocator_type;
-  typedef reverse_iterator<const_iterator> const_reverse_iterator;
-  typedef reverse_iterator<iterator> reverse_iterator;
+  typedef ReverseIterator<const_iterator> const_reverse_iterator;
+  typedef ReverseIterator<iterator> reverse_iterator;
 
  protected:
   using _Base::_M_allocate;

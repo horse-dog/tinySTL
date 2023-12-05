@@ -184,7 +184,7 @@ inline void __advance(_RandomAccessIterator& __i, _Distance __n,
 
 template <class _InputIterator, class _Distance>
 inline void advance(_InputIterator& __i, _Distance __n) {
-  __advance(__i, __n, iterator_category(__i));
+  tinySTL::__advance(__i, __n, iterator_category(__i));
 }
 
 }

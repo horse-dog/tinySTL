@@ -2,6 +2,7 @@
 
 #include <string>
 #include <sstream>
+#include <string.h>
 
 #include "tiny_pair.h"
 #include "tiny_concepts.h"
@@ -136,7 +137,7 @@ struct __copy_dispatch {
                           _OutputIter __result) {
     typedef typename iterator_traits<_InputIter>::iterator_category _Category;
     typedef typename iterator_traits<_InputIter>::difference_type _Distance;
-    return __copy(__first, __last, __result, _Category(), (_Distance*) 0);
+    return tinySTL::__copy(__first, __last, __result, _Category(), (_Distance*) 0);
   }
 };
 
@@ -144,7 +145,7 @@ template <class _Tp>
 struct __copy_dispatch<_Tp*, _Tp*, true_type>
 {
   static _Tp* copy(const _Tp* __first, const _Tp* __last, _Tp* __result) {
-    return __copy_trivial(__first, __last, __result);
+    return tinySTL::__copy_trivial(__first, __last, __result);
   }
 };
 
@@ -152,7 +153,7 @@ template <class _Tp>
 struct __copy_dispatch<const _Tp*, _Tp*, true_type>
 {
   static _Tp* copy(const _Tp* __first, const _Tp* __last, _Tp* __result) {
-    return __copy_trivial(__first, __last, __result);
+    return tinySTL::__copy_trivial(__first, __last, __result);
   }
 };
 
@@ -200,7 +201,7 @@ struct __move_dispatch {
                             _ForwardIter2 __result) {
     typedef typename iterator_traits<_ForwardIter1>::iterator_category _Category;
     typedef typename iterator_traits<_ForwardIter1>::difference_type _Distance;
-    return __move(__first, __last, __result, _Category(), (_Distance*) 0);
+    return tinySTL::__move(__first, __last, __result, _Category(), (_Distance*) 0);
   }
 };
 
@@ -208,7 +209,7 @@ template <class _Tp>
 struct __move_dispatch<_Tp*, _Tp*, true_type>
 {
   static _Tp* move(_Tp* __first, _Tp* __last, _Tp* __result) {
-    return __copy_trivial(__first, __last, __result);
+    return tinySTL::__copy_trivial(__first, __last, __result);
   }
 };
 
@@ -246,20 +247,20 @@ __copy_n(_RAIter __first, _Size __count,
          _OutputIter __result,
          random_access_iterator_tag) {
   _RAIter __last = __first + __count;
-  return pair<_RAIter, _OutputIter>(__last, copy(__first, __last, __result));
+  return pair<_RAIter, _OutputIter>(__last, tinySTL::copy(__first, __last, __result));
 }
 
 template <class _InputIter, class _Size, class _OutputIter>
 inline pair<_InputIter, _OutputIter>
 __copy_n(_InputIter __first, _Size __count, _OutputIter __result) {
-  return __copy_n(__first, __count, __result,
-                  iterator_category(__first));
+  return tinySTL::__copy_n(__first, __count, __result,
+                           iterator_category(__first));
 }
 
 template <class _InputIter, class _Size, class _OutputIter>
 inline pair<_InputIter, _OutputIter>
 copy_n(_InputIter __first, _Size __count, _OutputIter __result) {
-  return __copy_n(__first, __count, __result);
+  return tinySTL::__copy_n(__first, __count, __result);
 }
 
 
@@ -305,7 +306,7 @@ struct __copy_backward_dispatch
                                   _BidirectionalIter1 __last, 
                                   _BidirectionalIter2 __result) 
   {
-    return __copy_backward(__first, __last, __result, _Cat(), (_Distance*) 0);
+    return tinySTL::__copy_backward(__first, __last, __result, _Cat(), (_Distance*) 0);
   }
 };
 

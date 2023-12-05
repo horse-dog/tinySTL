@@ -31,7 +31,7 @@ void
 __destroy_aux(_ForwardIterator __first, _ForwardIterator __last, false_type)
 {
   for ( ; __first != __last; ++__first)
-    _Destroy(&*__first);
+    tinySTL::_Destroy(&*__first);
 }
 
 template <class _ForwardIterator> 
@@ -43,29 +43,29 @@ inline void __destroy(_ForwardIterator __first, _ForwardIterator __last, _Tp*)
   typedef typename type_traits<_Tp>::has_trivial_destructor
           _Trivial_destructor;
   // _Trivial_destructor is true_type or false_type.
-  __destroy_aux(__first, __last, _Trivial_destructor());
+  tinySTL::__destroy_aux(__first, __last, _Trivial_destructor());
 }
 
 // Range destory [first, last).
 template <class _ForwardIterator>
 inline void _Destroy(_ForwardIterator __first, _ForwardIterator __last) {
-  __destroy(__first, __last, value_type(__first));
+  tinySTL::__destroy(__first, __last, value_type(__first));
 }
 
 
 template <class _T1, class... _Args>
 inline void construct(_T1* __p, _Args&& ...__args) {
-  _Construct(__p, forward<_Args>(__args)...);
+  tinySTL::_Construct(__p, forward<_Args>(__args)...);
 }
 
 template <class _Tp>
 inline void destroy(_Tp* __pointer) {
-  _Destroy(__pointer);
+  tinySTL::_Destroy(__pointer);
 }
 
 template <class _ForwardIterator>
 inline void destroy(_ForwardIterator __first, _ForwardIterator __last) {
-  _Destroy(__first, __last);
+  tinySTL::_Destroy(__first, __last);
 }
 
 }
