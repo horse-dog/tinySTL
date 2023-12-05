@@ -451,7 +451,6 @@ TEST(vector, resize) {
     EXPECT_EQ(vc.size(), 2);
     EXPECT_EQ(vc.capacity(), 5);
   }
-  
 }
 
 TEST(vector, shrink_to_fit) {
