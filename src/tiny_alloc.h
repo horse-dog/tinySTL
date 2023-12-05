@@ -2,6 +2,7 @@
 
 #pragma once
 #include <string.h>
+#include <stdexcept>
 
 // defination of throw bad alloc.
 #ifndef __THROW_BAD_ALLOC
