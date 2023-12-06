@@ -506,25 +506,163 @@ class list
       __x._M_head._M_size -= __n;
     }
 
-  // TODO: unfinished...
-  size_type remove(const _Tp& __value);
+  size_type remove(const _Tp& __value)
+    { 
+      size_type __old_len = size();
+      iterator __extra = end();
+      for (auto it = begin(); it != end();)
+        if (*it == __value)
+          if (tinySTL::addressof(*it) != tinySTL::addressof(__value))
+            it = erase(it);
+          else
+            __extra = it++;
+        else
+          ++it;
+      if (__extra != end())
+        erase(__extra);
+      return __old_len - size();
+    }
 
   template <class _Predicate>
-  size_type remove_if(_Predicate __pred);
+  size_type remove_if(_Predicate __pred)
+    { 
+      size_type __old_len = size();
+      for (auto it = begin(); it != end();)
+        __pred(*it) ? (it = erase(it)) : (++it);
+      return __old_len - size();
+    }
 
-  size_type unique();
+  /**
+   * @brief remove all consecutive repeating elements from the list.
+   */
+  size_type unique()
+    { return unique(equal()); }
 
-  // template <class _BinaryPredicate>
-  // size_type unique(_BinaryPredicate __pred);
+  /**
+   * @brief remove all consecutive repeating elements from the list.
+   * @param __pred expression
+   */
+  template <class _BinaryPredicate>
+  size_type unique(_BinaryPredicate __pred)
+    { 
+      size_type __old_len = size();
+      for (iterator pre = begin(), p = ++begin(); p != end();)
+        __pred(*pre, *p) ? (p = erase(p)) : (pre = p, ++p);
+      return __old_len - size();
+    }
 
-  // void merge(list& __x);
+  /**
+   * @brief merge this list with another list, these two lists
+   * should be ordered before use this function.
+   * @param __x another list
+   */
+  void merge(list& __x)
+    { merge(__x, less()); }
 
-  // void reverse();
+  /**
+   * @brief merge this list with another list, these two lists
+   * should be ordered before use this function.
+   * @param __x another list
+   */
+  void merge(list&& __x)
+    { merge(__x, less()); }
 
-  // void sort() { sort(less()); }
+  /**
+   * @brief merge this list with another list, these two lists
+   * should be ordered before use this function.
+   * @param __x another list
+   * @param __comp sort method
+   */
+  template <class _StrictWeakOrdering>
+  void merge(list& __x, _StrictWeakOrdering __comp) 
+    { 
+      iterator __first1 = begin(), __last1 = end();    
+      iterator __first2 = __x.begin(), __last2 = __x.end();
+      while (__first1 != __last1 && __first2 != __last2) 
+      { 
+        if (__comp(*__first2, *__first1)) 
+        { 
+          iterator __old = __first2;
+          _M_transfer(__first1, __old, ++__first2);
+        } 
+        else
+          ++__first1;
+      }
+      if (__first2 != __last2)
+        _M_transfer(__last1, __first2, __last2);
+      _M_head._M_size += __x._M_head._M_size;
+      __x._M_head._M_size = 0;
+    }
 
-  // template <class _StrictWeakOrdering>
-  // void sort(_StrictWeakOrdering __comp);
+  /**
+   * @brief merge this list with another list, these two lists \n
+   * should be ordered before use this function
+   * @param __x another list
+   * @param __comp sort method
+   */
+  template <class _StrictWeakOrdering>
+  void merge(list&& __x, _StrictWeakOrdering __comp)
+    { merge(__x, __comp); }
+
+  /**
+   * @brief reverse list. 
+   */
+  void reverse()
+    { 
+      _List_node_base* __head = (_List_node_base*)(this);
+      _List_node_base* __cur = __head;
+      while (true) 
+      { 
+        _List_node_base* __next = __cur->_M_next;
+        __cur->_M_next = __cur->_M_prev;
+        __cur->_M_prev = __next;
+        if (__next == __head) break;
+        __cur = __next;
+      }
+    }
+
+  void sort() { sort(less()); }
+
+  // TODO: why it work?.
+  template <class _StrictWeakOrdering>
+  void sort(_StrictWeakOrdering __comp)
+  { 
+    // Do nothing if the list has length 0 or 1.
+    if (size() < 2) return;
+
+	  list __carry;
+    list __tmp[64];
+    list* __fill = __tmp;
+    list* __counter;
+	  try { 
+      do { 
+        // move front element to __carry.
+        __carry.splice(__carry.begin(), *this, begin());
+
+		    for(__counter = __tmp;
+            __counter != __fill && !__counter->empty(); 
+            ++__counter) 
+          { 
+            __counter->merge(__carry, __comp);
+			      __carry.swap(*__counter);
+		      }
+        
+		    __carry.swap(*__counter);
+		    if (__counter == __fill)
+		      ++__fill;
+		  } while ( !empty() );
+
+		  for (__counter = __tmp + 1; __counter != __fill; ++__counter)
+		    __counter->merge(*(__counter - 1), __comp);
+      
+      swap(*(__fill - 1));
+	  } catch(...) { 
+      this->splice(this->end(), __carry);
+		  for (int __i = 0; __i < sizeof(__tmp)/sizeof(__tmp[0]); ++__i)
+		    this->splice(this->end(), __tmp[__i]);
+		  throw;
+	  }
+  }
 
   template <class... _Args>
   iterator emplace(const_iterator __pos, _Args &&...__args) 

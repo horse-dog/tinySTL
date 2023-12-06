@@ -1,8 +1,9 @@
 #include <list>
-#include "vector.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include "vector.h"
 
 using namespace tinySTL;
 

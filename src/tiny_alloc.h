@@ -20,6 +20,16 @@ namespace tinySTL
 {
 
 template <typename _Tp>
+inline _Tp* addressof(_Tp& __r) noexcept
+{
+  return reinterpret_cast<_Tp*>(
+      &const_cast<char&>(reinterpret_cast<const volatile char&>(__r)));
+}
+
+template <class _Tp>
+const _Tp* addressof(const _Tp&&) = delete;
+
+template <typename _Tp>
 struct aligned_membuf 
 {
   struct Tval { _Tp _M_val; };

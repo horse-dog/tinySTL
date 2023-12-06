@@ -51,7 +51,7 @@ inline void _Destroy(_ForwardIterator __first, _ForwardIterator __last) {}
 
 template <class _T1, class... _Args>
 inline void construct(_T1* __p, _Args&& ...__args) {
-  tinySTL::_Construct(__p, forward<_Args>(__args)...);
+  tinySTL::_Construct(__p, tinySTL::forward<_Args>(__args)...);
 }
 
 template <class _Tp>
