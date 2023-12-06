@@ -466,7 +466,7 @@ class list
   void splice(const_iterator __position, list& __x)
     {
       if (!__x.empty()) {
-        this->transfer(__position.base(), __x.begin(), __x.end());
+        this->_M_transfer(__position.base(), __x.begin(), __x.end());
         this->_M_head._M_size += __x.size();
         __x._M_head._M_size = 0;
       }
@@ -480,7 +480,7 @@ class list
       const_iterator __j = __i;
       ++__j;
       if (__position == __i || __position == __j) return;
-      this->transfer(__position.base(), __i.base(), __j.base());
+      this->_M_transfer(__position.base(), __i.base(), __j.base());
       this->_M_head._M_size += 1;
       __x._M_head._M_size -= 1;
     }
@@ -501,7 +501,7 @@ class list
       iterator __end = __x.end();
       for (auto it = __first; it != __end && it != __last; ++it, ++__n)
         ;
-      this->transfer(__position.base(), __first.base(), __last.base());
+      this->_M_transfer(__position.base(), __first.base(), __last.base());
       this->_M_head._M_size += __n;
       __x._M_head._M_size -= __n;
     }
@@ -552,7 +552,7 @@ class list
   }
 
  protected:
-  void transfer(iterator __position, iterator __first, iterator __last)
+  void _M_transfer(iterator __position, iterator __first, iterator __last)
   {
     if (__position != __last) {
       // Remove [first, last) from its old position.
