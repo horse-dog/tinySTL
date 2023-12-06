@@ -1,11 +1,21 @@
 #include <list>
 #include <memory>
+#include "list.h"
 #include "vector.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 using namespace tinySTL;
+
+TEST(vector, constructor1) {
+  list<int> l;
+  l.emplace_back(1);
+  l.emplace_back(2);
+  l.emplace_back(3);
+  EXPECT_EQ(l.size(), 3);
+  EXPECT_STRING_EQ(l, [1, 2, 3]);
+}
 
 TEST(vector, constructor) {
   /**

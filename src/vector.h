@@ -82,7 +82,7 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     : _Base(__a) {}
 
   vector(size_type __n, 
-      const allocator_type& __a = allocator_type())
+         const allocator_type& __a = allocator_type())
     : _Base(__n, __a)
     { _M_finish = tinySTL::uninitialized_fill_n(_M_start, __n, _Tp()); }
 
@@ -172,10 +172,14 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   iterator begin() { return _M_start; }
   
   const_iterator begin() const { return _M_start; }
+
+  const_iterator cbegin() const { return _M_start; }
   
   iterator end() { return _M_finish; }
   
   const_iterator end() const { return _M_finish; }
+
+  const_iterator cend() const { return _M_finish; }
 
   reverse_iterator rbegin() 
     { return reverse_iterator(end()); }
@@ -183,10 +187,16 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   const_reverse_iterator rbegin() const
     { return const_reverse_iterator(end()); }
 
+  const_reverse_iterator crbegin() const
+    { return const_reverse_iterator(end()); }
+
   reverse_iterator rend()
     { return reverse_iterator(begin()); }
   
   const_reverse_iterator rend() const
+    { return const_reverse_iterator(begin()); }
+
+  const_reverse_iterator crend() const
     { return const_reverse_iterator(begin()); }
 
   size_type size() const

@@ -6,6 +6,33 @@ namespace tinySTL
 {
 
 template <class _Iterator, class _IteratorTag>
+class __const_iterator 
+{
+protected:
+  _Iterator current;
+public:
+  typedef typename iterator_traits<_Iterator>::iterator_category
+          iterator_category;
+  typedef const typename iterator_traits<_Iterator>::value_type
+          value_type;
+  typedef typename iterator_traits<_Iterator>::difference_type
+          difference_type;
+  typedef value_type* pointer;
+  typedef value_type& reference;
+
+  typedef _Iterator iterator_type;
+  typedef __const_iterator<_Iterator, _IteratorTag> _Self;
+
+public:
+  __const_iterator() {}
+  explicit __const_iterator(iterator_type __x) : current(__x) {}
+
+  __const_iterator(const _Self& __x) : current(__x.current) {}
+    
+  iterator_type base() const { return current; }
+};
+
+template <class _Iterator, class _IteratorTag>
 class __reverse_iterator 
 {
 protected:
@@ -34,6 +61,58 @@ public:
   iterator_type base() const { return current; }
 };
 
+
+// bidirectional version.
+template <class _Iterator>
+class __const_iterator<_Iterator, bidirectional_iterator_tag>
+{
+protected:
+  _Iterator current;
+public:
+  typedef typename iterator_traits<_Iterator>::iterator_category
+          iterator_category;
+  typedef const typename iterator_traits<_Iterator>::value_type
+          value_type;
+  typedef typename iterator_traits<_Iterator>::difference_type
+          difference_type;
+  typedef value_type* pointer;
+  typedef value_type& reference;
+
+  typedef _Iterator iterator_type;
+  typedef __const_iterator<_Iterator, bidirectional_iterator_tag> _Self;
+
+public:
+  __const_iterator() {}
+  
+  __const_iterator(iterator_type __x) : current(__x) {}
+
+  __const_iterator(const _Self& __x) : current(__x.current) {}
+    
+  iterator_type base() const { return current; }
+  
+  reference operator*() const { return *current; }
+
+  pointer operator->() const { return &(operator*()); }
+
+  _Self& operator++() {
+    ++current;
+    return *this;
+  }
+  _Self operator++(int) {
+    _Self __tmp = *this;
+    ++current;
+    return __tmp;
+  }
+  _Self& operator--() {
+    --current;
+    return *this;
+  }
+  _Self operator--(int) {
+    _Self __tmp = *this;
+    --current;
+    return __tmp;
+  }
+};
 
 // bidirectional version.
 template <class _Iterator>
@@ -90,6 +169,9 @@ public:
   }
 };
 
+// TODO: random_access version.
+template <class _Iterator>
+class __const_iterator<_Iterator, random_access_iterator_tag>;
 
 // random_access version.
 template <class _Iterator>
@@ -164,14 +246,42 @@ public:
 
 
 template <class _Iterator>
+using const_iterator = __const_iterator<
+  _Iterator, typename iterator_traits<_Iterator>::iterator_category>;
+
+template <class _Iterator>
 using reverse_iterator = __reverse_iterator<
   _Iterator, typename iterator_traits<_Iterator>::iterator_category>;
 
 
 template <class _Iterator>
+inline bool operator==(const const_iterator<_Iterator>& __x, 
+                       const const_iterator<_Iterator>& __y) {
+  return __x.base() == __y.base();
+}
+
+template <class _Iterator>
+inline bool operator==(const const_iterator<_Iterator>& __x, 
+                       const _Iterator& __y) {
+  return __x.base() == __y;
+}
+
+template <class _Iterator>
+inline bool operator==(const _Iterator& __x, 
+                       const const_iterator<_Iterator>& __y) {
+  return __x == __y.base();
+}
+
+template <class _Iterator>
 inline bool operator==(const reverse_iterator<_Iterator>& __x, 
                        const reverse_iterator<_Iterator>& __y) {
   return __x.base() == __y.base();
+}
+
+template <class _Iterator>
+inline bool operator<(const const_iterator<_Iterator>& __x, 
+                      const const_iterator<_Iterator>& __y) {
+  return __y.base() < __x.base();
 }
 
 template <class _Iterator>
@@ -181,9 +291,21 @@ inline bool operator<(const reverse_iterator<_Iterator>& __x,
 }
 
 template <class _Iterator>
+inline bool operator!=(const const_iterator<_Iterator>& __x, 
+                       const const_iterator<_Iterator>& __y) {
+  return !(__x == __y);
+}
+
+template <class _Iterator>
 inline bool operator!=(const reverse_iterator<_Iterator>& __x, 
                        const reverse_iterator<_Iterator>& __y) {
   return !(__x == __y);
+}
+
+template <class _Iterator>
+inline bool operator>(const const_iterator<_Iterator>& __x, 
+                      const const_iterator<_Iterator>& __y) {
+  return __y < __x;
 }
 
 template <class _Iterator>
@@ -193,15 +315,34 @@ inline bool operator>(const reverse_iterator<_Iterator>& __x,
 }
 
 template <class _Iterator>
+inline bool operator<=(const const_iterator<_Iterator>& __x, 
+                       const const_iterator<_Iterator>& __y) {
+  return !(__y < __x);
+}
+
+template <class _Iterator>
 inline bool operator<=(const reverse_iterator<_Iterator>& __x, 
                        const reverse_iterator<_Iterator>& __y) {
   return !(__y < __x);
 }
 
 template <class _Iterator>
-inline bool operator>=(const reverse_iterator<_Iterator>& __x, 
-                      const reverse_iterator<_Iterator>& __y) {
+inline bool operator>=(const const_iterator<_Iterator>& __x, 
+                       const const_iterator<_Iterator>& __y) {
   return !(__x < __y);
+}
+
+template <class _Iterator>
+inline bool operator>=(const reverse_iterator<_Iterator>& __x, 
+                       const reverse_iterator<_Iterator>& __y) {
+  return !(__x < __y);
+}
+
+template <class _Iterator>
+inline typename const_iterator<_Iterator>::difference_type
+operator-(const const_iterator<_Iterator>& __x, 
+          const const_iterator<_Iterator>& __y) {
+  return __x.base() - __y.base();
 }
 
 template <class _Iterator>
@@ -209,6 +350,13 @@ inline typename reverse_iterator<_Iterator>::difference_type
 operator-(const reverse_iterator<_Iterator>& __x, 
           const reverse_iterator<_Iterator>& __y) {
   return __y.base() - __x.base();
+}
+
+template <class _Iterator>
+inline const_iterator<_Iterator> 
+operator+(typename const_iterator<_Iterator>::difference_type __n,
+          const const_iterator<_Iterator>& __x) {
+  return const_iterator<_Iterator>(__x.base() + __n);
 }
 
 template <class _Iterator>

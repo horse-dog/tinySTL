@@ -20,3 +20,7 @@ enable_testing()
 add_executable(test_vector test/vector.cpp)
 target_link_libraries(test_vector PRIVATE gtest_main gmock_main)
 add_test(NAME test_vector COMMAND test_vector)
+
+add_executable(test_list test/list.cpp)
+target_link_libraries(test_list PRIVATE gtest_main gmock_main)
+add_test(NAME test_list COMMAND test_list)

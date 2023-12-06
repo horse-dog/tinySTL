@@ -33,9 +33,9 @@ std::string to_string(const container &__x) {
 
 template <class _Tp>
 inline void swap(_Tp& __a, _Tp& __b) {
-  _Tp __tmp = __a;
-  __a = __b;
-  __b = __tmp;
+  _Tp __tmp = tinySTL::move(__a);
+  __a = tinySTL::move(__b);
+  __b = tinySTL::move(__tmp);
 }
 
 ////////////////////////////////////////////////////////////////////////////

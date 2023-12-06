@@ -19,6 +19,27 @@
 namespace tinySTL 
 {
 
+template <typename _Tp>
+struct aligned_membuf 
+{
+  struct Tval { _Tp _M_val; };
+  
+  alignas(alignof(Tval)) unsigned char _M_data[sizeof(_Tp)];
+  
+  aligned_membuf() = default;
+  
+  aligned_membuf(std::nullptr_t) {}
+  
+  void *addr() noexcept { return (void*)(&_M_data); }
+  
+  const void *addr() const noexcept 
+    { return (const void*)(&_M_data); }
+
+  _Tp *ptr() noexcept { return (_Tp*) addr(); }
+
+  const _Tp *ptr() const noexcept { return (const _Tp*) addr(); }
+};
+
 // wrapper of _Alloc with type _Tp.
 template<class _Tp, class _Alloc>
 class simple_alloc {
