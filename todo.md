@@ -2,7 +2,7 @@
 
 [X] uninitialized_move.
 
-[ ] move_backward.
+[X] move_backward.
 
 [X] vector.
 

@@ -32,6 +32,8 @@ struct _List_node_head : public _List_node_base
 
   _List_node_head(const _List_node_head&) = delete;
 
+  _List_node_head& operator=(const _List_node_head&) = delete;
+
   _List_node_head(_List_node_head&& __x)
     {
       if (__x._M_size == 0)
@@ -50,6 +52,16 @@ struct _List_node_head : public _List_node_base
       __x._M_prev = __x._M_next = &__x;
       __x._M_size = 0;
     }
+
+  _List_node_head& operator=(_List_node_head&& __x) 
+    {
+      if (this != &__x) {
+        this->~_List_node_head();
+        tinySTL::construct(this, tinySTL::move(__x));
+      }
+      return *this;
+    }
+  
 };
 
 template <class _Tp>
@@ -255,7 +267,7 @@ class list
   {
     if (this != &__x)
     {
-      this->clear();
+      this->~list();
       tinySTL::construct(this, tinySTL::move(__x));
     }
     return *this;
@@ -406,11 +418,9 @@ class list
         clear();
         return end();
       } 
-      else {
-        while (__first != __last)
-          erase(__first++);
-        return __last.base();
-      }
+      while (__first != __last)
+        erase(__first++);
+      return __last.base();
     }
 
   void clear()
@@ -450,10 +460,10 @@ class list
     }
 
   // TODO: add comment of splices.
-  void splice(const_iterator __position, list& __x)
+  void splice(const_iterator __position, list&& __x)
     { return splice(__position, __x); }
 
-  void splice(const_iterator __position, list&& __x)
+  void splice(const_iterator __position, list& __x)
     {
       if (!__x.empty()) {
         this->transfer(__position.base(), __x.begin(), __x.end());
@@ -462,10 +472,10 @@ class list
       }
     }
 
-  void splice(const_iterator __position, list& __x, const_iterator __i)
+  void splice(const_iterator __position, list&& __x, const_iterator __i)
     { return splice(__position, __x, __i); }
 
-  void splice(const_iterator __position, list&& __x, const_iterator __i)
+  void splice(const_iterator __position, list& __x, const_iterator __i)
     {
       const_iterator __j = __i;
       ++__j;
@@ -475,11 +485,11 @@ class list
       __x._M_head._M_size -= 1;
     }
 
-  void splice(const_iterator __position, list& __x, const_iterator __first,
+  void splice(const_iterator __position, list&& __x, const_iterator __first,
               const_iterator __last)
     { return splice(__position, __x, __first, __last); }
 
-  void splice(const_iterator __position, list&& __x, const_iterator __first,
+  void splice(const_iterator __position, list& __x, const_iterator __first,
               const_iterator __last)
     {
       if (__first == __x.begin() && __last == __x.end()) 
@@ -504,17 +514,17 @@ class list
 
   size_type unique();
 
-  template <class _BinaryPredicate>
-  size_type unique(_BinaryPredicate __pred);
+  // template <class _BinaryPredicate>
+  // size_type unique(_BinaryPredicate __pred);
 
-  void merge(list& __x);
+  // void merge(list& __x);
 
-  void reverse();
+  // void reverse();
 
-  void sort() { sort(less()); }
+  // void sort() { sort(less()); }
 
-  template <class _StrictWeakOrdering>
-  void sort(_StrictWeakOrdering __comp);
+  // template <class _StrictWeakOrdering>
+  // void sort(_StrictWeakOrdering __comp);
 
   template <class... _Args>
   iterator emplace(const_iterator __pos, _Args &&...__args) 
@@ -542,7 +552,7 @@ class list
   }
 
  protected:
-  size_type transfer(iterator __position, iterator __first, iterator __last)
+  void transfer(iterator __position, iterator __first, iterator __last)
   {
     if (__position != __last) {
       // Remove [first, last) from its old position.
