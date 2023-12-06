@@ -2,6 +2,7 @@
 
 #pragma once
 #include <cstddef>
+#include <iterator>
 
 #include "tiny_traits.h"
 
