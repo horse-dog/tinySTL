@@ -11,8 +11,8 @@ namespace tinySTL
 {
 
 struct _List_node_base {
-  _List_node_base *_M_prev = 0;
-  _List_node_base *_M_next = 0;
+  _List_node_base* _M_prev = 0;
+  _List_node_base* _M_next = 0;
 };
 
 struct _List_node_head : public _List_node_base
