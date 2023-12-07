@@ -32,7 +32,7 @@ class stack {
   stack(container_type&& __c) : c(tinySTL::move(__c)) {}
 
  public:
-  template <typename... _Args>
+  template <class... _Args>
   auto emplace(_Args&& ...__args)
     { return c.emplace_back(std::forward<_Args>(__args)...); }
 

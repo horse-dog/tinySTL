@@ -89,7 +89,7 @@ class list
  protected:
   class _List_iterator
   {
-  friend class list;
+   friend class list;
    public:
     using iterator_category = tinySTL::bidirectional_iterator_tag;
     using value_type = _Tp;
@@ -210,8 +210,8 @@ class list
   explicit list(const allocator_type& __a = allocator_type())
     : _M_head() {}
 
-  explicit list(size_type __n)
-    { tinySTL::construct(this, __n, _Tp()); }
+  explicit list(size_type __n) 
+    : list(__n, _Tp()) {}
 
   list(size_type __n, const _Tp& __value,
        const allocator_type& __a = allocator_type())
@@ -630,38 +630,38 @@ class list
     // Do nothing if the list has length 0 or 1.
     if (size() < 2) return;
 
-	  list __carry;
+    list __carry;
     list __tmp[64];
     list* __fill = __tmp;
     list* __counter;
-	  try { 
+    try { 
       do { 
         // move front element to __carry.
         __carry.splice(__carry.begin(), *this, begin());
 
-		    for(__counter = __tmp;
+        for(__counter = __tmp;
             __counter != __fill && !__counter->empty(); 
             ++__counter) 
           { 
             __counter->merge(__carry, __comp);
-			      __carry.swap(*__counter);
-		      }
+            __carry.swap(*__counter);
+          }
         
-		    __carry.swap(*__counter);
-		    if (__counter == __fill)
-		      ++__fill;
-		  } while ( !empty() );
+        __carry.swap(*__counter);
+        if (__counter == __fill)
+          ++__fill;
+      } while ( !empty() );
 
-		  for (__counter = __tmp + 1; __counter != __fill; ++__counter)
-		    __counter->merge(*(__counter - 1), __comp);
+      for (__counter = __tmp + 1; __counter != __fill; ++__counter)
+        __counter->merge(*(__counter - 1), __comp);
       
       swap(*(__fill - 1));
-	  } catch(...) { 
+    } catch(...) { 
       this->splice(this->end(), __carry);
-		  for (int __i = 0; __i < sizeof(__tmp)/sizeof(__tmp[0]); ++__i)
-		    this->splice(this->end(), __tmp[__i]);
-		  throw;
-	  }
+      for (int __i = 0; __i < sizeof(__tmp)/sizeof(__tmp[0]); ++__i)
+        this->splice(this->end(), __tmp[__i]);
+      throw;
+    }
   }
 
   template <class... _Args>
@@ -678,15 +678,15 @@ class list
   }
 
   template <class... _Args>
-  iterator emplace_back(_Args &&...__args) 
+  reference emplace_back(_Args &&...__args) 
   {
-    return emplace(end(), tinySTL::forward<_Args>(__args)...);
+    return *emplace(end(), tinySTL::forward<_Args>(__args)...);
   }
 
   template <class... _Args>
-  iterator emplace_front(_Args &&...__args) 
+  reference emplace_front(_Args &&...__args) 
   {
-    return emplace(begin(), tinySTL::forward<_Args>(__args)...);
+    return *emplace(begin(), tinySTL::forward<_Args>(__args)...);
   }
 
  protected:

@@ -406,8 +406,8 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   }
 
   template <typename... _Args>
-  iterator emplace_back(_Args&& ...__args)
-    { return emplace(end(), forward<_Args>(__args)...); }
+  reference emplace_back(_Args&& ...__args)
+    { return *emplace(end(), forward<_Args>(__args)...); }
 
  protected:
   void _M_range_check(size_type __n) const {
