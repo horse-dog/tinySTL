@@ -131,11 +131,11 @@ TEST(list, assign_operator) {
    * @brief assign operator by copy.
    */
   SUBTEST(operator=) {
-    list<int> li0 = {1, 2, 3, 4};
-    list<int> li1 = {1, 2, 3};
-    li0 = li1;
-    EXPECT_STRING_EQ(li0, [1, 2, 3]);
-    EXPECT_EQ(li0.size(), 3);
+    list<int> li1 = {1, 2, 3, 4};
+    list<int> li2 = {1, 2, 3};
+    li1 = li2;
+    EXPECT_STRING_EQ(li1, [1, 2, 3]);
+    EXPECT_EQ(li1.size(), 3);
   }
 
   /**
@@ -395,11 +395,11 @@ TEST(list, size) {
 }
 
 TEST(list, swap) {
-  list<int> li0 = {1, 2, 3};
-  list<int> li1 = {11, 22, 33, 44};
-  li0.swap(li1);
-  EXPECT_STRING_EQ(li0, [11, 22, 33, 44]);
-  EXPECT_STRING_EQ(li1, [1, 2, 3]);
+  list<int> li1 = {1, 2, 3};
+  list<int> li2 = {11, 22, 33, 44};
+  li1.swap(li2);
+  EXPECT_STRING_EQ(li1, [11, 22, 33, 44]);
+  EXPECT_STRING_EQ(li2, [1, 2, 3]);
 }
 
 TEST(list, push_front) {
@@ -443,13 +443,13 @@ TEST(list, splice) {
    * @brief splice x to current list at pos.
    */
   SUBTEST(splice) {
-    list<int> li0 = {1, 2, 3, 4, 5};
-    list<int> li1 = {11, 12, 13};
-    li0.splice(++li0.begin(), li1);
-    EXPECT_STRING_EQ(li0, [1, 11, 12, 13, 2, 3, 4, 5]);
-    EXPECT_STRING_EQ(li1, []);
-    EXPECT_EQ(li0.size(), 8);
-    EXPECT_EQ(li1.size(), 0);
+    list<int> li1 = {1, 2, 3, 4, 5};
+    list<int> li2 = {11, 12, 13};
+    li1.splice(++li1.begin(), li2);
+    EXPECT_STRING_EQ(li1, [1, 11, 12, 13, 2, 3, 4, 5]);
+    EXPECT_STRING_EQ(li2, []);
+    EXPECT_EQ(li1.size(), 8);
+    EXPECT_EQ(li2.size(), 0);
   }
 
   /**
@@ -458,17 +458,17 @@ TEST(list, splice) {
    * @brief move i from x to current list at pos.
    */
   SUBTEST(splice) {
-    list<int> li0 = {1, 2, 3, 4, 5};
-    list<int> li1 = {11, 12, 13};
-    li0.splice(li0.begin(), li0, ++li0.begin());
-    EXPECT_STRING_EQ(li0, [2, 1, 3, 4, 5]);
-    EXPECT_EQ(li0.size(), 5);
+    list<int> li1 = {1, 2, 3, 4, 5};
+    list<int> li2 = {11, 12, 13};
+    li1.splice(li1.begin(), li1, ++li1.begin());
+    EXPECT_STRING_EQ(li1, [2, 1, 3, 4, 5]);
+    EXPECT_EQ(li1.size(), 5);
 
-    li0.splice(++++li0.begin(), li1, li1.begin());
-    EXPECT_STRING_EQ(li0, [2, 1, 11, 3, 4, 5]);
-    EXPECT_STRING_EQ(li1, [12, 13]);
-    EXPECT_EQ(li0.size(), 6);
-    EXPECT_EQ(li1.size(), 2);
+    li1.splice(++++li1.begin(), li2, li2.begin());
+    EXPECT_STRING_EQ(li1, [2, 1, 11, 3, 4, 5]);
+    EXPECT_STRING_EQ(li2, [12, 13]);
+    EXPECT_EQ(li1.size(), 6);
+    EXPECT_EQ(li2.size(), 2);
   }
 
   /**
@@ -479,17 +479,17 @@ TEST(list, splice) {
    * @brief move [first, last) from x to current list at pos.
    */
   SUBTEST(splice) {
-    list<int> li0 = {1, 2, 3, 4, 5};
-    list<int> li1 = {11, 12, 13};
-    li0.splice(li0.begin(), li0, ++li0.begin(), --li0.end());
-    EXPECT_STRING_EQ(li0, [2, 3, 4, 1, 5]);
-    EXPECT_EQ(li0.size(), 5);
+    list<int> li1 = {1, 2, 3, 4, 5};
+    list<int> li2 = {11, 12, 13};
+    li1.splice(li1.begin(), li1, ++li1.begin(), --li1.end());
+    EXPECT_STRING_EQ(li1, [2, 3, 4, 1, 5]);
+    EXPECT_EQ(li1.size(), 5);
 
-    li0.splice(++++li0.begin(), li1, li1.begin(), --li1.end());
-    EXPECT_STRING_EQ(li0, [2, 3, 11, 12, 4, 1, 5]);
-    EXPECT_STRING_EQ(li1, [13]);
-    EXPECT_EQ(li0.size(), 7);
-    EXPECT_EQ(li1.size(), 1);
+    li1.splice(++++li1.begin(), li2, li2.begin(), --li2.end());
+    EXPECT_STRING_EQ(li1, [2, 3, 11, 12, 4, 1, 5]);
+    EXPECT_STRING_EQ(li2, [13]);
+    EXPECT_EQ(li1.size(), 7);
+    EXPECT_EQ(li2.size(), 1);
   }
 }
 
@@ -544,13 +544,13 @@ TEST(list, merge) {
    * @brief merge two list.
    */
   SUBTEST(merge) {
-    list<int> li0 = {1, 3, 8, 9};
-    list<int> li1 = {2, 3, 4, 5, 6, 11, 12};
-    li0.merge(li1);
-    EXPECT_STRING_EQ(li0, [1, 2, 3, 3, 4, 5, 6, 8, 9, 11, 12]);
-    EXPECT_STRING_EQ(li1, []);
-    EXPECT_EQ(li0.size(), 11);
-    EXPECT_EQ(li1.size(), 0);
+    list<int> li1 = {1, 3, 8, 9};
+    list<int> li2 = {2, 3, 4, 5, 6, 11, 12};
+    li1.merge(li2);
+    EXPECT_STRING_EQ(li1, [1, 2, 3, 3, 4, 5, 6, 8, 9, 11, 12]);
+    EXPECT_STRING_EQ(li2, []);
+    EXPECT_EQ(li1.size(), 11);
+    EXPECT_EQ(li2.size(), 0);
   }
 
   /**
@@ -559,15 +559,15 @@ TEST(list, merge) {
    * @brief merge two list.
    */
   SUBTEST(merge) {
-    list<int> li0 = {9, 8, 3, 1};
-    list<int> li1 = {12, 11, 6, 5, 4, 3, 2};
-    li0.merge(li1, [](int a, int b) {
+    list<int> li1 = {9, 8, 3, 1};
+    list<int> li2 = {12, 11, 6, 5, 4, 3, 2};
+    li1.merge(li2, [](int a, int b) {
       return a > b;
     });
-    EXPECT_STRING_EQ(li0, [12, 11, 9, 8, 6, 5, 4, 3, 3, 2, 1]);
-    EXPECT_STRING_EQ(li1, []);
-    EXPECT_EQ(li0.size(), 11);
-    EXPECT_EQ(li1.size(), 0);
+    EXPECT_STRING_EQ(li1, [12, 11, 9, 8, 6, 5, 4, 3, 3, 2, 1]);
+    EXPECT_STRING_EQ(li2, []);
+    EXPECT_EQ(li1.size(), 11);
+    EXPECT_EQ(li2.size(), 0);
   }
 }
 

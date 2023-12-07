@@ -1,6 +1,7 @@
 #pragma once
 
-// TODO: unfinished...
+#include "tiny_errors.h"
+#include "tiny_algobase.h"
 #include "tiny_iterator.h"
 
 namespace tinySTL {
@@ -22,61 +23,62 @@ struct array
 
   constexpr void 
   fill(const value_type& __u)
-  { mtd::copy_operators_fill(begin(), begin() + _Nm, __u); }
+    { tinySTL::fill_n(begin(), _Nm, __u); }
 
   constexpr void
   swap(array& __other)
-  { for (size_type i = 0; i < _Nm; i++)
-      mtd::swap(this->_M_elems[i], __other._M_elems[i]);
-  }
+    { 
+      for (size_type i = 0; i < _Nm; i++)
+        tinySTL::swap(_M_elems[i], __other._M_elems[i]);
+    }
 
   constexpr iterator
   begin() noexcept
-  { return iterator(data()); }
+    { return iterator(data()); }
 
   constexpr const_iterator
   begin() const noexcept
-  { return const_iterator(data()); }
+    { return const_iterator(data()); }
 
   constexpr iterator
   end() noexcept
-  { return iterator(data() + _Nm); }
+    { return iterator(data() + _Nm); }
 
   constexpr const_iterator
   end() const noexcept
-  { return const_iterator(data() + _Nm); }
+    { return const_iterator(data() + _Nm); }
 
   constexpr reverse_iterator
   rbegin() noexcept
-  { return reverse_iterator(end()); }
+    { return reverse_iterator(end()); }
 
   constexpr const_reverse_iterator
   rbegin() const noexcept
-  { return const_reverse_iterator(end()); }
+    { return const_reverse_iterator(end()); }
 
   constexpr reverse_iterator
   rend() noexcept
-  { return reverse_iterator(begin()); }
+    { return reverse_iterator(begin()); }
 
   constexpr const_reverse_iterator
   rend() const noexcept
-  { return const_reverse_iterator(begin()); }
+    { return const_reverse_iterator(begin()); }
 
   constexpr const_iterator
   cbegin() const noexcept
-  { return const_iterator(data()); }
+    { return const_iterator(data()); }
 
   constexpr const_iterator
   cend() const noexcept
-  { return const_iterator(data() + _Nm); }
+    { return const_iterator(data() + _Nm); }
 
   constexpr const_reverse_iterator
   crbegin() const noexcept
-  { return const_reverse_iterator(end()); }
+    { return const_reverse_iterator(end()); }
 
   constexpr const_reverse_iterator
   crend() const noexcept
-  { return const_reverse_iterator(begin()); }
+    { return const_reverse_iterator(begin()); }
 
   constexpr size_type
   size() const noexcept { return _Nm; }
@@ -89,50 +91,62 @@ struct array
 
   constexpr reference
   operator[](size_type __n) noexcept
-  { return _M_elems[__n]; }
+    { return _M_elems[__n]; }
 
   constexpr const_reference
   operator[](size_type __n) const noexcept
-  { return _M_elems[__n]; }
+    { return _M_elems[__n]; }
 
 
   constexpr reference
   at(size_type __n)
-  { if (__n >= _Nm)
-	    throw std::out_of_range("index out of range");
-    return _M_elems[__n];
-  }
+    { 
+      if (__n >= _Nm)
+        __tiny_throw_range_error("array");
+      return _M_elems[__n];
+    }
 
   constexpr const_reference
   at(size_type __n) const
-  { if (__n >= _Nm)
-	    throw std::out_of_range("index out of range");
-    return _M_elems[__n];
-  }
+    { 
+      if (__n >= _Nm)
+        __tiny_throw_range_error("array");
+      return _M_elems[__n];
+    }
 
   constexpr reference
-  front() noexcept
-  { return *begin(); }
+  front() noexcept 
+    { 
+      static_assert(_Nm > 0, "array<_Tp, 0> is meaningless.");
+      return *begin(); 
+    }
 
   constexpr const_reference
   front() const noexcept
-  { return *begin(); }
+    { 
+      static_assert(_Nm > 0, "array<_Tp, 0> is meaningless.");
+      return *begin(); 
+    }
 
   constexpr reference
-  back() noexcept
-  { return _Nm ? *(end() - 1) : *end(); }
+  back() noexcept 
+    { 
+      static_assert(_Nm > 0, "array<_Tp, 0> is meaningless.");
+      return *(end() - 1); 
+    }
 
   constexpr const_reference
   back() const noexcept
-  { return _Nm ? *(end() - 1) : *end(); }
+    { 
+      static_assert(_Nm > 0, "array<_Tp, 0> is meaningless.");
+      return *(end() - 1); 
+    }
 
   constexpr pointer
-  data() noexcept
-  { return _M_elems; }
+  data() noexcept { return _M_elems; }
 
   constexpr const_pointer
-  data() const noexcept
-  { return _M_elems; }
+  data() const noexcept { return _M_elems; }
 
 };
 

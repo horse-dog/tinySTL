@@ -28,3 +28,7 @@ add_test(NAME test_list COMMAND test_list)
 add_executable(test_slist test/slist.cpp)
 target_link_libraries(test_slist PRIVATE gtest_main gmock_main)
 add_test(NAME test_slist COMMAND test_slist)
+
+add_executable(test_array test/array.cpp)
+target_link_libraries(test_array PRIVATE gtest_main gmock_main)
+add_test(NAME test_array COMMAND test_array)
