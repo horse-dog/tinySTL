@@ -451,7 +451,11 @@ class list
 
   void resize(size_type __new_size) { this->resize(__new_size, _Tp()); }
 
-  void pop_front() { erase(begin()); }
+  void pop_front() 
+    { 
+      if (!empty())
+        erase(begin());
+    }
 
   void pop_back() 
     { 

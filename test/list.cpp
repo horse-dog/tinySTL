@@ -401,3 +401,222 @@ TEST(list, swap) {
   EXPECT_STRING_EQ(li0, [11, 22, 33, 44]);
   EXPECT_STRING_EQ(li1, [1, 2, 3]);
 }
+
+TEST(list, push_front) {
+  /**
+   * @test  void push_front(T&& x)
+   * @brief push element at front.
+   */
+  SUBTEST(push_front) {
+    list<int> li = {1, 2, 3, 4};
+    li.push_front(0);
+    EXPECT_STRING_EQ(li, [0, 1, 2, 3, 4]);
+    EXPECT_EQ(li.size(), 5);
+  }
+
+  /**
+   * @test  void push_front(const T& x)
+   * @brief push element at front.
+   */
+  SUBTEST(push_front) {
+    list<int> li = {1, 2, 3, 4};
+    int x = 0;
+    li.push_front(x);
+    EXPECT_STRING_EQ(li, [0, 1, 2, 3, 4]);
+    EXPECT_EQ(li.size(), 5);
+  }
+}
+
+TEST(list, pop_front) {
+  list<int> li;
+  li.pop_front();
+  li = {1, 2, 3, 4};
+  li.pop_front();
+  EXPECT_STRING_EQ(li, [2, 3, 4]);
+  EXPECT_EQ(li.size(), 3);
+}
+
+TEST(list, splice) {
+  /**
+   * @test  splice(const_iterator pos, list& x)
+   * @test  splice(const_iterator pos, list&& x)
+   * @brief splice x to current list at pos.
+   */
+  SUBTEST(splice) {
+    list<int> li0 = {1, 2, 3, 4, 5};
+    list<int> li1 = {11, 12, 13};
+    li0.splice(++li0.begin(), li1);
+    EXPECT_STRING_EQ(li0, [1, 11, 12, 13, 2, 3, 4, 5]);
+    EXPECT_STRING_EQ(li1, []);
+    EXPECT_EQ(li0.size(), 8);
+    EXPECT_EQ(li1.size(), 0);
+  }
+
+  /**
+   * @test  splice(const_iterator pos, list& x, const_iterator i)
+   * @test  splice(const_iterator pos, list&& x, const_iterator i)
+   * @brief move i from x to current list at pos.
+   */
+  SUBTEST(splice) {
+    list<int> li0 = {1, 2, 3, 4, 5};
+    list<int> li1 = {11, 12, 13};
+    li0.splice(li0.begin(), li0, ++li0.begin());
+    EXPECT_STRING_EQ(li0, [2, 1, 3, 4, 5]);
+    EXPECT_EQ(li0.size(), 5);
+
+    li0.splice(++++li0.begin(), li1, li1.begin());
+    EXPECT_STRING_EQ(li0, [2, 1, 11, 3, 4, 5]);
+    EXPECT_STRING_EQ(li1, [12, 13]);
+    EXPECT_EQ(li0.size(), 6);
+    EXPECT_EQ(li1.size(), 2);
+  }
+
+  /**
+   * @test  splice(const_iterator pos, list& x, 
+   *               const_iterator first, const_iterator last)
+   * @test  splice(const_iterator pos, list&& x, 
+   *               const_iterator first, const_iterator last)
+   * @brief move [first, last) from x to current list at pos.
+   */
+  SUBTEST(splice) {
+    list<int> li0 = {1, 2, 3, 4, 5};
+    list<int> li1 = {11, 12, 13};
+    li0.splice(li0.begin(), li0, ++li0.begin(), --li0.end());
+    EXPECT_STRING_EQ(li0, [2, 3, 4, 1, 5]);
+    EXPECT_EQ(li0.size(), 5);
+
+    li0.splice(++++li0.begin(), li1, li1.begin(), --li1.end());
+    EXPECT_STRING_EQ(li0, [2, 3, 11, 12, 4, 1, 5]);
+    EXPECT_STRING_EQ(li1, [13]);
+    EXPECT_EQ(li0.size(), 7);
+    EXPECT_EQ(li1.size(), 1);
+  }
+}
+
+TEST(list, remove) {
+  list<std::string> li {"Aa", "Bb", "Aa", "Cc", "Dd"};
+  li.remove(li.front());
+  EXPECT_STRING_EQ(li, [Bb, Cc, Dd]);
+  EXPECT_EQ(li.size(), 3);
+}
+
+TEST(list, remove_if) {
+  list<std::string> li {"Aa", "Bb", "Aa", "Cc", "Dd"};
+  li.remove_if([](const std::string& str) {
+    return str[0] < 'C';
+  });
+  EXPECT_STRING_EQ(li, [Cc, Dd]);
+  EXPECT_EQ(li.size(), 2);
+}
+
+TEST(list, unique) {
+  /**
+   * @test  size_type unique()
+   * @brief unique an ordered list.
+   */
+  SUBTEST(unique) {
+    list<int> li = {1, 1, 4, 5, 5, 5, 8};
+    int old = li.size();
+    int cnt = li.unique();
+    EXPECT_STRING_EQ(li, [1, 4, 5, 8]);
+    EXPECT_EQ(cnt, old - li.size());
+  }
+
+  /**
+   * @test  size_type unique(_BinaryPredicate __pred)
+   * @brief unique an ordered list.
+   */
+  SUBTEST(unique) {
+    list<int> li = {1, 1, 4, 20, 50, 53, 81};
+    int old = li.size();
+    int cnt = li.unique([](int a, int b) {
+      return a / 10 == b / 10;
+    });
+    EXPECT_STRING_EQ(li, [1, 20, 50, 81]);
+    EXPECT_EQ(cnt, old - li.size());
+  }
+}
+
+TEST(list, merge) {
+  /**
+   * @test  merge(list& __x)
+   * @test  merge(list&& __x)
+   * @brief merge two list.
+   */
+  SUBTEST(merge) {
+    list<int> li0 = {1, 3, 8, 9};
+    list<int> li1 = {2, 3, 4, 5, 6, 11, 12};
+    li0.merge(li1);
+    EXPECT_STRING_EQ(li0, [1, 2, 3, 3, 4, 5, 6, 8, 9, 11, 12]);
+    EXPECT_STRING_EQ(li1, []);
+    EXPECT_EQ(li0.size(), 11);
+    EXPECT_EQ(li1.size(), 0);
+  }
+
+  /**
+   * @test  merge(list& __x, _StrictWeakOrdering __comp) 
+   * @test  merge(list&& __x, _StrictWeakOrdering __comp) 
+   * @brief merge two list.
+   */
+  SUBTEST(merge) {
+    list<int> li0 = {9, 8, 3, 1};
+    list<int> li1 = {12, 11, 6, 5, 4, 3, 2};
+    li0.merge(li1, [](int a, int b) {
+      return a > b;
+    });
+    EXPECT_STRING_EQ(li0, [12, 11, 9, 8, 6, 5, 4, 3, 3, 2, 1]);
+    EXPECT_STRING_EQ(li1, []);
+    EXPECT_EQ(li0.size(), 11);
+    EXPECT_EQ(li1.size(), 0);
+  }
+}
+
+TEST(list, reverse) {
+  list<int> li;
+  li.reverse();
+  EXPECT_STRING_EQ(li, []);
+  
+  li = {1};
+  li.reverse();
+  EXPECT_STRING_EQ(li, [1]);
+  
+  li = {1, 2};
+  li.reverse();
+  EXPECT_STRING_EQ(li, [2, 1]);
+
+  li = {1, 2, 3};
+  li.reverse();
+  EXPECT_STRING_EQ(li, [3, 2, 1]);
+}
+
+TEST(list, sort) {
+  /**
+   * @test  void sort()
+   * @brief sort the list.
+   */
+  SUBTEST(sort) {
+    list<int> li = {1, 3, 2, 7, 8, 6, 9, 5, 0, 4};
+    li.sort();
+    EXPECT_STRING_EQ(li, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  }
+
+  /**
+   * @test  void sort(_StrictWeakOrdering __comp)
+   * @brief sort the list by __comp.
+   */
+  SUBTEST(sort) {
+    list<int> li = {1, 3, 2, 7, 8, 6, 9, 5, 0, 4};
+    li.sort([](int x, int y) {
+      return x > y;
+    });
+    EXPECT_STRING_EQ(li, [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
+  }
+}
+
+TEST(list, emplace_front) {
+  list<int> li;
+  li.emplace_front(1);
+  EXPECT_STRING_EQ(li, [1]);
+  li.emplace_front(11);
+  EXPECT_STRING_EQ(li, [11, 1]);
+}
