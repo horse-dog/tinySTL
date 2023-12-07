@@ -362,7 +362,7 @@ TEST(list, rend) {
 TEST(list, resize) {
   /**
    * @test  void resize(size_type new_size)
-   * @brief resize the vector.
+   * @brief resize the list.
    */
   SUBTEST(resize) {
     list<int> li = {1, 2, 3};
@@ -376,7 +376,7 @@ TEST(list, resize) {
 
   /**
    * @test  void resize(size_type new_size, const T& x)
-   * @brief resize the vector.
+   * @brief resize the list.
    */
   SUBTEST(resize) {
     list<int> li = {1, 2, 3};
@@ -575,18 +575,26 @@ TEST(list, reverse) {
   list<int> li;
   li.reverse();
   EXPECT_STRING_EQ(li, []);
+  li.reverse();
+  EXPECT_STRING_EQ(li, []);
   
   li = {1};
+  li.reverse();
+  EXPECT_STRING_EQ(li, [1]);
   li.reverse();
   EXPECT_STRING_EQ(li, [1]);
   
   li = {1, 2};
   li.reverse();
   EXPECT_STRING_EQ(li, [2, 1]);
+  li.reverse();
+  EXPECT_STRING_EQ(li, [1, 2]);
 
   li = {1, 2, 3};
   li.reverse();
   EXPECT_STRING_EQ(li, [3, 2, 1]);
+  li.reverse();
+  EXPECT_STRING_EQ(li, [1, 2, 3]);
 }
 
 TEST(list, sort) {

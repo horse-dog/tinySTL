@@ -36,10 +36,24 @@ struct _Slist_node_head : public _Slist_node_base
  
  ~_Slist_node_head() { _M_next = 0; }
 
-  _Slist_node_head(const _Slist_node_head&) = default;
+  _Slist_node_head(const _Slist_node_head&) = delete;
 
-  // TODO: default ok ? .
-  _Slist_node_head(_Slist_node_head&&) = default;
+  _Slist_node_head(_Slist_node_head&& __x)
+    {
+      _M_next = __x._M_next;
+      __x._M_next = 0;
+    }
+
+  _Slist_node_head& operator=(const _Slist_node_head&) = delete;
+  
+  _Slist_node_head& operator=(_Slist_node_head&& __x)
+    {
+      if (this != &__x) {
+        _M_next = __x._M_next;
+        __x._M_next = 0;
+      }
+      return *this;
+    }
 };
 
 template <class _Tp>
@@ -283,13 +297,13 @@ class forward_list
     { return const_iterator(_M_head._M_next); }
 
   iterator before_begin()
-    { return iterator(this); }
+    { return iterator((_Slist_node_base*)this); }
 
   const_iterator before_begin() const
-    { return const_iterator(this); }
+    { return const_iterator((_Slist_node_base*)this); }
 
   const_iterator cbefore_begin() const
-    { return const_iterator(this); }
+    { return const_iterator((_Slist_node_base*)this); }
 
   iterator end()
     { return iterator(); }
@@ -493,7 +507,7 @@ class forward_list
 
     while (__cur->_M_next) {
       if (__pred(__SLIST_UNWRAP__(__cur))) {
-        erase_after(__cur);
+        erase_after(iterator(__cur));
         ++__cnt;
       } else {
         __cur = __cur->_M_next;
@@ -513,9 +527,9 @@ class forward_list
       __cur = __cur->_M_next;
     }
     if (__cur->_M_next)
-      erase_after(__cur, end()); 
+      erase_after(iterator(__cur), end()); 
     else
-      insert_after(__cur, __sz, __val);
+      insert_after(iterator(__cur), __sz, __val);
   }
 
   void reverse()
