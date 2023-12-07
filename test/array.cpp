@@ -8,8 +8,8 @@
 using namespace tinySTL;
 
 TEST(array, constructor) {
-  std::array<int, 3> arr1 = {1, 2, 3};
-  std::array<int, 3> arr2;
+  array<int, 3> arr1 = {1, 2, 3};
+  array<int, 3> arr2;
   EXPECT_STRING_EQ(arr1, [1, 2, 3]);
   arr2 = arr1;
   arr1[0] = 11;
