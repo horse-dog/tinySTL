@@ -70,7 +70,7 @@ TEST(array, max_size) {
 }
 
 TEST(array, empty) {
-  array<int, 0> arr1 = {};
+  array<int, 0> arr1;
   array<int, 3> arr2 = {1, 2, 3};
   EXPECT_TRUE(arr1.empty());
   EXPECT_FALSE(arr2.empty());
