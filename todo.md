@@ -6,9 +6,11 @@
 
 [X] vector.
 
-[ ] list.
+[X] array.
 
-[ ] forward_list.
+[X] list.
+
+[X] forward_list.
 
 [ ] deque.
 
