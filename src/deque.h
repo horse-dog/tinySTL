@@ -37,6 +37,7 @@ class deque {
     static constexpr inline size_t 
     __deque_buf_size(size_t __size)
     {
+      // TODO: replace by _S_deque_buffer_size ? .
       return __size < 512 ? (512 / __size) : 1;
     }
 
