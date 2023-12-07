@@ -11,6 +11,21 @@ namespace tinySTL
 
 struct _Slist_node_base {
   _Slist_node_base* _M_next = 0;
+
+  // TODO: Read.
+  _Slist_node_base* _M_transfer_after(
+                     _Slist_node_base*__begin,
+                     _Slist_node_base*__end) noexcept 
+  {
+    _Slist_node_base* __keep = __begin->_M_next;
+    if (__end) {
+      __begin->_M_next = __end->_M_next;
+      __end->_M_next = this->_M_next;
+    } else
+      __begin->_M_next = nullptr;
+    _M_next = __keep;
+    return __end;
+  }
 };
 
 struct _Slist_node_head : public _Slist_node_base
@@ -317,9 +332,9 @@ class forward_list
     { return emplace_after(__pos, std::move(__val)); }
 
   iterator insert_after(const_iterator __pos, const _Tp& __val)
-    { return emplace(__pos, __val); }
+    { return emplace_after(__pos, __val); }
 
-  iterator insert_after(const_iterator __pos, std::initializer_list<_Tp> __il)
+  iterator insert_after(const_iterator __pos, std::initializer_list<_Tp> __l)
     { return insert_after(__pos, __l.begin(), __l.end()); }
 
   iterator insert_after(const_iterator __pos, size_type __n, const _Tp& __val)
@@ -430,7 +445,7 @@ class forward_list
     while (__first1 != __last1 && __first2 != __last2) {
       if (__comp(*__first2, *__first1)) {
         iterator __old = __first2;
-        _M_transfer(__pre1, __pre2, ++__first2);
+        _M_splice_after(__pre1, __pre2, ++__first2);
         __pre1 = __old;
       } else {
         ++__pre1;
@@ -438,46 +453,194 @@ class forward_list
       }
     }
     if (__first2 != __last2)
-      _M_transfer(__pre1, __pre2, __last2);
+      _M_splice_after(__pre1, __pre2, __last2);
   }
 
-  size_type remove(const _Tp& __val);
+  size_type remove(const _Tp& __value) {
+    size_type __cnt = 0;
+    iterator __extra_before = end();
+    iterator __before = before_begin();
+    for (auto __cur = begin(); __cur != end();) {
+      if (*__cur == __value) {
+        if (tinySTL::addressof(*__cur) 
+         != tinySTL::addressof(__value)) {
+          __cur = erase_after(__before);
+          ++__cnt;
+        } else {
+          __extra_before = __before;
+          ++__before;
+          ++__cur;
+        }
+      } else {
+        ++__before;
+        ++__cur;
+      }
+    }
+    if (__extra_before != end()) {
+      erase_after(__extra_before);
+      ++__cnt;
+    }
+    return __cnt;
+  }
 
   template <class _Pred>
-  size_type remove_if(_Pred __pred);
+  size_type remove_if(_Pred __pred) {
+    size_type __cnt = 0;
+    _Slist_node_base* __cur = (_Slist_node_base*) this;
 
-  void resize(size_type __sz);
+#define __SLIST_GETVALUE(x) \
+    *((_Node*) x->_M_next)->_M_storage.ptr()
 
-  void resize(size_type __sz, const _Tp& __val);
+    while (__cur->_M_next) {
+      if (__pred(__SLIST_GETVALUE(__cur))) {
+        erase_after(__cur);
+        ++__cnt;
+      } else {
+        __cur = __cur->_M_next;
+      }
+    }
+#undef __SLIST_GETVALUE
+    return __cnt;
+  }
 
-  void reverse();
+  void resize(size_type __sz) { resize(__sz, _Tp()); }
 
-  void sort();
+  void resize(size_type __sz, const _Tp& __val)
+  {
+    _Slist_node_base* __cur = (_Slist_node_base*) this;
+    while (__cur->_M_next != 0 && __sz > 0) {
+      --__sz;
+      __cur = __cur->_M_next;
+    }
+    if (__cur->_M_next)
+      erase_after(__cur, end()); 
+    else
+      insert_after(__cur, __sz, __val);
+  }
+
+  void reverse()
+  {
+    if (this->empty()) return;
+    _Slist_node_base* __node = _M_head._M_next;
+    _Slist_node_base* __result = __node;
+    __node = __node->_M_next;
+    __result->_M_next = 0;
+    while (__node) {
+      _Slist_node_base* __next = __node->_M_next;
+      __node->_M_next = __result;
+      __result = __node;
+      __node = __next;
+    }
+    _M_head._M_next = __result;
+  }
+
+  void sort() { sort(less()); }
 
   template <class _Comp>
-  void sort(_Comp __comp);
+  void sort(_Comp __comp)
+  {
+    if (_M_head._M_next == 0 || _M_head._M_next->_M_next == 0)
+      return;
+    
+    forward_list __carry;
+    forward_list __counter[64];
+    int __fill = 0;
+    while (!empty()) {
+      __carry.splice_after(__carry.before_begin(),
+                           *this, this->before_begin());
+      int __i = 0;
+      while (__i < __fill && !__counter[__i].empty()) {
+        __counter[__i].merge(__carry, __comp);
+        __carry.swap(__counter[__i]);
+        ++__i;
+      }
+      __carry.swap(__counter[__i]);
+      if (__i == __fill)
+        ++__fill;
+    }
 
-  size_type unique();
+    for (int __i = 1; __i < __fill; ++__i)
+      __counter[__i].merge(__counter[__i - 1], __comp);
+    this->swap(__counter[__fill - 1]);
+  }
+
+  size_type unique() { return unique(equal()); }
 
   template <class _BinPred>
-  size_type unique(_BinPred __binary_pred);
+  size_type unique(_BinPred __binary_pred)
+  {
+    size_type __cnt = 0;
+    for (iterator pre = begin(), p = ++begin(); p != end();)
+      if (__binary_pred(*pre, *p)) {
+        p = erase_after(pre);
+        ++__cnt;
+      } else
+        pre = p++;
+    return __cnt;
+  }
 
-  void splice_after(const_iterator __pos, forward_list&& __list);
+  void splice_after(const_iterator __pos, forward_list&& __list)
+    { splice_after(__pos, __list); }
 
-  void splice_after(const_iterator __pos, forward_list& __list);
+  void splice_after(const_iterator __pos, forward_list& __list)
+    {
+      if (__list.empty()) return;
+      _M_splice_after(__pos.base(), __list.before_begin(), __list.end());
+    }
 
   void splice_after(const_iterator __pos, forward_list&& __list,
-                    const_iterator __i);
+                    const_iterator __i)
+    { splice_after(__pos, __list, __i); }
 
   void splice_after(const_iterator __pos, forward_list& __list,
-                    const_iterator __i);
+                    const_iterator __i)
+    {
+      _Slist_node_base* __before_splice = __pos.base()._M_node; 
+      _Slist_node_base* __before_first  = __i.base()._M_node;
+      _Slist_node_base* __before_last   = __before_first->_M_next;
+      if (__before_splice == __before_first 
+       || __before_splice == __before_last) return;
+      __before_splice->_M_transfer_after(__before_first, __before_last);
+    }
 
   void splice_after(const_iterator __pos, forward_list&& __list,
-                    const_iterator __before, const_iterator __last);
+                    const_iterator __before, const_iterator __last)
+    { splice_after(__pos, __list, __before, __last); }
 
   void splice_after(const_iterator __pos, forward_list& __list,
-                    const_iterator __before, const_iterator __last);
+                    const_iterator __before, const_iterator __last)
+    { _M_splice_after(__pos.base(), __before.base(), __last.base()); }
 
+ protected:
+  void _M_splice_after(iterator __pos, iterator __before,
+                       iterator __last)
+    {
+      _Slist_node_base* __before_splice = __pos._M_node;
+      _Slist_node_base* __before_first  = __before._M_node;
+      _Slist_node_base* __before_last   = __before_first;
+      _Slist_node_base* __last_ptr      = __last._M_node;
+
+      while (__before_last && __before_last->_M_next != __last_ptr)
+        __before_last = __before_last->_M_next;
+
+      if (__before_last == 0)
+        __tiny_throw_range_error("forward_list");
+
+      if (__before_last != __before_first)
+        __before_splice->_M_transfer_after(__before_first, __before_last);
+    }
+
+  template <class _Iterator>
+  void _M_iter_construct(_Iterator __first, _Iterator __last) {
+    _Slist_node_base* __head = (_Slist_node_base*) this;
+    _Slist_node_base* __before = __head;
+    for (auto it = __first; it != __last; ++it) {
+      _Node* __node = _M_create_node(*it);
+      __before->_M_next = __node;
+      __before = __node;
+    }
+    __before->_M_next = 0;
+  }
 };
 
 }
