@@ -488,18 +488,18 @@ class forward_list
     size_type __cnt = 0;
     _Slist_node_base* __cur = (_Slist_node_base*) this;
 
-#define __SLIST_GETVALUE(x) \
+#define __SLIST_UNWRAP__(x) \
     *((_Node*) x->_M_next)->_M_storage.ptr()
 
     while (__cur->_M_next) {
-      if (__pred(__SLIST_GETVALUE(__cur))) {
+      if (__pred(__SLIST_UNWRAP__(__cur))) {
         erase_after(__cur);
         ++__cnt;
       } else {
         __cur = __cur->_M_next;
       }
     }
-#undef __SLIST_GETVALUE
+#undef __SLIST_UNWRAP__
     return __cnt;
   }
 
