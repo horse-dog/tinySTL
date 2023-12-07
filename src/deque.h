@@ -37,7 +37,7 @@ class deque {
     static constexpr inline size_t 
     __deque_buf_size(size_t __size)
     {
-      return __size < 512 ? (512/__size) : 1;
+      return __size < 512 ? (512 / __size) : 1;
     }
 
     constexpr void _M_set_node(Map_ptr __new_node) 
@@ -111,10 +111,211 @@ class deque {
     operator-=(difference_type __n) 
       { return *this += -__n; }
 
-    // constexpr reference 
-    // operator[](difference_type __n) const
-    //   { return *(*this + __n); }
+    constexpr _Deque_iterator
+    operator+(difference_type __n) const {
+      _Deque_iterator __tmp = *this;
+      __tmp += __n;
+      return __tmp;
+    }
+
+    constexpr _Deque_iterator
+    operator-(difference_type __n) const {
+      _Deque_iterator __tmp = *this;
+      __tmp -= __n;
+      return __tmp;
+    }
+
+    constexpr reference 
+    operator[](difference_type __n) const
+    { return *(*this + __n); }
+
+    // TODO: what ? .
+    constexpr difference_type
+    operator-(const _Deque_iterator& __right) const {
+      return difference_type(_S_buffer_size()) 
+           * (_M_node - __right._M_node - int(_M_node != 0))
+           + (_M_cur - _M_first) 
+           + (__right._M_last - __right._M_cur);
+    }
+
+    friend constexpr bool
+    operator==(const _Deque_iterator& __x,
+               const _Deque_iterator& __y)
+      {
+        return __x._M_cur == __y._M_cur;
+      }
+
+    friend constexpr bool
+    operator!=(const _Deque_iterator& __x,
+               const _Deque_iterator& __y)
+      {
+        return !(__x == __y);
+      }
+
+    friend constexpr _Deque_iterator 
+    operator+(difference_type __n,
+       const _Deque_iterator& __x)
+      {
+        return __x + __n;
+      }
   };
+
+ public:
+  typedef _Tp value_type;
+  typedef value_type* pointer;
+  typedef const value_type* const_pointer;
+  typedef _Deque_iterator iterator;
+  typedef tinySTL::const_iterator<iterator> const_iterator;
+  typedef value_type& reference;
+  typedef const value_type& const_reference;
+  typedef size_t size_type;
+  typedef ptrdiff_t difference_type;
+  typedef _Alloc allocator_type;
+  typedef tinySTL::reverse_iterator<const_iterator> const_reverse_iterator;
+  typedef tinySTL::reverse_iterator<iterator> reverse_iterator;
+  
+ protected:
+  typedef pointer* map_pointer;
+  typedef simple_alloc<pointer, _Alloc> _M_map_allocator;
+
+  // TODO: need or not? .
+  const static size_type _S_initial_map_size = 8;
+  const static size_type _S_deque_buffer_size = 512;
+
+  map_pointer    _M_map;
+  size_type _M_map_size;
+  iterator     _M_start;
+  iterator     _M_fnish;
+
+ public:
+  explicit deque(const allocator_type& __a = allocator_type());
+
+  explicit deque(size_type __n);
+
+  deque(size_type __n, const _Tp& __value,
+        const allocator_type& __a = allocator_type());
+
+
+  deque(const deque& __x);
+
+  deque(deque&& __x);
+
+  deque(std::initializer_list<_Tp> __l, 
+        const allocator_type& __a = allocator_type());
+
+  template <InputIterator Iterator>
+  deque(Iterator __first, Iterator __last,
+       const allocator_type& __a = allocator_type());
+
+  ~deque();
+
+  deque& operator=(std::initializer_list<_Tp> __l);
+
+  deque& operator=(const deque& __x);
+
+  deque& operator=(deque&& __x);
+
+  void assign(std::initializer_list<_Tp> __l);
+
+  void assign(size_type __n, const _Tp& __val);
+
+  template <InputIterator Iterator>
+  void assign(Iterator __first, Iterator __last);
+
+ public:
+  allocator_type get_allocator() const { return allocator_type(); }
+
+  iterator begin();
+
+  const_iterator begin() const;
+
+  const_iterator cbegin() const;
+
+  iterator end();
+
+  const_iterator end() const;
+
+  const_iterator cend() const;
+
+  reverse_iterator rbegin();
+
+  const_reverse_iterator rbegin() const;
+
+  const_reverse_iterator crbegin() const;
+
+  reverse_iterator rend();
+
+  const_reverse_iterator rend() const;
+
+  const_reverse_iterator crend() const;
+
+  bool empty();
+
+  reference at(size_type __n);
+
+  const_reference at(size_type __n) const;
+
+  reference operator[](size_type __n);
+
+  const_reference operator[](size_type __n) const;
+
+  size_type size();
+
+  size_type max_size();
+
+  reference front();
+
+  const_reference front() const;
+
+  reference back();
+
+  const_reference back() const;
+
+  void swap(deque<_Tp, _Alloc>& __x);
+
+  iterator insert(const_iterator __position, _Tp&& __x);
+
+  iterator insert(const_iterator __position, const _Tp& __x);
+
+  iterator insert(const_iterator __position, std::initializer_list<_Tp> __l);
+
+  iterator insert(const_iterator __position, size_type __n, const _Tp& __x);
+
+  template <InputIterator Iterator>
+  iterator insert(const_iterator __position, Iterator __first, Iterator __last);
+
+  iterator erase(const_iterator __position);
+
+  iterator erase(const_iterator __first, const_iterator __last);
+
+  void push_front(_Tp&& __x);
+
+  void push_front(const _Tp& __x);
+
+  void push_back(_Tp&& __x);
+
+  void push_back(const _Tp& __x);
+
+  void clear();
+
+  void resize(size_type __new_size, const _Tp& __x);
+
+  void resize(size_type __new_size);
+
+  void pop_front();
+
+  void pop_back();
+
+  template <class... _Args>
+  iterator emplace(const_iterator __pos, _Args &&...__args);
+
+  template <class... _Args>
+  reference emplace_back(_Args&&... __args);
+
+  template <class... _Args>
+  reference emplace_front(_Args&&... __args);
+
+  void shrink_to_fit();
 
 };
 
