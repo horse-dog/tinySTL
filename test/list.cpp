@@ -222,3 +222,182 @@ TEST(list, erase) {
     EXPECT_STRING_EQ(li, [1]);
   }
 }
+
+TEST(list, front) {
+  list<int> li;
+  EXPECT_THROW(li.front(), std::range_error);
+  li = {1, 2, 3};
+  EXPECT_EQ(li.front(), 1);
+  li.front() = 11;
+  EXPECT_EQ(li.front(), 11);
+}
+
+TEST(list, get_allocator) {
+  list<int> li;
+  li.get_allocator();
+}
+
+TEST(list, insert) {
+  /**
+   * @test  iterator insert(const_iterator pos, initializer_list l)
+   * @brief insert an initializer_list.
+   */
+  SUBTEST(insert) {
+    list<int> li = {1, 2, 3};
+    li.insert(++li.begin(), {11, 22});
+    EXPECT_STRING_EQ(li, [1, 11, 22, 2, 3]);
+    EXPECT_EQ(li.size(), 5);
+  }
+
+  /**
+   * @test  iterator insert(const_iterator pos, T&& x)
+   * @brief insert an rvalue.
+   */
+  SUBTEST(insert) {
+    list<int> li = {1, 2, 3};
+    li.insert(li.begin(), 11);
+    EXPECT_STRING_EQ(li, [11, 1, 2, 3]);
+    EXPECT_EQ(li.size(), 4);
+  }
+
+  /**
+   * @test  iterator insert(const_iterator pos, const T& x)
+   * @brief insert an lvalue reference.
+   */
+  SUBTEST(insert) {
+    list<int> li = {1, 2, 3};
+    int x = 11;
+    li.insert(li.begin(), x);
+    EXPECT_STRING_EQ(li, [11, 1, 2, 3]);
+    EXPECT_EQ(li.size(), 4);
+  }
+
+  /**
+   * @test  iterator insert(const_iterator pos, size_type n, const T& x)
+   * @brief insert an lvalue reference n times.
+   */
+  SUBTEST(insert) {
+    list<int> li = {1, 2};
+    li.insert(li.begin(), 3, 11);
+    EXPECT_STRING_EQ(li, [11, 11, 11, 1, 2]);
+    EXPECT_EQ(li.size(), 5);
+  }
+
+  /**
+   * @test  iterator insert(const_iterator pos, Iterator first, Iterator last)
+   * @brief range insert.
+   */
+  SUBTEST(insert) {
+    std::vector<double> vc = {11, 22, 33};
+    list<int> li = {1, 2, 3, 4};
+    li.insert(li.begin(), vc.begin(), vc.end());
+    EXPECT_STRING_EQ(li, [11, 22, 33, 1, 2, 3, 4]);
+    EXPECT_EQ(li.size(), 7);
+  }
+}
+
+TEST(list, max_size) {
+  list<int> li;
+  EXPECT_GT(li.max_size(), 0xffff);
+}
+
+TEST(list, pop_back) {
+  list<int> li;
+  li.pop_back();
+  EXPECT_STRING_EQ(li, []);
+  EXPECT_EQ(li.size(), 0);
+  li = {1, 2, 3};
+  li.pop_back();
+  EXPECT_STRING_EQ(li, [1, 2]);
+  EXPECT_EQ(li.size(), 2);
+}
+
+TEST(list, push_back) {
+  /**
+   * @test  void push_back(T&& x)
+   * @brief push_back an rvalue.
+   */
+  SUBTEST(push_back) {
+    list<int> li;
+    li.push_back(1);
+    EXPECT_STRING_EQ(li, [1]);
+    EXPECT_EQ(li.size(), 1);
+    li.push_back(2);
+    li.push_back(3);
+    EXPECT_STRING_EQ(li, [1, 2, 3]);
+    EXPECT_EQ(li.size(), 3);
+  }
+
+  /**
+   * @test  void push_back(const T& x)
+   * @brief push_back an lvalue reference.
+   */
+  SUBTEST(push_back) {
+    list<int> li;
+    int arr[3] = {1, 2, 3};
+    li.push_back(arr[0]);
+    EXPECT_STRING_EQ(li, [1]);
+    EXPECT_EQ(li.size(), 1);
+    li.push_back(arr[1]);
+    li.push_back(arr[2]);
+    EXPECT_STRING_EQ(li, [1, 2, 3]);
+    EXPECT_EQ(li.size(), 3);
+  }
+}
+
+TEST(list, rbegin) {
+  list<int> li = {1, 2, 3};
+  EXPECT_EQ(*li.rbegin(), 3);
+  *li.rbegin() = 4;
+  EXPECT_EQ(*li.rbegin(), 4);
+}
+
+TEST(list, rend) {
+  list<int> li = {1, 2, 3};
+  EXPECT_EQ(*--li.rend(), 1);
+  *--li.rend() = 11;
+  EXPECT_EQ(*--li.rend(), 11);
+}
+
+TEST(list, resize) {
+  /**
+   * @test  void resize(size_type new_size)
+   * @brief resize the vector.
+   */
+  SUBTEST(resize) {
+    list<int> li = {1, 2, 3};
+    li.resize(5);
+    EXPECT_STRING_EQ(li, [1, 2, 3, 0, 0]);
+    EXPECT_EQ(li.size(), 5);
+    li.resize(2);
+    EXPECT_STRING_EQ(li, [1, 2]);
+    EXPECT_EQ(li.size(), 2);
+  }
+
+  /**
+   * @test  void resize(size_type new_size, const T& x)
+   * @brief resize the vector.
+   */
+  SUBTEST(resize) {
+    list<int> li = {1, 2, 3};
+    li.resize(5, 10);
+    EXPECT_STRING_EQ(li, [1, 2, 3, 10, 10]);
+    EXPECT_EQ(li.size(), 5);
+    li.resize(2, 20);
+    EXPECT_STRING_EQ(li, [1, 2]);
+    EXPECT_EQ(li.size(), 2);
+  }
+}
+
+TEST(list, size) {
+  list<int> li = {1, 2, 3};
+  EXPECT_EQ(li.size(), 3);
+}
+
+TEST(list, swap) {
+  list<int> li0 = {1, 2, 3};
+  list<int> li1 = {11, 22, 33, 44};
+  li0.swap(li1);
+  EXPECT_STRING_EQ(li0, [11, 22, 33, 44]);
+  EXPECT_STRING_EQ(li1, [1, 2, 3]);
+}

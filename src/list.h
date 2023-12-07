@@ -455,8 +455,11 @@ class list
 
   void pop_back() 
     { 
-      iterator __tmp = end();
-      erase(--__tmp);
+      if (!empty())
+      {
+        iterator __tmp = end();
+        erase(--__tmp);
+      }
     }
 
   // TODO: add comment of splices.
