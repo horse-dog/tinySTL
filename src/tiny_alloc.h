@@ -201,7 +201,8 @@ class __default_alloc_template {
     }
     if (_S_malloc_ptr_size == _S_malloc_ptr_cap) {
       size_t __newlen = _S_malloc_ptr_cap == 0 ? 32 : _S_malloc_ptr_cap * 2;
-      void*  __newbuf = malloc_alloc::reallocate(_S_malloc_ptr, 0, __newlen * sizeof(void*));
+      void*  __newbuf = malloc_alloc::
+      reallocate(_S_malloc_ptr, 0, __newlen * sizeof(void*));
       _S_malloc_ptr = (void**)__newbuf;
       _S_malloc_ptr_cap = __newlen;
     }
