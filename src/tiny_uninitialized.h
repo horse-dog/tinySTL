@@ -157,6 +157,30 @@ __uninitialized_fill_aux(_ForwardIter __first, _ForwardIter __last,
   }
 }
 
+template <class _ForwardIter, class _Size>
+inline _ForwardIter
+__uninitialized_default_n_aux(_ForwardIter __first, _Size __n, true_type)
+{
+  // TODO: error.
+  return tinySTL::fill_n(__first, __n);
+}
+
+template <class _ForwardIter, class _Size>
+_ForwardIter
+__uninitialized_default_n_aux(_ForwardIter __first, _Size __n, false_type)
+{
+  _ForwardIter __cur = __first;
+  try {
+    for ( ; __n > 0; --__n, ++__cur)
+      tinySTL::_Construct(&*__cur);
+    return __cur;
+  }
+  catch (...) {
+    tinySTL::_Destroy(__first, __cur);
+    throw;
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 // dispatcher.
@@ -205,6 +229,21 @@ inline void __uninitialized_fill(_ForwardIter __first,
                    
 }
 
+template <class _ForwardIter, class _Size, class _Tp>
+inline _ForwardIter 
+__uninitialized_default_n(_ForwardIter __first, _Size __n, _Tp*)
+{
+  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
+  return tinySTL::__uninitialized_default_n_aux(__first, __n, _Is_POD());
+}
+
+template <class _ForwardIter, class _Tp>
+inline void __uninitialized_default(_ForwardIter __first, _ForwardIter __last, _Tp*)
+{
+  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
+  tinySTL::__uninitialized_default_aux(__first, __last, _Is_POD());
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 // basic interface.
@@ -249,6 +288,19 @@ inline void uninitialized_fill(_ForwardIter __first,
                                const _Tp& __x)
 {
   tinySTL::__uninitialized_fill(__first, __last, __x, value_type(__first));
+}
+
+template <class _ForwardIter, class _Size>
+inline _ForwardIter 
+uninitialized_default_n(_ForwardIter __first, _Size __n)
+{
+  return tinySTL::__uninitialized_default_n(__first, __n, value_type(__first));
+}
+
+template <class _ForwardIter>
+inline void uninitialized_default(_ForwardIter __first, _ForwardIter __last)
+{
+  tinySTL::__uninitialized_default(__first, __last, value_type(__first));
 }
 
 
