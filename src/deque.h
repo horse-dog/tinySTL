@@ -180,6 +180,9 @@ class _Deque_base {
   typedef simple_alloc<pointer, _Alloc> _Map_alloc_type;
   typedef simple_alloc<value_type, _Alloc> _Node_alloc_type;
 
+  const static size_type _S_initial_map_size = 8;
+  const static size_type _S_deque_buffer_size = 512;
+
  public:
   _Deque_base() 
   : _M_map(), _M_map_size(0), _M_start(), _M_finish()
@@ -189,20 +192,84 @@ class _Deque_base {
   : _M_map(), _M_map_size(0), _M_start(), _M_finish()
   { _M_initialize_map(__num_elements); }
 
-  _Deque_base(const allocator_type& __a, size_t __num_elements)
+  _Deque_base(const allocator_type&, size_t __num_elements)
   : _M_map(), _M_map_size(0), _M_start(), _M_finish()
   { _M_initialize_map(__num_elements); }
 
-  _Deque_base(const allocator_type& __a)
+  _Deque_base(const allocator_type&)
   : _M_map(), _M_map_size(0), _M_start(), _M_finish()
   { /* Caller must initialize map. */ }
+
+ ~_Deque_base()
+  {
+    if (_M_map != 0) {
+      _M_destroy_nodes(_M_start._M_node, _M_finish._M_node + 1);
+      _M_deallocate_map(_M_map, _M_map_size);
+    }
+  }
 
   allocator_type
   get_allocator() const noexcept
   { return allocator_type(); }
 
  protected:
-  void _M_initialize_map(size_t __num_elements);
+  _Tp** _M_allocate_map(size_t __n) 
+    { return _Map_alloc_type::allocate(__n); }
+
+  void _M_deallocate_map(_Tp** __p, size_t __n) 
+    { _Map_alloc_type::deallocate(__p, __n); }
+
+  _Tp* _M_allocate_node()
+    { 
+      return _Node_alloc_type::allocate(
+        iterator::__deque_buf_size(sizeof(_Tp)));
+    }
+
+  void _M_deallocate_node(_Tp* __p)
+    { 
+      _Node_alloc_type::deallocate(__p, 
+      iterator::__deque_buf_size(sizeof(_Tp))); 
+    }
+
+  void _M_create_nodes(_Tp** __nstart, _Tp** __nfinish) {
+    _Tp** __cur;
+    try {
+      for (__cur = __nstart; __cur < __nfinish; ++__cur)
+        *__cur = _M_allocate_node();
+    } catch (...) {
+      _M_destroy_nodes(__nstart, __cur);
+      throw;
+    }
+  }
+
+  void _M_destroy_nodes(_Tp** __nstart, _Tp** __nfinish)
+    {
+      for (_Tp** __n = __nstart; __n < __nfinish; ++__n)
+        _M_deallocate_node(*__n);
+    }
+
+  void _M_initialize_map(size_t __num_elements) {
+    size_t __num_nodes = 
+      __num_elements / iterator::__deque_buf_size(sizeof(_Tp)) + 1;
+    _M_map_size = tinySTL::max(_S_initial_map_size, __num_nodes + 2);
+    _M_map = _M_allocate_map(_M_map_size);
+    _Tp** __nstart = _M_map + (_M_map_size - __num_nodes) / 2;
+    _Tp** __nfinish = __nstart + __num_nodes;
+
+    try {
+      _M_create_nodes(__nstart, __nfinish);
+    } catch (...) {
+      _M_deallocate_map(_M_map, _M_map_size);
+      _M_map = 0;
+      _M_map_size = 0;
+      throw;
+    }
+    _M_start._M_set_node(__nstart);
+    _M_finish._M_set_node(__nfinish - 1);
+    _M_start._M_cur = _M_start._M_first;
+    _M_finish._M_cur = _M_finish._M_first + __num_elements 
+                     % iterator::__deque_buf_size(sizeof(_Tp));
+  }
 
  protected:
   map_pointer    _M_map;
@@ -211,11 +278,15 @@ class _Deque_base {
   iterator    _M_finish;
 };
 
-template <class _Tp, class _Alloc> 
+template <class _Tp, class _Alloc = alloc> 
 class deque : public _Deque_base<_Tp, _Alloc> {
 
- private:
-  typedef _Deque_base<_Tp, _Alloc> _Base;
+ protected:
+  using _Base = _Deque_base<_Tp, _Alloc>;
+  using _Base::_M_map;
+  using _Base::_M_map_size;
+  using _Base::_M_start;
+  using _Base::_M_finish;
 
  public:
   typedef _Base::value_type value_type;
@@ -231,22 +302,21 @@ class deque : public _Deque_base<_Tp, _Alloc> {
   typedef _Base::const_reverse_iterator const_reverse_iterator;
   typedef _Base::const_reverse_iterator reverse_iterator;
 
- protected:
-  // TODO: need or not? .
-  const static size_type _S_initial_map_size = 8;
-  const static size_type _S_deque_buffer_size = 512;
-
-
  public:
-  explicit deque(const allocator_type& __a = allocator_type());
+  explicit deque(const allocator_type& __a = allocator_type())
+    : _Base(__a, 0) {}
 
-  explicit deque(size_type __n);
+  explicit deque(size_type __n) : _Base(allocator_type(), __n)
+    { tinySTL::uninitialized_default(begin(), end()); }
 
   deque(size_type __n, const _Tp& __value,
-        const allocator_type& __a = allocator_type());
+        const allocator_type& __a = allocator_type())
+    : _Base(__a, __n)
+    { tinySTL::uninitialized_fill(begin(), end(), __value); }
 
-
-  deque(const deque& __x);
+  deque(const deque& __x) 
+    : _Base(__x.get_allocator(), __x.size()) 
+    { tinySTL::uninitialized_copy(__x.begin(), __x.end(), _M_start); }
 
   deque(deque&& __x);
 
@@ -257,7 +327,7 @@ class deque : public _Deque_base<_Tp, _Alloc> {
   deque(Iterator __first, Iterator __last,
        const allocator_type& __a = allocator_type());
 
-  ~deque();
+  ~deque() { tinySTL::destroy(_M_start, _M_finish); }
 
   deque& operator=(std::initializer_list<_Tp> __l);
 
@@ -275,17 +345,17 @@ class deque : public _Deque_base<_Tp, _Alloc> {
  public:
   allocator_type get_allocator() const { return allocator_type(); }
 
-  iterator begin();
+  iterator begin() { return _M_start; }
 
-  const_iterator begin() const;
+  const_iterator begin() const { return _M_start; }
 
-  const_iterator cbegin() const;
+  const_iterator cbegin() const { return _M_start; }
 
-  iterator end();
+  iterator end() { return _M_finish; }
 
-  const_iterator end() const;
+  const_iterator end() const { return _M_finish; }
 
-  const_iterator cend() const;
+  const_iterator cend() const { return _M_finish; }
 
   reverse_iterator rbegin();
 

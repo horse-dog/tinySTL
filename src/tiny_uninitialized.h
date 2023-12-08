@@ -130,17 +130,17 @@ uninitialized_move(_ForwardIter1 __first, _ForwardIter1 __last,
 // uninitialized_default.
 ////////////////////////////////////////////////////////////////////////////
 
-template <class _ForwardIter, class _Tp>
+template <class _ForwardIter>
 inline void
 __uninitialized_default_aux(_ForwardIter __first, _ForwardIter __last, 
-                         const _Tp& __x, true_type)
+                            true_type)
 {
   // do nothing when _Tp is POD type.
 }
 
-template <class _ForwardIter, class _Tp> void
+template <class _ForwardIter> void
 __uninitialized_default_aux(_ForwardIter __first, _ForwardIter __last, 
-                         const _Tp& __x, false_type)
+                            false_type)
 {
   _ForwardIter __cur = __first;
   try {
