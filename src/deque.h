@@ -13,16 +13,9 @@ namespace tinySTL
 template <class _Tp, class _Alloc>
 class _Deque_base {
  
- public:
-
-};
-
-template <class _Tp, class _Alloc> 
-class deque {
-
  protected:
   class _Deque_iterator {
-   friend class deque;
+   friend class _Deque_base;
    public:
     using iterator_category = tinySTL::random_access_iterator_tag;
     using value_type = _Tp;
@@ -31,12 +24,12 @@ class deque {
     using reference = _Tp&;
 
    protected:
-    using Map_ptr = _Tp**;
+    using _Map_pointer = _Tp**;
 
-    pointer   _M_cur;
-    pointer _M_first;
-    pointer  _M_last;
-    Map_ptr  _M_node;
+    pointer       _M_cur;
+    pointer     _M_first;
+    pointer      _M_last;
+    _Map_pointer _M_node;
 
     static constexpr size_t _S_buffer_size()
     { return __deque_buf_size(sizeof(value_type)); }
@@ -48,14 +41,14 @@ class deque {
       return __size < 512 ? (512 / __size) : 1;
     }
 
-    constexpr void _M_set_node(Map_ptr __new_node) 
+    constexpr void _M_set_node(_Map_pointer __new_node) 
     {
       _M_node  =  __new_node;
       _M_first = *__new_node;
       _M_last  = _M_first + _S_buffer_size();
     }
 
-    constexpr _Deque_iterator(pointer __x, Map_ptr __y)
+    constexpr _Deque_iterator(pointer __x, _Map_pointer __y)
     : _M_cur(__x), _M_first(*__y),
       _M_last(*__y + _S_buffer_size()),
       _M_node(__y) {}
@@ -181,20 +174,68 @@ class deque {
   typedef _Alloc allocator_type;
   typedef tinySTL::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef tinySTL::reverse_iterator<iterator> reverse_iterator;
-  
+
  protected:
   typedef pointer* map_pointer;
   typedef simple_alloc<pointer, _Alloc> _Map_alloc_type;
   typedef simple_alloc<value_type, _Alloc> _Node_alloc_type;
 
+ public:
+  _Deque_base() 
+  : _M_map(), _M_map_size(0), _M_start(), _M_finish()
+  { _M_initialize_map(0); }
+
+  _Deque_base(size_t __num_elements)
+  : _M_map(), _M_map_size(0), _M_start(), _M_finish()
+  { _M_initialize_map(__num_elements); }
+
+  _Deque_base(const allocator_type& __a, size_t __num_elements)
+  : _M_map(), _M_map_size(0), _M_start(), _M_finish()
+  { _M_initialize_map(__num_elements); }
+
+  _Deque_base(const allocator_type& __a)
+  : _M_map(), _M_map_size(0), _M_start(), _M_finish()
+  { /* Caller must initialize map. */ }
+
+  allocator_type
+  get_allocator() const noexcept
+  { return allocator_type(); }
+
+ protected:
+  void _M_initialize_map(size_t __num_elements);
+
+ protected:
+  map_pointer    _M_map;
+  size_type _M_map_size;
+  iterator     _M_start;
+  iterator    _M_finish;
+};
+
+template <class _Tp, class _Alloc> 
+class deque : public _Deque_base<_Tp, _Alloc> {
+
+ private:
+  typedef _Deque_base<_Tp, _Alloc> _Base;
+
+ public:
+  typedef _Base::value_type value_type;
+  typedef _Base::value_type pointer;
+  typedef _Base::const_pointer const_pointer;
+  typedef _Base::iterator iterator;
+  typedef _Base::const_iterator const_iterator;
+  typedef _Base::reference reference;
+  typedef _Base::const_reference const_reference;
+  typedef _Base::size_type size_type;
+  typedef _Base::difference_type difference_type;
+  typedef _Base::allocator_type allocator_type;
+  typedef _Base::const_reverse_iterator const_reverse_iterator;
+  typedef _Base::const_reverse_iterator reverse_iterator;
+
+ protected:
   // TODO: need or not? .
   const static size_type _S_initial_map_size = 8;
   const static size_type _S_deque_buffer_size = 512;
 
-  map_pointer    _M_map;
-  size_type _M_map_size;
-  iterator     _M_start;
-  iterator     _M_fnish;
 
  public:
   explicit deque(const allocator_type& __a = allocator_type());
