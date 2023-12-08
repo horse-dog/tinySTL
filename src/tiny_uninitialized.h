@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "tiny_pair.h"
+#include "tiny_alloc.h"
 #include "tiny_traits.h"
 #include "tiny_algobase.h"
 #include "tiny_construct.h"
@@ -12,17 +13,206 @@ namespace tinySTL
 {
 
 ////////////////////////////////////////////////////////////////////////////
-// forward declaration.
+// uninitialized_copy.
 ////////////////////////////////////////////////////////////////////////////
+
+template <class _InputIter, class _ForwardIter>
+inline _ForwardIter 
+__uninitialized_copy_aux(_InputIter __first, _InputIter __last,
+                         _ForwardIter __result, true_type)
+{
+  return tinySTL::copy(__first, __last, __result);
+}
+
+template <class _InputIter, class _ForwardIter>
+_ForwardIter 
+__uninitialized_copy_aux(_InputIter __first, _InputIter __last,
+                         _ForwardIter __result, false_type)
+{
+  _ForwardIter __cur = __result;
+  try 
+  {
+    for ( ; __first != __last; ++__first, ++__cur)
+      tinySTL::_Construct(tinySTL::addressof(*__cur), *__first);
+    return __cur;
+  } 
+  catch(...)
+  { 
+    tinySTL::_Destroy(__result, __cur);
+    throw;
+  }
+}
+
+template <class _InputIter, class _ForwardIter, class _Tp>
+inline _ForwardIter
+__uninitialized_copy(_InputIter __first, _InputIter __last,
+                     _ForwardIter __result, _Tp*)
+{
+  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
+  return tinySTL::__uninitialized_copy_aux(__first, __last, __result, _Is_POD());
+}
 
 template <class _InputIter, class _ForwardIter>
 inline _ForwardIter
 uninitialized_copy(_InputIter __first, _InputIter __last,
-                   _ForwardIter __result);
+                   _ForwardIter __result) 
+{
+  return tinySTL::__uninitialized_copy(__first, __last, __result,
+                                       value_type(__result));
+}
+
+inline char* uninitialized_copy(const char* __first, const char* __last,
+                                char* __result) {
+  memmove(__result, __first, __last - __first);
+  return __result + (__last - __first);
+}
+
+inline wchar_t* 
+uninitialized_copy(const wchar_t* __first, const wchar_t* __last,
+                   wchar_t* __result)
+{
+  memmove(__result, __first, sizeof(wchar_t) * (__last - __first));
+  return __result + (__last - __first);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////
-// aux function.
+// uninitialized_move.
+////////////////////////////////////////////////////////////////////////////
+
+template <class _ForwardIter1, class _ForwardIter2>
+inline _ForwardIter2 
+__uninitialized_move_aux(_ForwardIter1 __first, _ForwardIter1 __last,
+                         _ForwardIter2 __result, true_type)
+{
+  return tinySTL::move(__first, __last, __result);
+}
+
+template <class _ForwardIter1, class _ForwardIter2>
+_ForwardIter2 
+__uninitialized_move_aux(_ForwardIter1 __first, _ForwardIter1 __last,
+                         _ForwardIter2 __result, false_type)
+{
+  _ForwardIter2 __cur = __result;
+  try 
+  {
+    for ( ; __first != __last; ++__first, ++__cur)
+      tinySTL::_Construct(tinySTL::addressof(*__cur), tinySTL::move(*__first));
+    return __cur;
+  } 
+  catch(...)
+  { 
+    tinySTL::_Destroy(__result, __cur);
+    throw;
+  }
+}
+
+template <class _ForwardIter1, class _ForwardIter2, class _Tp>
+inline _ForwardIter2
+__uninitialized_move(_ForwardIter1 __first, _ForwardIter1 __last,
+                     _ForwardIter2 __result, _Tp*)
+{
+  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
+  return tinySTL::__uninitialized_move_aux(__first, __last, __result, _Is_POD());
+}
+
+template <class _ForwardIter1, class _ForwardIter2>
+inline _ForwardIter2
+uninitialized_move(_ForwardIter1 __first, _ForwardIter1 __last,
+                   _ForwardIter2 __result) 
+{
+  return tinySTL::__uninitialized_move(__first, __last, __result,
+                                       value_type(__result));
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// uninitialized_default.
+////////////////////////////////////////////////////////////////////////////
+
+template <class _ForwardIter, class _Tp>
+inline void
+__uninitialized_default_aux(_ForwardIter __first, _ForwardIter __last, 
+                         const _Tp& __x, true_type)
+{
+  // do nothing when _Tp is POD type.
+}
+
+template <class _ForwardIter, class _Tp> void
+__uninitialized_default_aux(_ForwardIter __first, _ForwardIter __last, 
+                         const _Tp& __x, false_type)
+{
+  _ForwardIter __cur = __first;
+  try {
+    for ( ; __cur != __last; ++__cur)
+      tinySTL::_Construct(tinySTL::addressof(*__cur));
+  }
+  catch (...) {
+    tinySTL::_Destroy(__first, __cur);
+    throw;
+  }
+}
+
+template <class _ForwardIter, class _Tp>
+inline void __uninitialized_default(_ForwardIter __first, _ForwardIter __last, _Tp*)
+{
+  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
+  tinySTL::__uninitialized_default_aux(__first, __last, _Is_POD());
+}
+
+template <class _ForwardIter>
+inline void uninitialized_default(_ForwardIter __first, _ForwardIter __last)
+{
+  tinySTL::__uninitialized_default(__first, __last, value_type(__first));
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// uninitialized_fill.
+////////////////////////////////////////////////////////////////////////////
+
+template <class _ForwardIter, class _Tp>
+inline void
+__uninitialized_fill_aux(_ForwardIter __first, _ForwardIter __last, 
+                         const _Tp& __x, true_type)
+{
+  tinySTL::fill(__first, __last, __x);
+}
+
+template <class _ForwardIter, class _Tp> void
+__uninitialized_fill_aux(_ForwardIter __first, _ForwardIter __last, 
+                         const _Tp& __x, false_type)
+{
+  _ForwardIter __cur = __first;
+  try {
+    for ( ; __cur != __last; ++__cur)
+      tinySTL::_Construct(tinySTL::addressof(*__cur), __x);
+  }
+  catch (...) {
+    tinySTL::_Destroy(__first, __cur);
+    throw;
+  }
+}
+
+template <class _ForwardIter, class _Tp, class _Tp1>
+inline void __uninitialized_fill(_ForwardIter __first, 
+                                 _ForwardIter __last, const _Tp& __x, _Tp1*)
+{
+  typedef typename type_traits<_Tp1>::is_POD_type _Is_POD;
+  tinySTL::__uninitialized_fill_aux(__first, __last, __x, _Is_POD());
+}
+
+template <class _ForwardIter, class _Tp>
+inline void uninitialized_fill(_ForwardIter __first,
+                               _ForwardIter __last, 
+                               const _Tp& __x)
+{
+  tinySTL::__uninitialized_fill(__first, __last, __x, value_type(__first));
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// uninitialized_copy_n.
 ////////////////////////////////////////////////////////////////////////////
 
 template <class _InputIter, class _Size, class _ForwardIter>
@@ -34,7 +224,7 @@ __uninitialized_copy_n(_InputIter __first, _Size __count,
   _ForwardIter __cur = __result;
   try {
     for ( ; __count > 0 ; --__count, ++__first, ++__cur) 
-      tinySTL::_Construct(&*__cur, *__first);
+      tinySTL::_Construct(tinySTL::addressof(*__cur), *__first);
     return pair<_InputIter, _ForwardIter>(__first, __cur);
   }
   catch (...) {
@@ -55,59 +245,70 @@ __uninitialized_copy_n(_RandomAccessIter __first, _Size __count,
                 );
 }
 
-template <class _InputIter, class _ForwardIter>
+template <class _InputIter, class _Size, class _ForwardIter>
+inline pair<_InputIter, _ForwardIter>
+__uninitialized_copy_n(_InputIter __first, _Size __count,
+                       _ForwardIter __result) {
+  return tinySTL::__uninitialized_copy_n(__first, __count, __result,
+                                         iterator_category(__first));
+}
+
+template <class _InputIter, class _Size, class _ForwardIter>
+inline pair<_InputIter, _ForwardIter>
+uninitialized_copy_n(_InputIter __first, _Size __count,
+                     _ForwardIter __result) {
+  return tinySTL::__uninitialized_copy_n(__first, __count, __result,
+                                         iterator_category(__first));
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// uninitialized_default_n.
+////////////////////////////////////////////////////////////////////////////
+
+template <class _ForwardIter, class _Size>
+inline _ForwardIter
+__uninitialized_default_n_aux(_ForwardIter __first, _Size __n, true_type)
+{
+  // do nothing when _Tp is POD type.
+  return tinySTL::advance(__first, __n);
+}
+
+template <class _ForwardIter, class _Size>
+_ForwardIter
+__uninitialized_default_n_aux(_ForwardIter __first, _Size __n, false_type)
+{
+  _ForwardIter __cur = __first;
+  try {
+    for ( ; __n > 0; --__n, ++__cur)
+      tinySTL::_Construct(tinySTL::addressof(*__cur));
+    return __cur;
+  }
+  catch (...) {
+    tinySTL::_Destroy(__first, __cur);
+    throw;
+  }
+}
+
+template <class _ForwardIter, class _Size, class _Tp>
 inline _ForwardIter 
-__uninitialized_copy_aux(_InputIter __first, _InputIter __last,
-                         _ForwardIter __result, true_type)
+__uninitialized_default_n(_ForwardIter __first, _Size __n, _Tp*)
 {
-  return tinySTL::copy(__first, __last, __result);
+  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
+  return tinySTL::__uninitialized_default_n_aux(__first, __n, _Is_POD());
 }
 
-template <class _InputIter, class _ForwardIter>
-_ForwardIter 
-__uninitialized_copy_aux(_InputIter __first, _InputIter __last,
-                         _ForwardIter __result, false_type)
+template <class _ForwardIter, class _Size>
+inline _ForwardIter 
+uninitialized_default_n(_ForwardIter __first, _Size __n)
 {
-  _ForwardIter __cur = __result;
-  try 
-  {
-    for ( ; __first != __last; ++__first, ++__cur)
-      tinySTL::_Construct(&*__cur, *__first);
-    return __cur;
-  } 
-  catch(...)
-  { 
-    tinySTL::_Destroy(__result, __cur);
-    throw;
-  }
+  return tinySTL::__uninitialized_default_n(__first, __n, value_type(__first));
 }
 
-template <class _ForwardIter1, class _ForwardIter2>
-inline _ForwardIter2 
-__uninitialized_move_aux(_ForwardIter1 __first, _ForwardIter1 __last,
-                         _ForwardIter2 __result, true_type)
-{
-  return tinySTL::move(__first, __last, __result);
-}
 
-template <class _ForwardIter1, class _ForwardIter2>
-_ForwardIter2 
-__uninitialized_move_aux(_ForwardIter1 __first, _ForwardIter1 __last,
-                         _ForwardIter2 __result, false_type)
-{
-  _ForwardIter2 __cur = __result;
-  try 
-  {
-    for ( ; __first != __last; ++__first, ++__cur)
-      tinySTL::_Construct(&*__cur, tinySTL::move(*__first));
-    return __cur;
-  } 
-  catch(...)
-  { 
-    tinySTL::_Destroy(__result, __cur);
-    throw;
-  }
-}
+////////////////////////////////////////////////////////////////////////////
+// uninitialized_fill_n.
+////////////////////////////////////////////////////////////////////////////
 
 template <class _ForwardIter, class _Size, class _Tp>
 inline _ForwardIter
@@ -125,91 +326,13 @@ __uninitialized_fill_n_aux(_ForwardIter __first, _Size __n,
   _ForwardIter __cur = __first;
   try {
     for ( ; __n > 0; --__n, ++__cur)
-      tinySTL::_Construct(&*__cur, __x);
+      tinySTL::_Construct(tinySTL::addressof(*__cur), __x);
     return __cur;
   }
   catch (...) {
     tinySTL::_Destroy(__first, __cur);
     throw;
   }
-}
-
-template <class _ForwardIter, class _Tp>
-inline void
-__uninitialized_fill_aux(_ForwardIter __first, _ForwardIter __last, 
-                         const _Tp& __x, true_type)
-{
-  tinySTL::fill(__first, __last, __x);
-}
-
-template <class _ForwardIter, class _Tp> void
-__uninitialized_fill_aux(_ForwardIter __first, _ForwardIter __last, 
-                         const _Tp& __x, false_type)
-{
-  _ForwardIter __cur = __first;
-  try {
-    for ( ; __cur != __last; ++__cur)
-      tinySTL::_Construct(&*__cur, __x);
-  }
-  catch (...) {
-    tinySTL::_Destroy(__first, __cur);
-    throw;
-  }
-}
-
-template <class _ForwardIter, class _Size>
-inline _ForwardIter
-__uninitialized_default_n_aux(_ForwardIter __first, _Size __n, true_type)
-{
-  // TODO: error.
-  return tinySTL::fill_n(__first, __n);
-}
-
-template <class _ForwardIter, class _Size>
-_ForwardIter
-__uninitialized_default_n_aux(_ForwardIter __first, _Size __n, false_type)
-{
-  _ForwardIter __cur = __first;
-  try {
-    for ( ; __n > 0; --__n, ++__cur)
-      tinySTL::_Construct(&*__cur);
-    return __cur;
-  }
-  catch (...) {
-    tinySTL::_Destroy(__first, __cur);
-    throw;
-  }
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-// dispatcher.
-////////////////////////////////////////////////////////////////////////////
-
-template <class _InputIter, class _Size, class _ForwardIter>
-inline pair<_InputIter, _ForwardIter>
-__uninitialized_copy_n(_InputIter __first, _Size __count,
-                       _ForwardIter __result) {
-  return tinySTL::__uninitialized_copy_n(__first, __count, __result,
-                                         iterator_category(__first));
-}
-
-template <class _InputIter, class _ForwardIter, class _Tp>
-inline _ForwardIter
-__uninitialized_copy(_InputIter __first, _InputIter __last,
-                     _ForwardIter __result, _Tp*)
-{
-  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
-  return tinySTL::__uninitialized_copy_aux(__first, __last, __result, _Is_POD());
-}
-
-template <class _ForwardIter1, class _ForwardIter2, class _Tp>
-inline _ForwardIter2
-__uninitialized_move(_ForwardIter1 __first, _ForwardIter1 __last,
-                     _ForwardIter2 __result, _Tp*)
-{
-  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
-  return tinySTL::__uninitialized_move_aux(__first, __last, __result, _Is_POD());
 }
 
 template <class _ForwardIter, class _Size, class _Tp, class _Tp1>
@@ -220,61 +343,6 @@ __uninitialized_fill_n(_ForwardIter __first, _Size __n, const _Tp& __x, _Tp1*)
   return tinySTL::__uninitialized_fill_n_aux(__first, __n, __x, _Is_POD());
 }
 
-template <class _ForwardIter, class _Tp, class _Tp1>
-inline void __uninitialized_fill(_ForwardIter __first, 
-                                 _ForwardIter __last, const _Tp& __x, _Tp1*)
-{
-  typedef typename type_traits<_Tp1>::is_POD_type _Is_POD;
-  tinySTL::__uninitialized_fill_aux(__first, __last, __x, _Is_POD());
-                   
-}
-
-template <class _ForwardIter, class _Size, class _Tp>
-inline _ForwardIter 
-__uninitialized_default_n(_ForwardIter __first, _Size __n, _Tp*)
-{
-  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
-  return tinySTL::__uninitialized_default_n_aux(__first, __n, _Is_POD());
-}
-
-template <class _ForwardIter, class _Tp>
-inline void __uninitialized_default(_ForwardIter __first, _ForwardIter __last, _Tp*)
-{
-  typedef typename type_traits<_Tp>::is_POD_type _Is_POD;
-  tinySTL::__uninitialized_default_aux(__first, __last, _Is_POD());
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-// basic interface.
-////////////////////////////////////////////////////////////////////////////
-
-template <class _InputIter, class _Size, class _ForwardIter>
-inline pair<_InputIter, _ForwardIter>
-uninitialized_copy_n(_InputIter __first, _Size __count,
-                     _ForwardIter __result) {
-  return tinySTL::__uninitialized_copy_n(__first, __count, __result,
-                                         iterator_category(__first));
-}
-
-template <class _InputIter, class _ForwardIter>
-inline _ForwardIter
-uninitialized_copy(_InputIter __first, _InputIter __last,
-                   _ForwardIter __result) 
-{
-  return tinySTL::__uninitialized_copy(__first, __last, __result,
-                                       value_type(__result));
-}
-
-template <class _ForwardIter1, class _ForwardIter2>
-inline _ForwardIter2
-uninitialized_move(_ForwardIter1 __first, _ForwardIter1 __last,
-                   _ForwardIter2 __result) 
-{
-  return tinySTL::__uninitialized_move(__first, __last, __result,
-                                       value_type(__result));
-}
-
 template <class _ForwardIter, class _Size, class _Tp>
 inline _ForwardIter 
 uninitialized_fill_n(_ForwardIter __first, _Size __n, const _Tp& __x)
@@ -282,45 +350,6 @@ uninitialized_fill_n(_ForwardIter __first, _Size __n, const _Tp& __x)
   return tinySTL::__uninitialized_fill_n(__first, __n, __x, value_type(__first));
 }
 
-template <class _ForwardIter, class _Tp>
-inline void uninitialized_fill(_ForwardIter __first,
-                               _ForwardIter __last, 
-                               const _Tp& __x)
-{
-  tinySTL::__uninitialized_fill(__first, __last, __x, value_type(__first));
-}
-
-template <class _ForwardIter, class _Size>
-inline _ForwardIter 
-uninitialized_default_n(_ForwardIter __first, _Size __n)
-{
-  return tinySTL::__uninitialized_default_n(__first, __n, value_type(__first));
-}
-
-template <class _ForwardIter>
-inline void uninitialized_default(_ForwardIter __first, _ForwardIter __last)
-{
-  tinySTL::__uninitialized_default(__first, __last, value_type(__first));
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-// specific version.
-////////////////////////////////////////////////////////////////////////////
-
-inline char* uninitialized_copy(const char* __first, const char* __last,
-                                char* __result) {
-  memmove(__result, __first, __last - __first);
-  return __result + (__last - __first);
-}
-
-inline wchar_t* 
-uninitialized_copy(const wchar_t* __first, const wchar_t* __last,
-                   wchar_t* __result)
-{
-  memmove(__result, __first, sizeof(wchar_t) * (__last - __first));
-  return __result + (__last - __first);
-}
 
 ////////////////////////////////////////////////////////////////////////////
 // extensions functions.

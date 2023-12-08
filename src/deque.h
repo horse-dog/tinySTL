@@ -10,6 +10,13 @@
 namespace tinySTL
 {
 
+template <class _Tp, class _Alloc>
+class _Deque_base {
+ 
+ public:
+
+};
+
 template <class _Tp, class _Alloc> 
 class deque {
 
@@ -177,7 +184,8 @@ class deque {
   
  protected:
   typedef pointer* map_pointer;
-  typedef simple_alloc<pointer, _Alloc> _M_map_allocator;
+  typedef simple_alloc<pointer, _Alloc> _Map_alloc_type;
+  typedef simple_alloc<value_type, _Alloc> _Node_alloc_type;
 
   // TODO: need or not? .
   const static size_type _S_initial_map_size = 8;

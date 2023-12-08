@@ -161,7 +161,7 @@ template <class _InputIter, class _OutputIter>
 inline _OutputIter copy(_InputIter __first, _InputIter __last,
                         _OutputIter __result) {
   typedef typename iterator_traits<_OutputIter>::value_type _Tp;
-  typedef typename type_traits<_Tp>::has_trivial_assignment_operator
+  typedef typename type_traits<_Tp>::has_trivial_copy_operator
                    _Trivial;
   return __copy_dispatch<_InputIter, _OutputIter, _Trivial>
     ::copy(__first, __last, __result);
@@ -332,7 +332,7 @@ struct __copy_backward_dispatch<const _Tp*, _Tp*, true_type>
 template <class _BI1, class _BI2>
 inline _BI2 copy_backward(_BI1 __first, _BI1 __last, _BI2 __result) {
   typedef typename type_traits<typename iterator_traits<_BI2>::value_type>
-                   ::has_trivial_assignment_operator
+                   ::has_trivial_copy_operator
                    _Trivial;
   return __copy_backward_dispatch<_BI1, _BI2, _Trivial>
               ::copy(__first, __last, __result);

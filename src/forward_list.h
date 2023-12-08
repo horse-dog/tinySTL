@@ -141,7 +141,7 @@ class forward_list
   typedef tinySTL::reverse_iterator<iterator> reverse_iterator;
 
  protected:
-  typedef simple_alloc<_Slist_node<_Tp>, _Alloc> _M_node_allocator;
+  typedef simple_alloc<_Slist_node<_Tp>, _Alloc> _Node_alloc_type;
   typedef _Slist_node<_Tp> _Node;
 
   struct less 
@@ -155,10 +155,10 @@ class forward_list
 
  protected:
   _Node* _M_get_node()
-    { return _M_node_allocator::allocate(1); }
+    { return _Node_alloc_type::allocate(1); }
 
   void _M_put_node(_Node* __p) 
-    { _M_node_allocator::deallocate(__p, 1); }
+    { _Node_alloc_type::deallocate(__p, 1); }
 
   template <class... _Args>
   _Node* _M_create_node(_Args&&... __args)
