@@ -419,13 +419,17 @@ class deque : public _Deque_base<_Tp, _Alloc> {
 
   iterator erase(const_iterator __first, const_iterator __last);
 
-  void push_front(_Tp&& __x);
+  void push_front(_Tp&& __x)
+  { emplace_front(tinySTL::move(__x)); }
 
-  void push_front(const _Tp& __x);
+  void push_front(const _Tp& __x)
+  { emplace_front(__x); }
 
-  void push_back(_Tp&& __x);
+  void push_back(_Tp&& __x)
+  { emplace_back(tinySTL::move(__x)); }
 
-  void push_back(const _Tp& __x);
+  void push_back(const _Tp& __x)
+  { emplace_back(__x); }
 
   void clear();
 
