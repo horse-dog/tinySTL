@@ -150,6 +150,45 @@ void* __malloc_alloc_template<__inst>::_S_oom_realloc(void* __p, size_t __n)
 
 typedef __malloc_alloc_template<0> malloc_alloc;
 
+template <bool _Log=true>
+class __debug_alloc_template {
+ public:
+  static void* allocate(size_t __n) 
+  {
+    if (_S_atexit == false) {
+      atexit(_S_log);
+      _S_atexit = true;
+    }
+
+    void* __result = malloc(__n);
+    if constexpr (_Log)
+      printf("[allocate]  : %zd bytes.\n", __n);
+    _S_bytes += __n;
+    return __result;
+  }
+
+  static void deallocate(void* __p, size_t __n) 
+  { 
+    free(__p);
+    if constexpr (_Log)
+      printf("[deallocate]: %zd bytes.\n", __n);
+    _S_bytes -= __n;
+  }
+
+  static void _S_log() {
+    printf("memory at exit: %zd\n", _S_bytes);
+  }
+
+  static bool _S_atexit;
+  static size_t _S_bytes;
+};
+
+template <bool _Log>
+size_t __debug_alloc_template<_Log>::_S_bytes = 0;
+
+template <bool _Log>
+bool __debug_alloc_template<_Log>::_S_atexit = false;
+
 
 // second memory adaptor. __inst is useless.
 // threads == true : ==> multi-threads environment.
@@ -271,7 +310,8 @@ class __default_alloc_template {
 };
 
 // TODO: multi-thread env.
-typedef __default_alloc_template<false, 0> alloc;
+// typedef __default_alloc_template<false, 0> alloc;
+typedef __debug_alloc_template<false> alloc;
 
 template <bool __threads, int __inst>
 char* __default_alloc_template<__threads, __inst>::_S_start_free = 0;
