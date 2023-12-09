@@ -78,7 +78,6 @@ TEST(forward_list, constructor) {
   }
 }
 
-
 TEST(forward_list, assign) {
   /**
    * @test  void assign(initializer_list l)
@@ -111,7 +110,6 @@ TEST(forward_list, assign) {
     EXPECT_STRING_EQ(fl, [3, 6, 0]);
   }
 }
-
 
 TEST(forward_list, assign_operator) {
   /**
