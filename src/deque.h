@@ -321,7 +321,9 @@ class deque : public _Deque_base<_Tp, _Alloc> {
   deque(deque&& __x);
 
   deque(std::initializer_list<_Tp> __l, 
-        const allocator_type& __a = allocator_type());
+        const allocator_type& __a = allocator_type())
+    : _Base(__a, __l.size())
+    { tinySTL::uninitialized_copy(__l.begin(), __l.end(), _M_start); }
 
   template <InputIterator Iterator>
   deque(Iterator __first, Iterator __last,
@@ -357,31 +359,35 @@ class deque : public _Deque_base<_Tp, _Alloc> {
 
   const_iterator cend() const { return _M_finish; }
 
-  reverse_iterator rbegin();
+  reverse_iterator rbegin() { return reverse_iterator(_M_finish); }
 
-  const_reverse_iterator rbegin() const;
+  const_reverse_iterator rbegin() const { return const_reverse_iterator(_M_finish); }
 
-  const_reverse_iterator crbegin() const;
+  const_reverse_iterator crbegin() const { return const_reverse_iterator(_M_finish); }
 
-  reverse_iterator rend();
+  reverse_iterator rend() { return reverse_iterator(_M_start); }
 
-  const_reverse_iterator rend() const;
+  const_reverse_iterator rend() const { return const_reverse_iterator(_M_start); }
 
-  const_reverse_iterator crend() const;
+  const_reverse_iterator crend() const { return const_reverse_iterator(_M_start); }
 
-  bool empty();
+  bool empty() const { return _M_finish == _M_start; }
 
-  reference at(size_type __n);
+  reference at(size_type __n)
+  { _M_range_check(__n); return (*this)[__n]; }
 
-  const_reference at(size_type __n) const;
+  const_reference at(size_type __n) const
+  { _M_range_check(__n); return (*this)[__n]; }
 
-  reference operator[](size_type __n);
+  reference operator[](size_type __n)
+  { return _M_start[difference_type(__n)]; }
 
-  const_reference operator[](size_type __n) const;
+  const_reference operator[](size_type __n) const
+  { return _M_start[difference_type(__n)]; }
 
-  size_type size();
+  size_type size() { return _M_finish - _M_start; }
 
-  size_type max_size();
+  size_type max_size() const { return size_type(-1); }
 
   reference front();
 
@@ -391,7 +397,12 @@ class deque : public _Deque_base<_Tp, _Alloc> {
 
   const_reference back() const;
 
-  void swap(deque<_Tp, _Alloc>& __x);
+  void swap(deque<_Tp, _Alloc>& __x) {
+    tinySTL::swap(_M_start, __x._M_start);
+    tinySTL::swap(_M_finish, __x._M_finish);
+    tinySTL::swap(_M_map, __x._M_map);
+    tinySTL::swap(_M_map_size, __x._M_map_size);
+  }
 
   iterator insert(const_iterator __position, _Tp&& __x);
 
@@ -437,6 +448,11 @@ class deque : public _Deque_base<_Tp, _Alloc> {
 
   void shrink_to_fit();
 
+ protected:
+  void _M_range_check(size_type __n) const {
+    if (__n >= this->size())
+      __tiny_throw_range_error("deque");
+  }
 };
 
 }
