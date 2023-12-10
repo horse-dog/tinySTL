@@ -30,7 +30,8 @@ class _Deque_base {
     __deque_buf_size(size_t __size)
     {
       // TODO: replace by _S_deque_buffer_size ? .
-      return __size < 512 ? (512 / __size) : 1;
+      // TODO: 8 -> 512.
+      return __size < 8 ? (8 / __size) : 1;
     }
 
    // TODO: protected.
@@ -182,12 +183,12 @@ class _Deque_base {
   typedef simple_alloc<value_type, _Alloc> _Node_alloc_type;
 
   const static size_type _S_initial_map_size = 8;
-  const static size_type _S_deque_buffer_size = 512;
+  const static size_type _S_deque_buffer_size = 8; // TODO: 8 -> 512.
 
  public:
   _Deque_base() 
   : _M_map(), _M_map_size(0), _M_start(), _M_finish()
-  { _M_initialize_map(0); } // TODO: vc++: don't alloc map, g++ alloc ? .
+  { _M_initialize_map(0); }
 
   _Deque_base(size_t __num_elements)
   : _M_map(), _M_map_size(0), _M_start(), _M_finish()
@@ -204,10 +205,8 @@ class _Deque_base {
   _Deque_base(_Deque_base&& __x)
   : _M_map(), _M_map_size(0), _M_start(), _M_finish()
   {
-    tinySTL::swap(_M_map, __x._M_map);
-    tinySTL::swap(_M_map_size, __x._M_map_size);
-    tinySTL::swap(_M_start, __x._M_start);
-    tinySTL::swap(_M_finish, __x._M_finish);
+    _M_initialize_map(0);
+    _M_swap_data(__x);
   }
 
  ~_Deque_base()
@@ -281,6 +280,14 @@ class _Deque_base {
                      % iterator::__deque_buf_size(sizeof(_Tp));
   }
 
+  void _M_swap_data(_Deque_base& __x) noexcept
+  {
+    tinySTL::swap(_M_map, __x._M_map);
+    tinySTL::swap(_M_map_size, __x._M_map_size);
+    tinySTL::swap(_M_start, __x._M_start);
+    tinySTL::swap(_M_finish, __x._M_finish);
+  }
+
  protected:
   map_pointer    _M_map;
   size_type _M_map_size;
@@ -351,7 +358,12 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
 
   ~deque() { tinySTL::destroy(_M_start, _M_finish); }
 
-  deque& operator=(std::initializer_list<_Tp> __l);
+  deque& operator=(std::initializer_list<_Tp> __l)
+  {
+    _M_assign_aux(__l.begin(), __l.end(),
+		      random_access_iterator_tag());
+    return *this;
+  }
 
   deque& operator=(const deque& __x) {
     const size_type __len = size();
@@ -367,14 +379,32 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     return *this;
   }
 
-  deque& operator=(deque&& __x);
+  deque& operator=(deque&& __x)
+  {
+    if (&__x != this) {
+      this->_M_swap_data(__x);
+      __x.clear();
+    }
+    return *this;
+  }
 
-  void assign(std::initializer_list<_Tp> __l);
+  void assign(std::initializer_list<_Tp> __l)
+  { _M_assign_aux(__l.begin(), __l.end(), random_access_iterator_tag()); }
 
-  void assign(size_type __n, const _Tp& __val);
+  void assign(size_type __n, const _Tp& __val)
+  {
+    if (__n > size()) {
+      tinySTL::fill(begin(), end(), __val);
+      insert(end(), __n - size(), __val);
+    } else {
+      _M_erase_at_end(begin() + difference_type(__n));
+      std::fill(begin(), end(), __val);
+    }
+  }
 
   template <InputIterator Iterator>
-  void assign(Iterator __first, Iterator __last);
+  void assign(Iterator __first, Iterator __last)
+  { _M_assign_aux(__first, __last, iterator_category(__first)); }
 
  public:
   allocator_type get_allocator() const { return allocator_type(); }
@@ -463,7 +493,8 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   void push_back(const _Tp& __x)
   { emplace_back(__x); }
 
-  void clear();
+  void clear() 
+  { _M_erase_at_end(begin()); }
 
   void resize(size_type __new_size, const _Tp& __x);
 
@@ -488,6 +519,26 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   void _M_range_check(size_type __n) const {
     if (__n >= this->size())
       __tiny_throw_range_error("deque");
+  }
+
+  void _M_erase_at_end(iterator __pos)
+  {
+	  _M_destroy_data(__pos, end());
+	  _M_destroy_nodes(__pos._M_node + 1, _M_finish._M_node + 1);
+	  this->_M_finish = __pos;
+  }
+  
+  void _M_destroy_data(iterator __first, iterator __last)
+  {
+    for (_Map_pointer __node = __first._M_node + 1;
+         __node < __last._M_node; ++__node)
+      tinySTL::destroy(*__node, *__node + 
+               iterator::__deque_buf_size(sizeof(_Tp)));
+    if (__first._M_node != __last._M_node) {
+      tinySTL::destroy(__first._M_cur, __first._M_last);
+      tinySTL::destroy(__last._M_first, __last._M_cur);
+    } else
+      tinySTL::destroy(__first._M_cur, __last._M_cur);
   }
 
   template <class _InputIterator>
@@ -530,6 +581,38 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
       throw;
     }
   }
+
+  template <class _InputIterator>
+  void _M_assign_aux(_InputIterator __first, _InputIterator __last,
+                     input_iterator_tag)
+  {
+    iterator __cur = begin();
+    for (; __first != __last && __cur != end(); ++__cur, ++__first)
+      *__cur = *__first;
+    if (__first == __last)
+      _M_erase_at_end(__cur);
+    else
+      _M_range_insert_aux(end(), __first, __last,
+              iterator_category(__first));
+  }
+
+  // TODO: unfinished...
+  template <class _ForwardIterator>
+  void _M_assign_aux(_ForwardIterator __first, _ForwardIterator __last,
+                     forward_iterator_tag)
+  {
+	  const size_type __len = std::distance(__first, __last);
+	  if (__len > size())
+	    {
+	      _ForwardIterator __mid = __first;
+	      std::advance(__mid, size());
+	      std::copy(__first, __mid, begin());
+	      _M_range_insert_aux(end(), __mid, __last,
+				  std::__iterator_category(__first));
+	    }
+	  else
+	    _M_erase_at_end(std::copy(__first, __last, begin()));
+	}
 };
 
 }
