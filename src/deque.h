@@ -343,7 +343,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
         const allocator_type& __a = allocator_type())
     : _Base(__a)
     {
-	    _M_range_initialize(
+      _M_range_initialize(
         __l.begin(), __l.end(), random_access_iterator_tag());
     }
 
@@ -361,7 +361,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   deque& operator=(std::initializer_list<_Tp> __l)
   {
     _M_assign_aux(__l.begin(), __l.end(),
-		      random_access_iterator_tag());
+          random_access_iterator_tag());
     return *this;
   }
 
@@ -398,7 +398,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
       insert(end(), __n - size(), __val);
     } else {
       _M_erase_at_end(begin() + difference_type(__n));
-      std::fill(begin(), end(), __val);
+      tinySTL::fill(begin(), end(), __val);
     }
   }
 
@@ -523,9 +523,9 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
 
   void _M_erase_at_end(iterator __pos)
   {
-	  _M_destroy_data(__pos, end());
-	  _M_destroy_nodes(__pos._M_node + 1, _M_finish._M_node + 1);
-	  this->_M_finish = __pos;
+    _M_destroy_data(__pos, end());
+    _M_destroy_nodes(__pos._M_node + 1, _M_finish._M_node + 1);
+    this->_M_finish = __pos;
   }
   
   void _M_destroy_data(iterator __first, iterator __last)
@@ -596,23 +596,193 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
               iterator_category(__first));
   }
 
-  // TODO: unfinished...
   template <class _ForwardIterator>
   void _M_assign_aux(_ForwardIterator __first, _ForwardIterator __last,
                      forward_iterator_tag)
   {
-	  const size_type __len = std::distance(__first, __last);
-	  if (__len > size())
-	    {
-	      _ForwardIterator __mid = __first;
-	      std::advance(__mid, size());
-	      std::copy(__first, __mid, begin());
-	      _M_range_insert_aux(end(), __mid, __last,
-				  std::__iterator_category(__first));
-	    }
-	  else
-	    _M_erase_at_end(std::copy(__first, __last, begin()));
-	}
+    const size_type __len = tinySTL::distance(__first, __last);
+    if (__len > size())
+      {
+        _ForwardIterator __mid = tinySTL::copy_n(__first, __len, begin()).first;
+        _M_range_insert_aux(end(), __mid, __last, iterator_category(__first));
+      }
+    else
+      _M_erase_at_end(tinySTL::copy(__first, __last, begin()));
+  }
+
+  // TODO: unfinished...
+  template <class _ForwardIterator>
+  void _M_range_insert_aux(iterator __pos,
+        _ForwardIterator __first, _ForwardIterator __last,
+        input_iterator_tag);
+
+  template <class _ForwardIterator>
+  void _M_range_insert_aux(iterator __pos,
+        _ForwardIterator __first, _ForwardIterator __last,
+        forward_iterator_tag)
+  {
+    const size_type __n = tinySTL::distance(__first, __last);
+    if (__pos._M_cur == this->_M_start._M_cur) {
+      // insert at begin.
+      iterator __new_start = _M_reserve_elements_at_front(__n);
+      try {
+        tinySTL::uninitialized_copy(__first, __last, __new_start);
+        this->_M_start = __new_start;
+      } catch (...) {
+        _M_destroy_nodes(__new_start._M_node, _M_start._M_node);
+        throw;
+      }
+    } else if (__pos._M_cur == this->_M_finish._M_cur) {
+      // insert at end.
+      iterator __new_finish = _M_reserve_elements_at_back(__n);
+      try {
+        tinySTL::uninitialized_copy(__first, __last, _M_finish);
+        this->_M_finish = __new_finish;
+      } catch (...) {
+        _M_destroy_nodes(_M_finish._M_node + 1, __new_finish._M_node + 1);
+        throw;
+      }
+    } else {
+      // insert not at begin and end.
+      _M_insert_aux(__pos, __first, __last, __n);
+    }
+  }
+
+  template <class _ForwardIterator>
+  void _M_insert_aux(iterator __pos,
+        _ForwardIterator __first, _ForwardIterator __last,
+        size_type __n) {
+    const difference_type __elemsbefore = __pos - _M_start;
+    const size_type __length = size();
+    if ((size_type)__elemsbefore < __length / 2) {
+      // __pos is at the left of mid.
+      iterator __new_start = _M_reserve_elements_at_front(__n);
+      iterator __old_start = this->_M_start;
+      // refresh __pos because _M_start may be realloc.
+      __pos = this->_M_start + __elemsbefore;
+      try {
+        if (__elemsbefore >= difference_type(__n)) {
+          iterator __start_n = _M_start + difference_type(__n);
+          tinySTL::uninitialized_move(_M_start, __start_n, __new_start);
+          _M_start = __new_start;
+          tinySTL::move(__start_n, __pos, __old_start);
+          tinySTL::copy(__first, __last, __pos - difference_type(__n));
+        } else {
+          _ForwardIterator __mid = __first;
+          tinySTL::advance(__mid, difference_type(__n) - __elemsbefore);
+          iterator __midm = tinySTL::uninitialized_move(
+                                     _M_start, __pos, __new_start);
+          tinySTL::uninitialized_copy(__first, __mid, __midm);
+          _M_start = __new_start;
+          tinySTL::copy(__mid, __last, __old_start);
+        }
+      } catch (...) {
+        _M_destroy_nodes(__new_start._M_node, _M_start._M_node);
+        throw;
+      }
+    } else {
+      iterator __new_finish = _M_reserve_elements_at_back(__n);
+      iterator __old_finish = this->_M_finish;
+      const difference_type __elemsafter = difference_type(__length)
+                                           - __elemsbefore;
+      // refresh __pos because _M_finish may be realloc.
+      __pos = this->_M_finish - __elemsafter;
+      try {
+        if (__elemsafter > difference_type(__n)) {
+          iterator __finish_n = this->_M_finish - difference_type(__n);
+          tinySTL::uninitialized_move(__finish_n, _M_finish, _M_finish);
+          _M_finish = __new_finish;
+          tinySTL::move_backward(__pos, __finish_n, __old_finish);
+          tinySTL::copy(__first, __last, __pos);
+        } else {
+          _ForwardIterator __mid = __first;
+          tinySTL::advance(__mid, __elemsafter);
+          iterator __midm = tinySTL::uninitialized_copy(
+                                     __mid, __last, _M_finish);
+          tinySTL::uninitialized_move(__pos, _M_finish, __midm);
+          _M_finish = __new_finish;
+          tinySTL::copy(__first, __mid, __pos);
+        }
+      } catch (...) {
+        _M_destroy_nodes(_M_finish._M_node + 1, __new_finish._M_node + 1);
+        throw;
+      }
+    }
+  }
+
+  iterator 
+  _M_reserve_elements_at_front(size_type __n)
+  {
+    const size_type __vacancies = _M_start._M_cur - _M_start._M_first;
+    if (__n > __vacancies) 
+	    _M_new_elements_at_front(__n - __vacancies);
+    return _M_start - difference_type(__n);
+  }
+
+  iterator
+  _M_reserve_elements_at_back(size_type __n)
+  {
+    const size_type __vacancies = _M_finish._M_last - _M_finish._M_cur - 1;
+    if (__n > __vacancies)
+      _M_new_elements_at_back(__n - __vacancies);
+    return _M_finish + difference_type(__n);
+  }
+
+  void _M_new_elements_at_front(size_type __new_elems) {
+    if (this->max_size() - this->size() < __new_elems)
+      __tiny_throw_length_error("deque::_M_new_elements_at_front");
+    
+    const size_type __new_nodes = 
+      (__new_elems + iterator::_S_buffer_size() - 1)
+      / iterator::_S_buffer_size();
+    _M_reserve_map_at_front(__new_nodes);
+    size_type __i;
+    try {
+      for (__i = 1; __i <= __new_nodes; ++__i)
+        *(_M_start._M_node - __i) = _Base::_M_allocate_node();
+    } catch (...) {
+      for (size_type __j = 1; __j < __i; ++__j)
+        _M_deallocate_node(*(_M_start._M_node - __j));
+      throw;
+    }
+  }
+
+  void _M_new_elements_at_back(size_type __new_elems) {
+    if (this->max_size() - this->size() < __new_elems)
+      __tiny_throw_length_error("deque::_M_new_elements_at_back");
+
+    const size_type __new_nodes = 
+      (__new_elems + iterator::_S_buffer_size() - 1) 
+      / iterator::_S_buffer_size();
+    _M_reserve_map_at_back(__new_nodes);
+    size_type __i;
+    try {
+      for (__i = 1; __i <= __new_nodes; ++__i)
+        *(_M_finish._M_node + __i) = _Base::_M_allocate_node();
+    } catch (...) {
+      for (size_type __j = 1; __j < __i; ++__j)
+        _M_deallocate_node(*(_M_finish._M_node + __j));
+      throw;
+    }
+  }
+
+  void _M_reserve_map_at_front(size_type __nodes_to_add = 1)
+  {
+    if (__nodes_to_add > size_type(_M_start._M_node - _M_map))
+      _M_reallocate_map(__nodes_to_add, true);
+  }
+
+  void _M_reserve_map_at_back(size_type __nodes_to_add = 1)
+  {
+    if (__nodes_to_add + 1 
+        > _M_map_size - (_M_finish._M_node - _M_map))
+      _M_reallocate_map(__nodes_to_add, false);
+  }
+
+  // TODO: unfinished at 2023/12/10/23:23
+  void
+  _M_reallocate_map(size_type __nodes_to_add, bool __add_at_front);
+  
 };
 
 }
