@@ -9,7 +9,7 @@ using namespace tinySTL;
 
 TEST(deque, constructor) {
   /**
-   * @test  vector()
+   * @test  deque()
    * @brief default constructor. 
    */
   SUBTEST(constructor) {
@@ -18,7 +18,7 @@ TEST(deque, constructor) {
   }
   
   /**
-   * @test  vector(size_type n). 
+   * @test  deque(size_type n). 
    * @brief size constructor. 
    */
   SUBTEST(constructor) {
@@ -27,7 +27,7 @@ TEST(deque, constructor) {
   }
 
   /**
-   * @test  vector(size_type n, const T& val)
+   * @test  deque(size_type n, const T& val)
    * @brief size with value constructor. 
    */
   SUBTEST(constructor) {
@@ -36,7 +36,7 @@ TEST(deque, constructor) {
   }
 
   /**
-   * @test  vector(const vector& x)
+   * @test  deque(const deque& x)
    * @brief copy constructor. 
    */
   SUBTEST(constructor) {
@@ -47,7 +47,7 @@ TEST(deque, constructor) {
   }
 
   /**
-   * @test  vector(vector&& x)
+   * @test  deque(deque&& x)
    * @brief move constructor. 
    */
   SUBTEST(constructor) {
@@ -59,7 +59,7 @@ TEST(deque, constructor) {
   }
 
   /**
-   * @test  vector(initializer_list l)
+   * @test  deque(initializer_list l)
    * @brief initializer_list constructor. 
    */
   SUBTEST(constructor) {
@@ -68,7 +68,7 @@ TEST(deque, constructor) {
   }
 
   /**
-   * @test  vector(Iterator first, Iterator last)
+   * @test  deque(Iterator first, Iterator last)
    * @brief range constructor. 
    */
   SUBTEST(constructor) {
