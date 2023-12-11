@@ -113,3 +113,57 @@ TEST(deque, assign) {
     EXPECT_EQ(dq.size(), 3);
   }
 }
+
+TEST(deque, assign_operator) {
+  /**
+   * @test deque& operator=(initializer_list l)
+   * @brief assign operator by initializer_list.
+   */
+  SUBTEST(operator=) {
+    deque<int> dq = {1, 2, 3, 4};
+    dq = {1, 2, 3};
+    EXPECT_STRING_EQ(dq, [1, 2, 3]);
+    EXPECT_EQ(dq.size(), 3);
+  }
+  
+  /**
+   * @test deque& operator=(const deque& x)
+   * @brief assign operator by copy.
+   */
+  SUBTEST(operator=) {
+    deque<int> dq0 = {1, 2, 3, 4};
+    deque<int> dq1 = {1, 2, 3};
+    dq0 = dq1;
+    EXPECT_STRING_EQ(dq0, [1, 2, 3]);
+    EXPECT_EQ(dq0.size(), 3);
+  }
+
+  /**
+   * @test deque& operator=(deque&& x)
+   * @brief assign operator by move.
+   */
+  SUBTEST(operator=) {
+    deque<int> dq = {1, 2, 3, 4};
+    dq = deque<int>({1, 2, 3});
+    EXPECT_STRING_EQ(dq, [1, 2, 3]);
+    EXPECT_EQ(dq.size(), 3);
+  }
+}
+
+TEST(deque, at) {
+  deque<int> dq = {1, 2, 3};
+  for (int i = 0; i < dq.size(); i++) dq.at(i) = i * i;
+  EXPECT_STRING_EQ(dq, [0, 1, 4]);
+  EXPECT_EQ(dq.at(0), 0);
+  EXPECT_EQ(dq.at(1), 1);
+  EXPECT_EQ(dq.at(2), 4);
+  EXPECT_THROW(dq.at(3), std::range_error);
+  EXPECT_THROW((dq.at(3) = 6), std::range_error);
+}
+
+TEST(deque, at_operator) {
+  deque<int> dq = {1, 2, 3};
+  EXPECT_EQ(dq[0], 1);
+  dq[1] = 22;
+  EXPECT_STRING_EQ(dq, [1, 22, 3]);
+}
