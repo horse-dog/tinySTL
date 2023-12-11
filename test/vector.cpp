@@ -239,7 +239,9 @@ TEST(vector, empty) {
 TEST(vector, end) {
   vector<int> vc = {1, 2, 3};
   auto it = vc.end();
-  EXPECT_EQ(*--it, 3);
+  EXPECT_EQ(*--it, 3); // TODO: EXPECT_EQ(*--vc.end(), 3);
+  *it = 4;
+  EXPECT_STRING_EQ(vc, [1, 2, 4]);
 }
 
 TEST(vector, erase) {

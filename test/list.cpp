@@ -196,8 +196,9 @@ TEST(list, empty) {
 
 TEST(list, end) {
   list<int> li = {1, 2, 3};
-  auto it = li.end();
-  EXPECT_EQ(*--it, 3);
+  EXPECT_EQ(*--li.end(), 3);
+  *--li.end() = 4;
+  EXPECT_STRING_EQ(li, [1, 2, 4]);
 }
 
 TEST(list, erase) {

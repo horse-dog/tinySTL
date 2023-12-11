@@ -326,7 +326,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   typedef _Base::difference_type difference_type;
   typedef _Base::allocator_type allocator_type;
   typedef _Base::const_reverse_iterator const_reverse_iterator;
-  typedef _Base::const_reverse_iterator reverse_iterator;
+  typedef _Base::reverse_iterator reverse_iterator;
 
  public:
   explicit deque(const allocator_type& __a = allocator_type())
@@ -550,6 +550,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     iterator __next = __pos;
     ++__next;
     const difference_type __index = __pos - begin();
+    _M_range_check(__index);
     if (size_type(__index) < (size() >> 1)) {
       // __pos is at the left of mid.
       if (__pos != begin())
@@ -558,7 +559,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     } else {
       // __pos is at the right of mid.
       if (__next != end())
-        tinySTL::move(__next, end(), __position);
+        tinySTL::move(__next, end(), __pos);
       pop_back();
     }
     return begin() + __index;
@@ -568,6 +569,14 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   {
     iterator __first = first.base();
     iterator __last  = last.base();
+
+    difference_type __len1 = __first - this->_M_start;
+    difference_type __len2 = __last - this->_M_start;
+    if (__len1 < 0 || __len2 < 0)
+      __tiny_throw_range_error("deque");
+    if (size_type(__len1) > size() || size_type(__len2) > size())
+      __tiny_throw_range_error("deque");
+
     if (__first == __last) {
       return __first;
     } else if (__first == begin() && __last == end()) {
@@ -636,7 +645,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
 
   void pop_front() 
   {
-    _M_range_check(0);
+    if (empty()) return;
     if (_M_start._M_cur != _M_start._M_last - 1) 
     {
       tinySTL::destroy(_M_start._M_cur);
@@ -648,7 +657,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
 
   void pop_back()
   {
-    _M_range_check(0);
+    if (empty()) return;
     if (_M_finish._M_cur != _M_finish._M_first) 
     {
       --this->_M_finish._M_cur;
@@ -702,7 +711,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
       // still has space before front.
       tinySTL::construct(_M_start._M_cur - 1, 
                          tinySTL::forward<_Args>(__args)...);
-      --this->_M_impl._M_start._M_cur;
+      --this->_M_start._M_cur;
     }
     else
       _M_push_front_aux(tinySTL::forward<_Args>(__args)...);
@@ -820,18 +829,27 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     const size_type __len = tinySTL::distance(__first, __last);
     if (__len > size())
       {
-        _ForwardIterator __mid = tinySTL::copy_n(__first, __len, begin()).first;
+        _ForwardIterator __mid = tinySTL::copy_n(__first, size(), begin()).first;
         _M_range_insert_aux(end(), __mid, __last, iterator_category(__first));
       }
     else
       _M_erase_at_end(tinySTL::copy(__first, __last, begin()));
   }
 
-  // TODO: unfinished...
   template <class _ForwardIterator>
   void _M_range_insert_aux(iterator __pos,
         _ForwardIterator __first, _ForwardIterator __last,
-        input_iterator_tag);
+        input_iterator_tag)
+  {
+	  iterator __cur = begin();
+	  for (; __first != __last && __cur != end(); ++__cur, ++__first)
+	    *__cur = *__first;
+	  if (__first == __last)
+	    _M_erase_at_end(__cur);
+	  else
+	    _M_range_insert_aux(end(), __first, __last,
+			  iterator_category(__first));
+  }
 
   template <class _ForwardIterator>
   void _M_range_insert_aux(iterator __pos,
@@ -866,7 +884,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   }
 
   // insert element not at begin and end.
-  template<typename... _Args> iterator
+  template<class... _Args> iterator
   _M_insert_aux(iterator __pos, _Args&&... __args)
   {
     value_type __x_copy(tinySTL::forward<_Args>(__args)...);
@@ -1163,6 +1181,44 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     tinySTL::destroy(_M_finish._M_cur);
   }
 
+  template<class... _Args>
+  void _M_push_back_aux(_Args&&... __args)
+  {
+    if (size() == max_size())
+      __tiny_throw_length_error
+      ("cannot create std::deque larger than max_size()");
+    _M_reserve_map_at_back();
+    *(this->_M_finish._M_node + 1) = _M_allocate_node();
+    try {
+      tinySTL::construct(_M_finish._M_cur, 
+        tinySTL::forward<_Args>(__args)...);
+      _M_finish._M_set_node(_M_finish._M_node + 1);
+      _M_finish._M_cur = _M_finish._M_first;
+    } catch (...) {
+      _M_deallocate_node(*(_M_finish._M_node + 1));
+      throw;
+    }
+  }
+
+  template<class... _Args>
+	void _M_push_front_aux(_Args&&... __args)
+  {
+    if (size() == max_size())
+      __tiny_throw_length_error
+      ("cannot create std::deque larger than max_size()");
+    _M_reserve_map_at_front();
+    *(this->_M_start._M_node - 1) = _M_allocate_node();
+    try {
+      _M_start._M_set_node(_M_start._M_node - 1);
+      _M_start._M_cur = _M_start._M_last - 1;
+      tinySTL::construct(_M_start._M_cur, 
+        tinySTL::forward<_Args>(__args)...);
+    } catch (...) {
+      ++this->_M_start;
+      _M_deallocate_node(*(_M_start._M_node - 1));
+      throw;
+    }
+  }
 };
 
 }
