@@ -84,7 +84,7 @@ TEST(deque, assign) {
    * @brief initializer_list assign. 
    */
   SUBTEST(assign) {
-    deque<int> dq(1);
+    deque<int> dq {1, 2, 3, 4};
     dq.assign({1, 2, 3});
     EXPECT_STRING_EQ(dq, [1, 2, 3]);
     EXPECT_EQ(dq.size(), 3);
@@ -94,12 +94,12 @@ TEST(deque, assign) {
    * @test  void assign(size_type n, const T& val)
    * @brief size with value assign. 
    */
-  // SUBTEST(assign) {
-  //   deque<int> dq { 1, 2, 3, 4 };
-  //   dq.assign(3, 100);
-  //   EXPECT_STRING_EQ(dq, [100, 100, 100]);
-  //   EXPECT_EQ(dq.size(), 3);
-  // }
+  SUBTEST(assign) {
+    deque<int> dq { 1, 2, 3, 4 };
+    dq.assign(3, 100);
+    EXPECT_STRING_EQ(dq, [100, 100, 100]);
+    EXPECT_EQ(dq.size(), 3);
+  }
 
   /**
    * @test  void assign(Iterator first, Iterator last)

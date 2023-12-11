@@ -403,7 +403,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   {
     if (__n > size()) {
       tinySTL::fill(begin(), end(), __val);
-      insert(end(), __n - size(), __val);
+      _M_fill_insert(end(), __n - size(), __val);
     } else {
       _M_erase_at_end(begin() + difference_type(__n));
       tinySTL::fill(begin(), end(), __val);
@@ -459,13 +459,27 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
 
   size_type max_size() const { return size_type(-1); }
 
-  reference front();
+  reference front() 
+  { _M_range_check(0); return *begin(); }
 
-  const_reference front() const;
+  const_reference front() const
+  { _M_range_check(0); return *begin(); }
 
-  reference back();
+  reference back() 
+  {
+    _M_range_check(0);
+    iterator __tmp = end();
+    --__tmp;
+    return *__tmp;
+  }
 
-  const_reference back() const;
+  const_reference back() const
+  {
+    _M_range_check(0);
+    const_iterator __tmp = end();
+    --__tmp;
+    return *__tmp;
+  }
 
   void swap(deque<_Tp, _Alloc>& __x) {
     tinySTL::swap(_M_start, __x._M_start);
@@ -474,59 +488,246 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     tinySTL::swap(_M_map_size, __x._M_map_size);
   }
 
-  iterator insert(const_iterator __position, _Tp&& __x);
+  iterator insert(const_iterator __position, _Tp&& __x)
+  { return emplace(__position, tinySTL::move(__x)); }
 
-  iterator insert(const_iterator __position, const _Tp& __x);
+  iterator insert(const_iterator __position, const _Tp& __x)
+  {
+    iterator __pos = __position.base();
+    if (__pos._M_cur == _M_start._M_cur) {
+      // insert at begin.
+      push_front(__x);
+      return this->_M_start;
+    } else if (__pos._M_cur == _M_finish._M_cur) {
+      // insert at end.
+      push_back(__x);
+      iterator __tmp = this->_M_finish;
+      --__tmp;
+      return __tmp;
+    } else {
+      return _M_insert_aux(__pos, __x);
+    }
+  }
 
-  iterator insert(const_iterator __position, std::initializer_list<_Tp> __l);
+  iterator insert(const_iterator __position, std::initializer_list<_Tp> __l)
+  {
+    iterator __pos = __position.base();
+    difference_type __offset = __pos - begin(); 
+    _M_range_insert_aux(__pos, __l.begin(), __l.end(),
+                        random_access_iterator_tag());
+    return begin() + __offset;
+  }
 
-  iterator insert(const_iterator __position, size_type __n, const _Tp& __x);
+  iterator insert(const_iterator __position, size_type __n, const _Tp& __x)
+  {
+    iterator __pos = __position.base();
+    difference_type __offset = __pos - begin();
+    _M_fill_insert(__pos, __n, __x);
+    return begin() + __offset;
+  }
 
   template <InputIterator Iterator>
-  iterator insert(const_iterator __position, Iterator __first, Iterator __last);
+  iterator insert(const_iterator __position, Iterator __first, Iterator __last)
+  {
+    iterator __pos = __position.base();
+    difference_type __offset = __pos - begin();
+    _M_range_insert_aux(__pos, __first, __last,
+                        iterator_category(__first));
+    return begin() + __offset;
+  }
 
-  iterator erase(const_iterator __position);
+  iterator erase(const_iterator __position) 
+  {
+    iterator __pos  = __position.base();
+    iterator __next = __pos;
+    ++__next;
+    const difference_type __index = __pos - begin();
+    if (size_type(__index) < (size() >> 1)) {
+      // __pos is at the left of mid.
+      if (__pos != begin())
+        tinySTL::move_backward(begin(), __pos, __next);
+      pop_front();
+    } else {
+      // __pos is at the right of mid.
+      if (__next != end())
+        tinySTL::move(__next, end(), __position);
+      pop_back();
+    }
+    return begin() + __index;
+  }
 
-  iterator erase(const_iterator __first, const_iterator __last);
+  iterator erase(const_iterator first, const_iterator last)
+  {
+    iterator __first = first.base();
+    iterator __last  = last.base();
+    if (__first == __last) {
+      return __first;
+    } else if (__first == begin() && __last == end()) {
+      clear();
+      return end();
+    } else {
+      const difference_type __n = __last - __first;
+      const difference_type __elems_before = __first - begin();
+      if (size_type(__elems_before) <= (size() - __n) / 2) {
+        if (__first != begin())
+          tinySTL::move_backward(begin(), __first, __last);
+        _M_erase_at_begin(begin() + __n);
+      } else {
+        if (__last != end())
+          tinySTL::move(__last, end(), __first);
+        _M_erase_at_end(end() - __n);
+      }
+      return begin() + __elems_before;
+    }
+  }
 
   void push_front(_Tp&& __x)
   { emplace_front(tinySTL::move(__x)); }
 
   void push_front(const _Tp& __x)
-  { emplace_front(__x); }
+  {
+    if (_M_start._M_cur != _M_start._M_first)
+    {
+      // still has space before front.
+      tinySTL::construct(_M_start._M_cur - 1, __x);
+      --this->_M_start._M_cur;
+    }
+    else
+      _M_push_front_aux(__x);
+  }
 
   void push_back(_Tp&& __x)
   { emplace_back(tinySTL::move(__x)); }
 
   void push_back(const _Tp& __x)
-  { emplace_back(__x); }
+  {
+    if (_M_finish._M_cur != _M_finish._M_last - 1)
+    {
+      // still has more than 1 space after end.
+      tinySTL::construct(_M_finish._M_cur, __x);
+      ++this->_M_finish._M_cur;
+    }
+    else
+      _M_push_back_aux(__x);
+  }
 
   void clear() 
   { _M_erase_at_end(begin()); }
 
-  void resize(size_type __new_size, const _Tp& __x);
+  void resize(size_type __new_size, const _Tp& __x)
+  {
+    const size_type __len = size();
+    if (__new_size > __len)
+      _M_fill_insert(this->_M_finish, __new_size - __len, __x);
+    else if (__new_size < __len)
+      _M_erase_at_end(this->_M_start + difference_type(__new_size));
+  }
 
-  void resize(size_type __new_size);
+  void resize(size_type __new_size) 
+  { resize(__new_size, _Tp()); }
 
-  void pop_front();
+  void pop_front() 
+  {
+    _M_range_check(0);
+    if (_M_start._M_cur != _M_start._M_last - 1) 
+    {
+      tinySTL::destroy(_M_start._M_cur);
+      ++this->_M_start._M_cur;
+    } 
+    else
+      _M_pop_front_aux();
+  }
 
-  void pop_back();
+  void pop_back()
+  {
+    _M_range_check(0);
+    if (_M_finish._M_cur != _M_finish._M_first) 
+    {
+      --this->_M_finish._M_cur;
+      tinySTL::destroy(_M_finish._M_cur);
+    } 
+    else
+      _M_pop_back_aux();
+  }
 
   template <class... _Args>
-  iterator emplace(const_iterator __pos, _Args &&...__args);
+  iterator emplace(const_iterator __pos, _Args &&...__args)
+  {
+    iterator __position = __pos.base();
+    if (__position._M_cur == _M_start._M_cur)
+    {
+      emplace_front(tinySTL::forward<_Args>(__args)...);
+      return this->_M_start;
+    }
+    else if (__position._M_cur == _M_finish._M_cur)
+    {
+      emplace_back(tinySTL::forward<_Args>(__args)...);
+      iterator __tmp = this->_M_finish;
+      --__tmp;
+      return __tmp;
+    }
+    else
+      return _M_insert_aux(__position,
+             tinySTL::forward<_Args>(__args)...);
+  }
 
   template <class... _Args>
-  reference emplace_back(_Args&&... __args);
+  reference emplace_back(_Args&&... __args)
+  {
+    if (_M_finish._M_cur != _M_finish._M_last - 1)
+    {
+      // still has more than 1 space after end.
+      tinySTL::construct(_M_finish._M_cur, 
+                         tinySTL::forward<_Args>(__args)...);
+      ++this->_M_finish._M_cur;
+    }
+    else
+      _M_push_back_aux(tinySTL::forward<_Args>(__args)...);
+    return back();
+  }
 
   template <class... _Args>
-  reference emplace_front(_Args&&... __args);
+  reference emplace_front(_Args&&... __args)
+  {
+    if (_M_start._M_cur != _M_start._M_first)
+    {
+      // still has space before front.
+      tinySTL::construct(_M_start._M_cur - 1, 
+                         tinySTL::forward<_Args>(__args)...);
+      --this->_M_impl._M_start._M_cur;
+    }
+    else
+      _M_push_front_aux(tinySTL::forward<_Args>(__args)...);
+    return front();
+  }
 
-  void shrink_to_fit();
+  void shrink_to_fit()
+  {
+    const difference_type 
+    __front_capacity = _M_start._M_cur - _M_start._M_first;
+    if (__front_capacity == 0) return;
+
+    const difference_type 
+    __back_capacity = _M_finish._M_last - _M_finish._M_cur;
+    if (__front_capacity + __back_capacity 
+      < iterator::_S_buffer_size()) return;
+
+    // TODO: check this ?.
+    deque __tmp(begin(), end());
+    this->swap(__tmp);
+  }
 
  protected:
   void _M_range_check(size_type __n) const {
     if (__n >= this->size())
       __tiny_throw_range_error("deque");
+  }
+
+  void _M_erase_at_begin(iterator __pos)
+  {
+    _M_destroy_data(begin(), __pos);
+    _M_destroy_nodes(_M_start._M_node, __pos._M_node);
+    this->_M_start = __pos;
   }
 
   void _M_erase_at_end(iterator __pos)
@@ -656,14 +857,96 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     }
   }
 
-  // TODO: unfinished...
+  // insert element not at begin and end.
   template<typename... _Args> iterator
-	_M_insert_aux(iterator __pos, _Args&&... __args);
+  _M_insert_aux(iterator __pos, _Args&&... __args)
+  {
+    value_type __x_copy(tinySTL::forward<_Args>(__args)...);
+    difference_type __index = __pos - _M_start;
+    if ((size_type) __index < size() / 2) {
+      // insert at left of mid.
+      push_front(tinySTL::move(front()));
+      iterator __front1 = _M_start;
+      ++__front1;
+      iterator __front2 = __front1;
+      ++__front2;
+      __pos = _M_start + __index;
+      iterator __pos1 = __pos;
+      ++__pos1;
+      tinySTL::move(__front2, __pos1, __front1);
+    } else {
+      // insert at right of mid.
+      push_back(tinySTL::move(back()));
+      iterator __back1 = _M_finish;
+      --__back1;
+      iterator __back2 = __back1;
+      --__back2;
+      __pos = _M_start + __index;
+      tinySTL::move_backward(__pos, __back2, __back1);
+    }
+    *__pos = tinySTL::move(__x_copy);
+    return __pos;
+  }
 
-  // TODO: unfinished...
-  void
-  _M_insert_aux(iterator __pos, size_type __n, const value_type& __x);
+  void // insert __x __n times not at begin and end.
+  _M_insert_aux(iterator __pos, size_type __n, const value_type& __x)
+  {
+    const difference_type __elems_before = __pos - _M_start;
+    const size_type __length = this->size();
+    value_type __x_copy = __x;
+    if (__elems_before < difference_type(__length / 2)) {
+      // insert at left of mid.
+      iterator __new_start = _M_reserve_elements_at_front(__n);
+      iterator __old_start = this->_M_start;
+      __pos = _M_start + __elems_before;
+      try {
+        if (__elems_before >= difference_type(__n)) {
+          iterator __start_n = _M_start + difference_type(__n);
+          tinySTL::uninitialized_move(_M_start, __start_n, __new_start);
+          _M_start = __new_start;
+          tinySTL::move(__start_n, __pos, __old_start);
+          tinySTL::fill(__pos - difference_type(__n), __pos, __x_copy);
+        } else {
+          iterator __moven = tinySTL::uninitialized_move(
+            _M_start, __pos, __new_start);
+          tinySTL::uninitialized_fill(__moven, _M_start, __x_copy);
+          _M_start = __new_start;
+          tinySTL::fill(__old_start, __pos, __x_copy);
+        }
+      } catch (...) {
+        _M_destroy_nodes(__new_start._M_node, _M_start._M_node);
+        throw;
+      }
+    } else {
+      // insert at right of mid.
+      iterator __new_finish = _M_reserve_elements_at_back(__n);
+      iterator __old_finish = this->_M_finish;
+      const difference_type __elems_after = 
+        difference_type(__length) - __elems_before;
+      __pos = _M_finish - __elems_after;
+      try {
+        if (__elems_after > difference_type(__n)) {
+          iterator __finish_n = _M_finish - difference_type(__n);
+          tinySTL::uninitialized_move(__finish_n, _M_finish, _M_finish);
+          _M_finish = __new_finish;
+          tinySTL::move_backward(__pos, __finish_n, __old_finish);
+          tinySTL::fill(__pos, __pos + difference_type(__n), __x_copy);
+        } else {
+          tinySTL::uninitialized_fill(_M_finish, 
+                   __pos + difference_type(__n), __x_copy);
+          tinySTL::uninitialized_move(__pos, _M_finish, 
+                   __pos + difference_type(__n));
+          _M_finish = __new_finish;
+          tinySTL::fill(__pos, __old_finish, __x_copy);
+        }
+      } catch (...) {
+        _M_destroy_nodes(_M_finish._M_node + 1, __new_finish._M_node + 1);
+        throw;
+      }
+    }
+  }
 
+  // insert [__first, __last) not at begin and end.
   template <class _ForwardIterator>
   void _M_insert_aux(iterator __pos,
         _ForwardIterator __first, _ForwardIterator __last,
@@ -726,16 +1009,16 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     }
   }
 
-  iterator 
+  iterator // reserve __n elements space at front (uninitialized).
   _M_reserve_elements_at_front(size_type __n)
   {
     const size_type __vacancies = _M_start._M_cur - _M_start._M_first;
     if (__n > __vacancies) 
-	    _M_new_elements_at_front(__n - __vacancies);
+      _M_new_elements_at_front(__n - __vacancies);
     return _M_start - difference_type(__n);
   }
 
-  iterator
+  iterator // reserve __n elements space at back (uninitialized).
   _M_reserve_elements_at_back(size_type __n)
   {
     const size_type __vacancies = _M_finish._M_last - _M_finish._M_cur - 1;
@@ -825,10 +1108,53 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     _M_finish._M_set_node(__new_nstart + __old_num_nodes - 1);
   }
 
-  // TODO: unfinished...
-  void
-  _M_fill_insert(iterator __pos, size_type __n, const value_type& __x);
-  
+  void // insert __x __n times.
+  _M_fill_insert(iterator __pos, size_type __n, const value_type& __x)
+  {
+    if (__pos._M_cur == _M_start._M_cur) {
+      // insert at begin.
+      iterator __new_start = _M_reserve_elements_at_front(__n);
+      try {
+        tinySTL::uninitialized_fill(__new_start, _M_start, __x);
+        _M_start = __new_start;
+      } catch (...) {
+        _M_destroy_nodes(__new_start._M_node, _M_start._M_node);
+        throw;
+      }
+    } else if (__pos._M_cur == _M_finish._M_cur) {
+      // insert at end.
+      iterator __new_finish = _M_reserve_elements_at_back(__n);
+      try {
+        tinySTL::uninitialized_fill(_M_finish, __new_finish, __x);
+        _M_finish = __new_finish;
+      } catch (...) {
+        _M_destroy_nodes(_M_finish._M_node + 1, __new_finish._M_node + 1);
+        throw;
+      }
+    } else {
+      // insert not at begin and end.
+      _M_insert_aux(__pos, __n, __x);
+    }
+  }
+
+  // Called only if _M_start._M_cur == _M_start._M_last - 1.
+  void _M_pop_front_aux() 
+  {
+    tinySTL::destroy(_M_start._M_cur);
+    _M_deallocate_node(_M_start._M_first);
+    _M_start._M_set_node(_M_start._M_node + 1);
+    _M_start._M_cur = _M_start._M_first;
+  }
+
+  // Called only if _M_finish._M_cur == _M_finish._M_first.
+  void _M_pop_back_aux()
+  {
+    _M_deallocate_node(_M_finish._M_first);
+    _M_finish._M_set_node(_M_finish._M_node - 1);
+    _M_finish._M_cur = _M_finish._M_last - 1;
+    tinySTL::destroy(_M_finish._M_cur);
+  }
+
 };
 
 }
