@@ -182,7 +182,8 @@ class _Deque_base {
   typedef simple_alloc<pointer, _Alloc> _Map_alloc_type;
   typedef simple_alloc<value_type, _Alloc> _Node_alloc_type;
 
-  const static size_type _S_initial_map_size = 8;
+  enum { _S_initial_map_size = 8 };
+  // const static size_type _S_initial_map_size = 8;
   const static size_type _S_deque_buffer_size = 8; // TODO: 8 -> 512.
 
  public:
@@ -260,7 +261,8 @@ class _Deque_base {
   void _M_initialize_map(size_t __num_elements) {
     size_t __num_nodes = 
       __num_elements / iterator::__deque_buf_size(sizeof(_Tp)) + 1;
-    _M_map_size = tinySTL::max(_S_initial_map_size, __num_nodes + 2);
+    _M_map_size = tinySTL::max((size_t) _S_initial_map_size, 
+                               (size_t) (__num_nodes + 2));
     _M_map = _M_allocate_map(_M_map_size);
     _Tp** __nstart = _M_map + (_M_map_size - __num_nodes) / 2;
     _Tp** __nfinish = __nstart + __num_nodes;
@@ -779,9 +781,35 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
       _M_reallocate_map(__nodes_to_add, false);
   }
 
-  // TODO: unfinished at 2023/12/10/23:23
-  void
-  _M_reallocate_map(size_type __nodes_to_add, bool __add_at_front);
+  void // __add_at_front: true -> add nodes at front : false -> add at back.
+  _M_reallocate_map(size_type __nodes_to_add, bool __add_at_front) 
+  {
+    const size_type __old_num_nodes = _M_finish._M_node - _M_start._M_node + 1;
+    const size_type __new_num_nodes = __old_num_nodes + __nodes_to_add;
+
+    _Map_pointer __new_nstart;
+    if (this->_M_map_size > 2 * __new_num_nodes) {
+      __new_nstart = _M_map + (_M_map_size - __new_num_nodes) / 2
+                     + (__add_at_front ? __nodes_to_add : 0);
+      if (__new_nstart < _M_start._M_node)
+        tinySTL::copy(_M_start._M_node, _M_finish._M_node + 1, __new_nstart);
+      else 
+        tinySTL::copy_backward(_M_start._M_node, _M_finish._M_node + 1, 
+                               __new_nstart + __old_num_nodes);
+    } else {
+      size_type __new_map_size = _M_map_size
+          + tinySTL::max(_M_map_size, __nodes_to_add) + 2;
+      _Map_pointer __new_map = _Base::_M_allocate_map(__new_map_size);
+      __new_nstart = __new_map + (__new_map_size - __new_num_nodes) / 2
+                     + (__add_at_front ? __nodes_to_add : 0);
+      tinySTL::copy(_M_start._M_node, _M_finish._M_node + 1, __new_nstart);
+      _Base::_M_deallocate_map(_M_map, _M_map_size);
+      _M_map = __new_map;
+      _M_map_size = __new_map;
+    }
+    _M_start._M_set_node(__new_nstart);
+    _M_finish._M_set_node(__new_nstart + __old_num_nodes - 1);
+  }
   
 };
 

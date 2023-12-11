@@ -72,8 +72,9 @@ TEST(deque, constructor) {
    * @brief range constructor. 
    */
   SUBTEST(constructor) {
-    std::list<double> l = { 3.14, 6.28, 0.618 };
+    std::vector<double> l = { 3.14, 6.28, 0.618 };
     deque<int> dq(l.begin(), l.end());
     EXPECT_STRING_EQ(dq, [3, 6, 0]);
   }
 }
+#include <deque>
