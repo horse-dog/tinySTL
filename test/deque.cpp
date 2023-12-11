@@ -77,4 +77,39 @@ TEST(deque, constructor) {
     EXPECT_STRING_EQ(dq, [3, 6, 0]);
   }
 }
-#include <deque>
+
+TEST(deque, assign) {
+  /**
+   * @test  void assign(initializer_list l)
+   * @brief initializer_list assign. 
+   */
+  SUBTEST(assign) {
+    deque<int> dq(1);
+    dq.assign({1, 2, 3});
+    EXPECT_STRING_EQ(dq, [1, 2, 3]);
+    EXPECT_EQ(dq.size(), 3);
+  }
+
+  /**
+   * @test  void assign(size_type n, const T& val)
+   * @brief size with value assign. 
+   */
+  // SUBTEST(assign) {
+  //   deque<int> dq { 1, 2, 3, 4 };
+  //   dq.assign(3, 100);
+  //   EXPECT_STRING_EQ(dq, [100, 100, 100]);
+  //   EXPECT_EQ(dq.size(), 3);
+  // }
+
+  /**
+   * @test  void assign(Iterator first, Iterator last)
+   * @brief range assign. 
+   */
+  SUBTEST(assign) {
+    std::vector<double> l = { 3.14, 6.28, 0.618 };
+    deque<int> dq { 1, 2, 3, 4 };
+    dq.assign(l.begin(), l.end());
+    EXPECT_STRING_EQ(dq, [3, 6, 0]);
+    EXPECT_EQ(dq.size(), 3);
+  }
+}

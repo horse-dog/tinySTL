@@ -307,7 +307,13 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   using _Base::_M_map_size;
   using _Base::_M_start;
   using _Base::_M_finish;
-
+  using _Base::_M_allocate_map;
+  using _Base::_M_deallocate_map;
+  using _Base::_M_initialize_map;
+  using _Base::_M_allocate_node;
+  using _Base::_M_deallocate_node;
+  using _Base::_M_destroy_nodes;
+ 
  public:
   typedef _Base::value_type value_type;
   typedef _Base::value_type pointer;
@@ -548,7 +554,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     _InputIterator __first, _InputIterator __last,
     input_iterator_tag) 
   {
-    _Base::_M_initialize_map(0);
+    _M_initialize_map(0);
     try {
       for ( ; __first != __last; ++__first)
         push_back(*__first);
@@ -564,7 +570,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     forward_iterator_tag) 
   {
     size_type __n = tinySTL::distance(__first, __last);
-    _Base::_M_initialize_map(__n);
+    _M_initialize_map(__n);
 
     _Map_pointer __cur_node;
     const size_t __bufsz = iterator::_S_buffer_size();
@@ -649,6 +655,14 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
       _M_insert_aux(__pos, __first, __last, __n);
     }
   }
+
+  // TODO: unfinished...
+  template<typename... _Args> iterator
+	_M_insert_aux(iterator __pos, _Args&&... __args);
+
+  // TODO: unfinished...
+  void
+  _M_insert_aux(iterator __pos, size_type __n, const value_type& __x);
 
   template <class _ForwardIterator>
   void _M_insert_aux(iterator __pos,
@@ -741,7 +755,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     size_type __i;
     try {
       for (__i = 1; __i <= __new_nodes; ++__i)
-        *(_M_start._M_node - __i) = _Base::_M_allocate_node();
+        *(_M_start._M_node - __i) = _M_allocate_node();
     } catch (...) {
       for (size_type __j = 1; __j < __i; ++__j)
         _M_deallocate_node(*(_M_start._M_node - __j));
@@ -760,7 +774,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     size_type __i;
     try {
       for (__i = 1; __i <= __new_nodes; ++__i)
-        *(_M_finish._M_node + __i) = _Base::_M_allocate_node();
+        *(_M_finish._M_node + __i) = _M_allocate_node();
     } catch (...) {
       for (size_type __j = 1; __j < __i; ++__j)
         _M_deallocate_node(*(_M_finish._M_node + __j));
@@ -799,17 +813,21 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     } else {
       size_type __new_map_size = _M_map_size
           + tinySTL::max(_M_map_size, __nodes_to_add) + 2;
-      _Map_pointer __new_map = _Base::_M_allocate_map(__new_map_size);
+      _Map_pointer __new_map = _M_allocate_map(__new_map_size);
       __new_nstart = __new_map + (__new_map_size - __new_num_nodes) / 2
                      + (__add_at_front ? __nodes_to_add : 0);
       tinySTL::copy(_M_start._M_node, _M_finish._M_node + 1, __new_nstart);
-      _Base::_M_deallocate_map(_M_map, _M_map_size);
+      _M_deallocate_map(_M_map, _M_map_size);
       _M_map = __new_map;
-      _M_map_size = __new_map;
+      _M_map_size = __new_map_size;
     }
     _M_start._M_set_node(__new_nstart);
     _M_finish._M_set_node(__new_nstart + __old_num_nodes - 1);
   }
+
+  // TODO: unfinished...
+  void
+  _M_fill_insert(iterator __pos, size_type __n, const value_type& __x);
   
 };
 
