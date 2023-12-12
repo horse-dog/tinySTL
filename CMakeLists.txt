@@ -37,6 +37,10 @@ add_executable(test_deque test/deque.cpp)
 target_link_libraries(test_deque PRIVATE gtest_main gmock_main)
 add_test(NAME test_deque COMMAND test_deque)
 
+add_executable(test_heap test/heap.cpp)
+target_link_libraries(test_heap PRIVATE gtest_main gmock_main)
+add_test(NAME test_heap COMMAND test_heap)
+
 add_executable(test_stack test/stack.cpp)
 target_link_libraries(test_stack PRIVATE gtest_main gmock_main)
 add_test(NAME test_stack COMMAND test_stack)

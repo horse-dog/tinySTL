@@ -3,6 +3,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "priority_queue.h"
+#include "queue.h"
 
 using namespace tinySTL;

@@ -841,14 +841,14 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
         _ForwardIterator __first, _ForwardIterator __last,
         input_iterator_tag)
   {
-	  iterator __cur = begin();
-	  for (; __first != __last && __cur != end(); ++__cur, ++__first)
-	    *__cur = *__first;
-	  if (__first == __last)
-	    _M_erase_at_end(__cur);
-	  else
-	    _M_range_insert_aux(end(), __first, __last,
-			  iterator_category(__first));
+    iterator __cur = begin();
+    for (; __first != __last && __cur != end(); ++__cur, ++__first)
+      *__cur = *__first;
+    if (__first == __last)
+      _M_erase_at_end(__cur);
+    else
+      _M_range_insert_aux(end(), __first, __last,
+        iterator_category(__first));
   }
 
   template <class _ForwardIterator>
@@ -1201,7 +1201,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   }
 
   template<class... _Args>
-	void _M_push_front_aux(_Args&&... __args)
+  void _M_push_front_aux(_Args&&... __args)
   {
     if (size() == max_size())
       __tiny_throw_length_error

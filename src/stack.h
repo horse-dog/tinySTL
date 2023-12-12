@@ -1,12 +1,11 @@
 #pragma once
 
-// TODO: replace by deque.
-#include "vector.h"
+#include "deque.h"
 
 namespace tinySTL
 {
 
-template <typename _Tp, typename _Sequence = vector<_Tp>>
+template <typename _Tp, typename _Sequence = deque<_Tp>>
 class stack {
  public:
   using value_type = typename _Sequence::value_type;
@@ -34,7 +33,7 @@ class stack {
  public:
   template <class... _Args>
   auto emplace(_Args&& ...__args)
-    { return c.emplace_back(std::forward<_Args>(__args)...); }
+    { return c.emplace_back(tinySTL::forward<_Args>(__args)...); }
 
   bool empty() const
     { return c.empty(); }

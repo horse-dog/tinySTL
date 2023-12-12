@@ -593,6 +593,7 @@ class forward_list
     return __cnt;
   }
 
+  // TODO: add comment of splices.
   void splice_after(const_iterator __pos, forward_list&& __list)
     { splice_after(__pos, __list); }
 
