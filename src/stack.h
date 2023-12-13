@@ -60,7 +60,7 @@ class stack {
     { return c.back(); }
 
   friend bool operator==(const stack& __x, const stack& __y)
-    { return operator==(__x.c, __y.c); }
+    { return __x.c == __y.c; }
 
   friend bool operator!=(const stack& __x, const stack& __y)
     { return !(__x == __y); }

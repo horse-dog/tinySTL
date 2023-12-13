@@ -54,20 +54,44 @@ struct aligned_membuf
 template<class _Tp, class _Alloc>
 class simple_alloc {
  public:
-  static _Tp* allocate(size_t __n) { 
+  typedef size_t     size_type;
+  typedef ptrdiff_t  difference_type;
+  typedef _Tp*       pointer;
+  typedef const _Tp* const_pointer;
+  typedef _Tp&       reference;
+  typedef const _Tp& const_reference;
+  typedef _Tp        value_type;
+
+ int xxxSS = 0;
+
+  template<typename _Tp1>
+	struct rebind
+	{ 
+    typedef simple_alloc<_Tp1, _Alloc> other; 
+  };
+
+  constexpr simple_alloc() noexcept
+  { }
+
+  template<typename _Tp1>
+	constexpr
+	simple_alloc(const simple_alloc<_Tp1, _Alloc>&) noexcept 
+  { }
+
+  pointer allocate(size_type __n) { 
     return 0 == __n ? 0 : (_Tp*) _Alloc::allocate(__n * sizeof (_Tp));
   }
 
   // same as allocate(1).
-  static _Tp* allocate(void) { 
+  pointer allocate(void) { 
     return (_Tp*) _Alloc::allocate(sizeof (_Tp)); 
   }
 
-  static void deallocate(_Tp* __p, size_t __n) { 
+  void deallocate(pointer __p, size_type __n) { 
     if (0 != __n) _Alloc::deallocate(__p, __n * sizeof (_Tp)); 
   }
 
-  static void deallocate(_Tp* __p) { 
+  void deallocate(pointer __p) { 
     _Alloc::deallocate(__p, sizeof (_Tp)); 
   }
 };
@@ -313,9 +337,18 @@ class __default_alloc_template {
 // TODO: multi-thread env.
 // typedef __default_alloc_template<false, 0> alloc;
 typedef __debug_alloc_template<false> alloc;
+// typedef __malloc_alloc_template<0> alloc;
 
 template <class _Tp>
 using allocator = simple_alloc<_Tp, alloc>;
+
+template <typename _Tp, typename _Up>
+struct _Alloc_rebind {};
+
+template <template <typename, typename...> class _Template,
+          typename _Up, typename _Tp, typename... _Types>
+struct _Alloc_rebind<_Template<_Tp, _Types...>, _Up>
+{ using type = _Template<_Up, _Types...>; };
 
 template <bool __threads, int __inst>
 char* __default_alloc_template<__threads, __inst>::_S_start_free = 0;

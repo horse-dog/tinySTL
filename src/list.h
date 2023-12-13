@@ -15,26 +15,26 @@ struct _List_node_base {
   _List_node_base* _M_next = 0;
 };
 
-struct _List_node_head : public _List_node_base
+struct _List_node_header : public _List_node_base
 {
   using _List_node_base::_M_prev;
   using _List_node_base::_M_next;
   size_t _M_size = 0;
 
-  _List_node_head() : _M_size(0) 
+  _List_node_header() : _M_size(0) 
     { _M_prev = _M_next = this; }
 
- ~_List_node_head() 
+ ~_List_node_header() 
     { 
       _M_prev = _M_next = this;
       _M_size = 0;
     }
 
-  _List_node_head(const _List_node_head&) = delete;
+  _List_node_header(const _List_node_header&) = delete;
 
-  _List_node_head& operator=(const _List_node_head&) = delete;
+  _List_node_header& operator=(const _List_node_header&) = delete;
 
-  _List_node_head(_List_node_head&& __x)
+  _List_node_header(_List_node_header&& __x)
     {
       if (__x._M_size == 0)
       {
@@ -53,10 +53,10 @@ struct _List_node_head : public _List_node_base
       __x._M_size = 0;
     }
 
-  _List_node_head& operator=(_List_node_head&& __x) 
+  _List_node_header& operator=(_List_node_header&& __x) 
     {
       if (this != &__x) {
-        this->~_List_node_head();
+        this->~_List_node_header();
         tinySTL::construct(this, tinySTL::move(__x));
       }
       return *this;
@@ -73,18 +73,22 @@ struct _List_node : public _List_node_base
 
   template <class... _Args>
   _List_node(_Args&&... __args)
-    { tinySTL::construct(_M_storage.ptr(), tinySTL::forward<_Args>(__args)...); }
+    { 
+      tinySTL::construct(
+        _M_storage.ptr(), 
+        tinySTL::forward<_Args>(__args)...
+      ); 
+    }
 
  ~_List_node() 
-    { tinySTL::destroy(_M_storage.ptr()); }
+    { 
+      tinySTL::destroy(_M_storage.ptr()); 
+    }
 };
 
-template <class _Tp, class _Alloc = alloc>
+template <class _Tp, class _Alloc = tinySTL::allocator<_Tp>>
 class list
 {
-
- protected:
-  _List_node_head _M_head;
 
  protected:
   class _List_iterator
@@ -164,8 +168,22 @@ class list
   typedef tinySTL::reverse_iterator<iterator> reverse_iterator;
 
  protected:
-  typedef simple_alloc<_List_node<_Tp>, _Alloc> _Node_alloc_type;
+  typedef typename _Alloc_rebind<_Alloc, _List_node<_Tp>>
+            ::type _Node_alloc_type;
   typedef _List_node<_Tp> _Node;
+
+  struct _List_impl 
+  : public _Node_alloc_type
+  {
+    _List_impl(const _Node_alloc_type& __a)
+    : _Node_alloc_type(__a), _M_header()
+      { }
+
+    _List_impl(_List_impl&& __x) = default;
+
+    _List_node_header _M_header;
+  };
+  _List_impl _M_impl;
 
   struct less 
   {
@@ -177,10 +195,10 @@ class list
   };
 
   _Node* _M_get_node()
-    { return _Node_alloc_type::allocate(1); }
+    { return _M_impl.allocate(1); }
 
   void _M_put_node(_Node* __p) 
-    { _Node_alloc_type::deallocate(__p, 1); }
+    { _M_impl.deallocate(__p, 1); }
 
   template <class... _Args>
   _Node* _M_create_node(_Args&&... __args)
@@ -208,22 +226,22 @@ class list
 
  public:
   explicit list(const allocator_type& __a = allocator_type())
-    : _M_head() {}
+    : _M_impl(_Node_alloc_type(__a)) { }
 
-  explicit list(size_type __n) 
-    : list(__n, _Tp()) {}
+  explicit list(size_type __n, const allocator_type& __a = allocator_type()) 
+    : list(__n, _Tp(), __a) { }
 
   list(size_type __n, const _Tp& __value,
        const allocator_type& __a = allocator_type())
-    : _M_head()
+    : _M_impl(_Node_alloc_type(__a))
     { 
-      _List_node_base* __head = (_List_node_base*) this;
+      _List_node_base* __head = (_List_node_base*)(&_M_impl._M_header);
       _List_node_base* pre = __head;
       _List_node_base* s;
-      _M_head._M_size = __n;
+      _M_impl._M_header._M_size = __n;
       for (size_type i = 0; i < __n; i++)
       {
-        s = (_List_node_base*) _M_create_node(__value);
+        s = _M_create_node(__value);
         pre->_M_next = s;
         s->_M_prev = pre;
         pre = s;
@@ -232,20 +250,21 @@ class list
       __head->_M_prev = pre;
     }
 
-  list(const list& __x) : _M_head()
+  list(const list& __x) 
+  : _M_impl(_Node_alloc_type(__x._M_impl))
     { _M_iter_construct(__x.begin(), __x.end()); }
 
   list(list&& __x) = default;
 
   list(std::initializer_list<_Tp> __l, 
        const allocator_type& __a = allocator_type())
-    : _M_head()
+    : _M_impl(_Node_alloc_type(__a))
     { _M_iter_construct(__l.begin(), __l.end()); }
 
   template <InputIterator Iterator>
   list(Iterator __first, Iterator __last,
        const allocator_type& __a = allocator_type())
-    : _M_head()
+    : _M_impl(_Node_alloc_type(__a))
     { _M_iter_construct(__first, __last); }
 
   ~list() { clear(); }
@@ -301,25 +320,26 @@ class list
   }
 
  public:
-  allocator_type get_allocator() const { return allocator_type(); }
+  allocator_type get_allocator() const 
+  { return allocator_type(_M_impl); }
 
   iterator begin() 
-    { return iterator(_M_head._M_next); }
+    { return iterator(_M_impl._M_header._M_next); }
 
   const_iterator begin() const 
-    { return const_iterator(_M_head._M_next); }
+    { return const_iterator(_M_impl._M_header._M_next); }
 
   const_iterator cbegin() const 
-    { return const_iterator(_M_head._M_next); }
+    { return const_iterator(_M_impl._M_header._M_next); }
 
   iterator end() 
-    { return iterator(&_M_head); }
+    { return iterator(&_M_impl._M_header); }
 
   const_iterator end() const 
-    { return const_iterator(&_M_head); }
+    { return const_iterator(&_M_impl._M_header); }
 
   const_iterator cend() const 
-    { return const_iterator(&_M_head); }
+    { return const_iterator(&_M_impl._M_header); }
 
   reverse_iterator rbegin() 
     { return reverse_iterator(end()); }
@@ -341,7 +361,7 @@ class list
 
   bool empty() const { return size() == 0; }
   
-  size_type size() const { return _M_head._M_size; }
+  size_type size() const { return _M_impl._M_header._M_size; }
 
   size_type max_size() const { return size_type(-1); }
 
@@ -358,7 +378,7 @@ class list
     { _M_range_check(0); return *(--end()); }
 
   void swap(list<_Tp, _Alloc>& __x) 
-    { tinySTL::swap(_M_head, __x._M_head); }
+    { tinySTL::swap(_M_impl._M_header, __x._M_impl._M_header); }
 
   iterator insert(const_iterator __position, _Tp&& __x) 
     { return emplace(__position, std::move(__x)); }
@@ -407,7 +427,7 @@ class list
       __prev_node->_M_next = __next_node;
       __next_node->_M_prev = __prev_node;
       _M_destroy_node(__n);
-      _M_head._M_size -= 1;
+      _M_impl._M_header._M_size -= 1;
       return iterator(__next_node);
     }
 
@@ -425,16 +445,16 @@ class list
 
   void clear()
     {
-      _Node* __cur  = (_Node*) _M_head._M_next;
-      _Node* __head = (_Node*) &_M_head;
+      _Node* __cur  = (_Node*) _M_impl._M_header._M_next;
+      _Node* __head = (_Node*)&_M_impl._M_header;
       while (__cur != __head) {
         _Node* __tmp = __cur;
         __cur = (_Node*) __cur->_M_next;
         _M_destroy_node(__tmp);
       }
-      _M_head._M_next = &_M_head;
-      _M_head._M_prev = &_M_head;
-      _M_head._M_size = 0;
+      _M_impl._M_header._M_next = &_M_impl._M_header;
+      _M_impl._M_header._M_prev = &_M_impl._M_header;
+      _M_impl._M_header._M_size = 0;
     }
 
   void resize(size_type __new_size, const _Tp& __x)
@@ -474,8 +494,8 @@ class list
     {
       if (!__x.empty()) {
         this->_M_transfer(__position.base(), __x.begin(), __x.end());
-        this->_M_head._M_size += __x.size();
-        __x._M_head._M_size = 0;
+        this->_M_impl._M_header._M_size += __x.size();
+        __x._M_impl._M_header._M_size = 0;
       }
     }
 
@@ -488,8 +508,8 @@ class list
       ++__j;
       if (__position == __i || __position == __j) return;
       this->_M_transfer(__position.base(), __i.base(), __j.base());
-      this->_M_head._M_size += 1;
-      __x._M_head._M_size -= 1;
+      this->_M_impl._M_header._M_size += 1;
+      __x._M_impl._M_header._M_size -= 1;
     }
 
   void splice(const_iterator __position, list&& __x, const_iterator __first,
@@ -509,8 +529,8 @@ class list
       for (auto it = __first; it != __end && it != __last; ++it, ++__n)
         ;
       this->_M_transfer(__position.base(), __first.base(), __last.base());
-      this->_M_head._M_size += __n;
-      __x._M_head._M_size -= __n;
+      this->_M_impl._M_header._M_size += __n;
+      __x._M_impl._M_header._M_size -= __n;
     }
 
   size_type remove(const _Tp& __value)
@@ -597,8 +617,8 @@ class list
       }
       if (__first2 != __last2)
         _M_transfer(__last1, __first2, __last2);
-      _M_head._M_size += __x._M_head._M_size;
-      __x._M_head._M_size = 0;
+      _M_impl._M_header._M_size += __x._M_impl._M_header._M_size;
+      __x._M_impl._M_header._M_size = 0;
     }
 
   /**
@@ -616,7 +636,7 @@ class list
    */
   void reverse()
     { 
-      _List_node_base* __head = (_List_node_base*)(this);
+      _List_node_base* __head = (_List_node_base*)(&_M_impl._M_header);
       _List_node_base* __cur = __head;
       while (true) 
       { 
@@ -680,7 +700,7 @@ class list
     __tmp->_M_prev = __position._M_node->_M_prev;
     __position._M_node->_M_prev->_M_next = __tmp;
     __position._M_node->_M_prev = __tmp;
-    ++_M_head._M_size;
+    ++_M_impl._M_header._M_size;
     return __tmp;
   }
 
@@ -716,7 +736,7 @@ class list
   template <InputIterator Iterator>
   void _M_iter_construct(Iterator __first, Iterator __last) 
   {
-    _List_node_base* head = (_List_node_base*) this;
+    _List_node_base* head = (_List_node_base*)(&_M_impl._M_header);
     _List_node_base* pre = head, *s;
     size_type __n = 0;
     for (auto it = __first; it != __last; ++it, ++__n) {
@@ -727,7 +747,7 @@ class list
     }
     pre->_M_next = head;
     head->_M_prev = pre;
-    _M_head._M_size = __n;
+    _M_impl._M_header._M_size = __n;
   }
 
 };

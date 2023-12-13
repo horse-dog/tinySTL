@@ -18,7 +18,8 @@ class _Vector_base {
  public:
   typedef _Alloc allocator_type;
 
-  allocator_type get_allocator() const { return allocator_type(); }
+  allocator_type get_allocator() const 
+  { return allocator_type(_M_impl); }
 
  protected:
   _Vector_base(const _Alloc& __a) 
