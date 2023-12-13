@@ -17,40 +17,70 @@ template <class _Tp, class _Alloc>
 class _Vector_base {
  public:
   typedef _Alloc allocator_type;
+
   allocator_type get_allocator() const { return allocator_type(); }
 
  protected:
-  _Vector_base(const _Alloc&)
-    : _M_start(0), _M_finish(0), _M_end_of_storage(0) {}
+  _Vector_base(const _Alloc& __a) 
+    : _M_impl(__a) {}
   
-  _Vector_base(size_t __n, const _Alloc&)
-    : _M_start(0), _M_finish(0), _M_end_of_storage(0) 
-  {
-    _M_start = _M_allocate(__n);
-    _M_finish = _M_start;
-    _M_end_of_storage = _M_start + __n;
-  }
+  _Vector_base(size_t __n, const _Alloc& __a)
+    : _M_impl(__n, __a) {}
 
-  ~_Vector_base() 
-  { 
-    _M_deallocate(_M_start, _M_end_of_storage - _M_start);
-    _M_start = _M_finish = _M_end_of_storage = 0;
-  }
+  _Vector_base(const _Vector_base& __x) = default;
+
+  _Vector_base(_Vector_base&& __x) = default;
 
  protected:
-  _Tp* _M_start;
-  _Tp* _M_finish;
-  _Tp* _M_end_of_storage;
+  struct _Vector_impl : public _Alloc
+  {
+    _Tp* _M_start;
+    _Tp* _M_finish;
+    _Tp* _M_end_of_storage;
 
-  typedef simple_alloc<_Tp, _Alloc> _M_data_allocator;
-  _Tp* _M_allocate(size_t __n)
-    { return _M_data_allocator::allocate(__n); }
+    _Vector_impl(const _Alloc& __a)
+      : _Alloc(__a), _M_start(0), _M_finish(0), _M_end_of_storage(0) 
+      { }
+
+    _Vector_impl(size_t __n, const _Alloc& __a)
+      : _Alloc(__a)
+      {
+        _M_start = this->allocate(__n);
+        _M_finish = _M_start;
+        _M_end_of_storage = _M_start + __n;
+      }
+
+    _Vector_impl(const _Vector_impl& __x)
+      : _Vector_impl(__x._M_end_of_storage - __x._M_start, __x)
+      { }
+
+    _Vector_impl(_Vector_impl&& __x)
+      : _Alloc(tinySTL::move(__x)) 
+      {
+        _M_start = __x._M_start;
+        _M_finish = __x._M_finish;
+        _M_end_of_storage = __x._M_end_of_storage;
+        __x._M_start = __x._M_finish = __x._M_end_of_storage = 0;
+      }
+
+    ~_Vector_impl()
+      {
+        this->deallocate(_M_start, _M_end_of_storage - _M_start);
+        _M_start = _M_finish = _M_end_of_storage = 0;
+      }
+
+  };
+
+  _Vector_impl _M_impl;
+
+  _Tp* _M_allocate(size_t __n) { return _M_impl.allocate(__n); }
+
   void _M_deallocate(_Tp* __p, size_t __n) 
-    { _M_data_allocator::deallocate(__p, __n); }
+    { _M_impl.deallocate(__p, __n); }
 };
 
 
-template <class _Tp, class _Alloc = alloc>
+template <class _Tp, class _Alloc = tinySTL::allocator<_Tp>>
 class vector : protected _Vector_base<_Tp, _Alloc> {
 
  private:
@@ -73,49 +103,57 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
  protected:
   using _Base::_M_allocate;
   using _Base::_M_deallocate;
-  using _Base::_M_start;
-  using _Base::_M_finish;
-  using _Base::_M_end_of_storage;
+  using _Base::_M_impl;
 
  public:
   explicit vector(const allocator_type& __a = allocator_type())
-    : _Base(__a) {}
+    : _Base(__a) 
+    { }
 
   vector(size_type __n, 
          const allocator_type& __a = allocator_type())
-    : _Base(__n, __a)
-    { _M_finish = tinySTL::uninitialized_fill_n(_M_start, __n, _Tp()); }
+    : vector(__n, _Tp(), __a)
+    { }
 
   vector(size_type __n, const _Tp& __value,
          const allocator_type& __a = allocator_type()) 
     : _Base(__n, __a)
-    { _M_finish = tinySTL::uninitialized_fill_n(_M_start, __n, __value); }
+    { 
+      _M_impl._M_finish = tinySTL::
+        uninitialized_fill_n(_M_impl._M_start, __n, __value); 
+    }
 
   vector(const vector& __x)
-    : _Base(__x.size(), __x.get_allocator())
-    { _M_finish = tinySTL::uninitialized_copy(__x.begin(), __x.end(), _M_start); }
-
-  vector(vector&& __x)
-    : _Base(__x.get_allocator())
-    {
-      _M_start = __x._M_start;
-      _M_finish = __x._M_finish;
-      _M_end_of_storage = __x._M_end_of_storage;
-      __x._M_start = __x._M_finish = __x._M_end_of_storage = 0;
+    : _Base(__x)
+    { 
+      _M_impl._M_finish = tinySTL::uninitialized_copy(
+        __x.begin(), __x.end(), _M_impl._M_start);
     }
+
+  vector(vector&& __x) = default;
 
   vector(std::initializer_list<_Tp> __l, 
          const allocator_type& __a = allocator_type())
     : _Base(__l.size(), __a)
-    { _M_finish = tinySTL::uninitialized_copy(__l.begin(), __l.end(), _M_start); }
+    { 
+      _M_impl._M_finish = tinySTL::uninitialized_copy(
+        __l.begin(), __l.end(), _M_impl._M_start); 
+    }
 
   template <InputIterator Iterator>
   vector(Iterator __first, Iterator __last,
          const allocator_type& __a = allocator_type())
     : _Base(tinySTL::distance(__first, __last), __a)
-    { _M_finish = tinySTL::uninitialized_copy(__first, __last, _M_start); }
+    { 
+      _M_impl._M_finish = tinySTL::uninitialized_copy(
+        __first, __last, _M_impl._M_start); 
+    }
 
-  ~vector() { tinySTL::destroy(_M_start, _M_finish); }
+  ~vector() 
+    { 
+      tinySTL::destroy(
+        _M_impl._M_start, _M_impl._M_finish); 
+    }
 
   vector& operator=(std::initializer_list<_Tp> __l) 
   {
@@ -134,14 +172,15 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   vector& operator=(vector&& __x)
   {
     if (&__x != this) {
-      tinySTL::destroy(_M_start, _M_finish);
-      _M_deallocate(_M_start, _M_end_of_storage - _M_start);
-      _M_start = __x._M_start;
-      _M_finish = __x._M_finish;
-      _M_end_of_storage = __x._M_end_of_storage;
-      __x._M_start = 0;
-      __x._M_finish = 0;
-      __x._M_end_of_storage = 0;
+      tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
+      _M_deallocate(_M_impl._M_start, 
+      _M_impl._M_end_of_storage - _M_impl._M_start);
+      _M_impl._M_start = __x._M_impl._M_start;
+      _M_impl._M_finish = __x._M_impl._M_finish;
+      _M_impl._M_end_of_storage = __x._M_impl._M_end_of_storage;
+      __x._M_impl._M_start = 0;
+      __x._M_impl._M_finish = 0;
+      __x._M_impl._M_end_of_storage = 0;
     }
     return *this;
   }
@@ -156,7 +195,8 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
       __tmp.swap(*this);
     } else if (__n > size()) {
       tinySTL::fill(begin(), end(), __val);
-      _M_finish = tinySTL::uninitialized_fill_n(_M_finish, __n - size(), __val);
+      _M_impl._M_finish = tinySTL::uninitialized_fill_n(
+        _M_impl._M_finish, __n - size(), __val);
     } else {
       erase(tinySTL::fill_n(begin(), __n, __val), end());
     }
@@ -169,17 +209,17 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
  public:
   allocator_type get_allocator() const { return _Base::get_allocator(); }
   
-  iterator begin() { return _M_start; }
+  iterator begin() { return _M_impl._M_start; }
   
-  const_iterator begin() const { return _M_start; }
+  const_iterator begin() const { return _M_impl._M_start; }
 
-  const_iterator cbegin() const { return _M_start; }
+  const_iterator cbegin() const { return _M_impl._M_start; }
   
-  iterator end() { return _M_finish; }
+  iterator end() { return _M_impl._M_finish; }
   
-  const_iterator end() const { return _M_finish; }
+  const_iterator end() const { return _M_impl._M_finish; }
 
-  const_iterator cend() const { return _M_finish; }
+  const_iterator cend() const { return _M_impl._M_finish; }
 
   reverse_iterator rbegin() 
     { return reverse_iterator(end()); }
@@ -206,7 +246,7 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     { return size_type(-1) / sizeof(_Tp); }
 
   size_type capacity() const
-    { return size_type(_M_end_of_storage - begin()); }
+    { return size_type(_M_impl._M_end_of_storage - _M_impl._M_start); }
 
   bool empty() const
     { return begin() == end(); }
@@ -248,9 +288,9 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     { emplace(end(), tinySTL::move(__x)); }
 
   void pop_back() {
-    if (_M_start != _M_finish) {
-      --_M_finish;
-      tinySTL::destroy(_M_finish);
+    if (_M_impl._M_start != _M_impl._M_finish) {
+      --_M_impl._M_finish;
+      tinySTL::destroy(_M_impl._M_finish);
     }
   }
 
@@ -274,21 +314,22 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     if (__first == __last) return __pos;
       
     size_type __n = tinySTL::distance(__first, __last);
-    const size_type __elems_before = __pos - _M_start;
-    if (size_type(_M_end_of_storage - _M_finish) >= __n) {
-      const size_type __elems_after = _M_finish - __pos;
-      iterator __old_finish = _M_finish;
+    const size_type __elems_before = __pos - _M_impl._M_start;
+    if (size_type(_M_impl._M_end_of_storage - _M_impl._M_finish) >= __n) {
+      const size_type __elems_after = _M_impl._M_finish - __pos;
+      iterator __old_finish = _M_impl._M_finish;
       if (__elems_after > __n) {
-        tinySTL::uninitialized_move(_M_finish - __n, _M_finish, _M_finish);
-        _M_finish += __n;
+        tinySTL::uninitialized_move(
+          _M_impl._M_finish - __n, _M_impl._M_finish, _M_impl._M_finish);
+        _M_impl._M_finish += __n;
         tinySTL::move_backward(__pos, __old_finish - __n, __old_finish);
         tinySTL::copy(__first, __last, __pos);
       } else {
-        _M_finish += __n - __elems_after;
-        tinySTL::uninitialized_move(__pos, __old_finish, _M_finish);
+        _M_impl._M_finish += __n - __elems_after;
+        tinySTL::uninitialized_move(__pos, __old_finish, _M_impl._M_finish);
         pair __copy_n_result = tinySTL::copy_n(__first, __elems_after, __pos);
         tinySTL::uninitialized_copy(__copy_n_result.first, __last, __old_finish);
-        _M_finish += __elems_after;
+        _M_impl._M_finish += __elems_after;
       }
     } else {
       const size_type __old_size = size();
@@ -296,36 +337,36 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
       iterator __new_start = _M_allocate(__len);
       iterator __new_finish = __new_start;
       try {
-        __new_finish = tinySTL::uninitialized_move(_M_start, __pos, __new_start);
+        __new_finish = tinySTL::uninitialized_move(_M_impl._M_start, __pos, __new_start);
         __new_finish = tinySTL::uninitialized_copy(__first, __last, __new_finish);
-        __new_finish = tinySTL::uninitialized_move(__pos, _M_finish, __new_finish);
+        __new_finish = tinySTL::uninitialized_move(__pos, _M_impl._M_finish, __new_finish);
       } catch (...) {
         tinySTL::destroy(__new_start,__new_finish);
         _M_deallocate(__new_start,__len);
         throw;
       }
-      tinySTL::destroy(_M_start, _M_finish);
-      _M_deallocate(_M_start, _M_end_of_storage - _M_start);
-      _M_start = __new_start;
-      _M_finish = __new_finish;
-      _M_end_of_storage = __new_start + __len;
+      tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
+      _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
+      _M_impl._M_start = __new_start;
+      _M_impl._M_finish = __new_finish;
+      _M_impl._M_end_of_storage = __new_start + __len;
     }
-    return _M_start + __elems_before;
+    return _M_impl._M_start + __elems_before;
   }
 
   void swap(vector& __x) {
-    tinySTL::swap(_M_start, __x._M_start);
-    tinySTL::swap(_M_finish, __x._M_finish);
-    tinySTL::swap(_M_end_of_storage, __x._M_end_of_storage);
+    tinySTL::swap(_M_impl._M_start, __x._M_impl._M_start);
+    tinySTL::swap(_M_impl._M_finish, __x._M_impl._M_finish);
+    tinySTL::swap(_M_impl._M_end_of_storage, __x._M_impl._M_end_of_storage);
   }
 
   iterator erase(const_iterator __position) {
     iterator __pos = const_cast<iterator>(__position);
-    _M_range_check(size_type(__pos - _M_start));
+    _M_range_check(size_type(__pos - _M_impl._M_start));
     if (__pos + 1 != end())
-      tinySTL::move(__pos + 1, _M_finish, __pos);
-    --_M_finish;
-    tinySTL::destroy(_M_finish);
+      tinySTL::move(__pos + 1, _M_impl._M_finish, __pos);
+    --_M_impl._M_finish;
+    tinySTL::destroy(_M_impl._M_finish);
     return __pos;
   }
 
@@ -333,18 +374,18 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     iterator __first = const_cast<iterator>(first);
     iterator __last = const_cast<iterator>(last);
     
-    if (__first - _M_start > this->size())
+    if (__first - _M_impl._M_start > this->size())
       __tiny_throw_range_error("vector");
-    if ( __last - _M_start > this->size())
+    if ( __last - _M_impl._M_start > this->size())
       __tiny_throw_range_error("vector");
 
-    if ((__first - _M_start) < 0 || (__last - _M_start) < 0)
+    if ((__first - _M_impl._M_start) < 0 || (__last - _M_impl._M_start) < 0)
       __tiny_throw_range_error("vector");
     
     if (__last - __first > 0) {
-      iterator __i = tinySTL::move(__last, _M_finish, __first);
-      tinySTL::destroy(__i, _M_finish);
-      _M_finish = _M_finish - (__last - __first);
+      iterator __i = tinySTL::move(__last, _M_impl._M_finish, __first);
+      tinySTL::destroy(__i, _M_impl._M_finish);
+      _M_impl._M_finish = _M_impl._M_finish - (__last - __first);
     }
     return __first;
   }
@@ -363,42 +404,42 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   void reserve(size_type __n) {
     if (capacity() < __n) {
       const size_type __old_size = size();
-      iterator __tmp = _M_allocate_and_move(__n, _M_start, _M_finish);
-      tinySTL::destroy(_M_start, _M_finish);
-      _M_deallocate(_M_start, _M_end_of_storage - _M_start);
-      _M_start = __tmp;
-      _M_finish = __tmp + __old_size;
-      _M_end_of_storage = _M_start + __n;
+      iterator __tmp = _M_allocate_and_move(__n, _M_impl._M_start, _M_impl._M_finish);
+      tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
+      _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
+      _M_impl._M_start = __tmp;
+      _M_impl._M_finish = __tmp + __old_size;
+      _M_impl._M_end_of_storage = _M_impl._M_start + __n;
     }
   }
 
   void shrink_to_fit() {
-    if (_M_finish == _M_end_of_storage) return;
-    if (_M_start == _M_finish) {
-      _M_deallocate(_M_start, _M_end_of_storage - _M_start);
-      _M_start = _M_finish = _M_end_of_storage = 0;
+    if (_M_impl._M_finish == _M_impl._M_end_of_storage) return;
+    if (_M_impl._M_start == _M_impl._M_finish) {
+      _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
+      _M_impl._M_start = _M_impl._M_finish = _M_impl._M_end_of_storage = 0;
     } else {
       const size_type __size = size();
-      iterator __tmp = _M_allocate_and_move(__size, _M_start, _M_finish);
-      tinySTL::destroy(_M_start, _M_finish);
-      _M_deallocate(_M_start, _M_end_of_storage - _M_start);
-      _M_start = __tmp;
-      _M_finish = __tmp + __size;
-      _M_end_of_storage = _M_finish;
+      iterator __tmp = _M_allocate_and_move(__size, _M_impl._M_start, _M_impl._M_finish);
+      tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
+      _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
+      _M_impl._M_start = __tmp;
+      _M_impl._M_finish = __tmp + __size;
+      _M_impl._M_end_of_storage = _M_impl._M_finish;
     }
   }
 
-  const _Tp* data() const { return _M_start; }
+  const _Tp* data() const { return _M_impl._M_start; }
 
-  _Tp* data() { return _M_start; }
+  _Tp* data() { return _M_impl._M_start; }
 
   template <typename... _Args>
   iterator emplace(const_iterator __pos, _Args&& ...__args)
   {
     size_type __n = __pos - begin();
-    if (_M_finish != _M_end_of_storage && __pos == end()) {
-      tinySTL::construct(_M_finish, forward<_Args>(__args)...);
-      ++_M_finish;
+    if (_M_impl._M_finish != _M_impl._M_end_of_storage && __pos == end()) {
+      tinySTL::construct(_M_impl._M_finish, forward<_Args>(__args)...);
+      ++_M_impl._M_finish;
     }
     else
       _M_emplace_aux(__pos, forward<_Args>(__args)...);
@@ -466,21 +507,21 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
 
     if (__len > capacity()) {
       iterator __tmp = _M_allocate_and_copy(__len, __first, __last);
-      tinySTL::destroy(_M_start, _M_finish);
-      _M_deallocate(_M_start, _M_end_of_storage - _M_start);
-      _M_start = __tmp;
-      _M_end_of_storage = _M_finish = _M_start + __len;
+      tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
+      _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
+      _M_impl._M_start = __tmp;
+      _M_impl._M_end_of_storage = _M_impl._M_finish = _M_impl._M_start + __len;
     }
     else if (size() >= __len) {
-      iterator __new_finish = tinySTL::copy(__first, __last, _M_start);
-      tinySTL::destroy(__new_finish, _M_finish);
-      _M_finish = __new_finish;
+      iterator __new_finish = tinySTL::copy(__first, __last, _M_impl._M_start);
+      tinySTL::destroy(__new_finish, _M_impl._M_finish);
+      _M_impl._M_finish = __new_finish;
     }
     else {
       _ForwardIterator __mid = __first;
       tinySTL::advance(__mid, size());
-      tinySTL::copy(__first, __mid, _M_start);
-      _M_finish = tinySTL::uninitialized_copy(__mid, __last, _M_finish);
+      tinySTL::copy(__first, __mid, _M_impl._M_start);
+      _M_impl._M_finish = tinySTL::uninitialized_copy(__mid, __last, _M_impl._M_finish);
     }
   }
 
@@ -489,10 +530,10 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   void _M_emplace_aux(const_iterator __pos, _Args&& ...__args)
   {
     iterator __position = const_cast<iterator>(__pos);
-    if (_M_finish != _M_end_of_storage) {
-      tinySTL::construct(_M_finish, *(_M_finish - 1));
-      ++_M_finish;
-      tinySTL::move_backward(__position, _M_finish - 2, _M_finish - 1);
+    if (_M_impl._M_finish != _M_impl._M_end_of_storage) {
+      tinySTL::construct(_M_impl._M_finish, *(_M_impl._M_finish - 1));
+      ++_M_impl._M_finish;
+      tinySTL::move_backward(__position, _M_impl._M_finish - 2, _M_impl._M_finish - 1);
       *__position = _Tp(std::forward<_Args>(__args)...);
     } else {
       const size_type __old_size = size();
@@ -500,20 +541,20 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
       iterator __new_start = _M_allocate(__len);
       iterator __new_finish = __new_start;
       try {
-        __new_finish = tinySTL::uninitialized_move(_M_start, __position, __new_start);
+        __new_finish = tinySTL::uninitialized_move(_M_impl._M_start, __position, __new_start);
         tinySTL::construct(__new_finish, std::forward<_Args>(__args)...);
         ++__new_finish;
-        __new_finish = tinySTL::uninitialized_move(__position, _M_finish, __new_finish);
+        __new_finish = tinySTL::uninitialized_move(__position, _M_impl._M_finish, __new_finish);
       } catch (...) {
         tinySTL::destroy(__new_start, __new_finish);
         _M_deallocate(__new_start, __len);
         throw;
       }
       tinySTL::destroy(begin(), end());
-      _M_deallocate(_M_start, _M_end_of_storage - _M_start);
-      _M_start = __new_start;
-      _M_finish = __new_finish;
-      _M_end_of_storage = __new_start + __len;
+      _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
+      _M_impl._M_start = __new_start;
+      _M_impl._M_finish = __new_finish;
+      _M_impl._M_end_of_storage = __new_start + __len;
     }
   }
 
@@ -522,21 +563,22 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   {
     if (__n == 0) return __pos;
 
-    const size_type __elems_before = __pos - _M_start;
-    if (size_type(_M_end_of_storage - _M_finish) >= __n) {
+    const size_type __elems_before = __pos - _M_impl._M_start;
+    if (size_type(_M_impl._M_end_of_storage - _M_impl._M_finish) >= __n) {
       _Tp __x_copy = __x;
-      const size_type __elems_after = _M_finish - __pos;
-      iterator __old_finish = _M_finish;
+      const size_type __elems_after = _M_impl._M_finish - __pos;
+      iterator __old_finish = _M_impl._M_finish;
       if (__elems_after > __n) {
-        tinySTL::uninitialized_move(_M_finish - __n, _M_finish, _M_finish);
-        _M_finish += __n;
+        tinySTL::uninitialized_move(
+          _M_impl._M_finish - __n, _M_impl._M_finish, _M_impl._M_finish);
+        _M_impl._M_finish += __n;
         tinySTL::move_backward(__pos, __old_finish - __n, __old_finish);
         tinySTL::fill(__pos, __pos + __n, __x_copy);
       } else {
-        tinySTL::uninitialized_fill_n(_M_finish, __n - __elems_after, __x_copy);
-        _M_finish += __n - __elems_after;
-        tinySTL::uninitialized_move(__pos, __old_finish, _M_finish);
-        _M_finish += __elems_after;
+        tinySTL::uninitialized_fill_n(_M_impl._M_finish, __n - __elems_after, __x_copy);
+        _M_impl._M_finish += __n - __elems_after;
+        tinySTL::uninitialized_move(__pos, __old_finish, _M_impl._M_finish);
+        _M_impl._M_finish += __elems_after;
         tinySTL::fill(__pos, __old_finish, __x_copy);
       }
     } else {
@@ -545,21 +587,21 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
       iterator __new_start = _M_allocate(__len);
       iterator __new_finish = __new_start;
       try {
-        __new_finish = tinySTL::uninitialized_move(_M_start, __pos, __new_start);
+        __new_finish = tinySTL::uninitialized_move(_M_impl._M_start, __pos, __new_start);
         __new_finish = tinySTL::uninitialized_fill_n(__new_finish, __n, __x);
-        __new_finish = tinySTL::uninitialized_move(__pos, _M_finish, __new_finish);
+        __new_finish = tinySTL::uninitialized_move(__pos, _M_impl._M_finish, __new_finish);
       } catch (...) {
         tinySTL::destroy(__new_start, __new_finish);
         _M_deallocate(__new_start, __len);
         throw;
       }
-      tinySTL::destroy(_M_start, _M_finish);
-      _M_deallocate(_M_start, _M_end_of_storage - _M_start);
-      _M_start = __new_start;
-      _M_finish = __new_finish;
-      _M_end_of_storage = __new_start + __len;
+      tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
+      _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
+      _M_impl._M_start = __new_start;
+      _M_impl._M_finish = __new_finish;
+      _M_impl._M_end_of_storage = __new_start + __len;
     }
-    return _M_start + __elems_before;
+    return _M_impl._M_start + __elems_before;
   }
 
 };

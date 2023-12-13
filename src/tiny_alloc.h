@@ -309,9 +309,13 @@ class __default_alloc_template {
 
 };
 
+// TODO： Singleton.
 // TODO: multi-thread env.
 // typedef __default_alloc_template<false, 0> alloc;
 typedef __debug_alloc_template<false> alloc;
+
+template <class _Tp>
+using allocator = simple_alloc<_Tp, alloc>;
 
 template <bool __threads, int __inst>
 char* __default_alloc_template<__threads, __inst>::_S_start_free = 0;
