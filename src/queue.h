@@ -39,7 +39,7 @@ class queue {
 
   template <class... _Args>
   auto emplace(_Args&& ...__args)
-	{ return c.emplace_back(tinySTL::forward<_Args>(__args)...); }
+  { return c.emplace_back(tinySTL::forward<_Args>(__args)...); }
 
   bool empty() const
   { return c.empty(); }
@@ -63,7 +63,7 @@ class queue {
   { return c.size(); }
 
   void swap(queue& __s)
-	{ tinySTL::swap(c, __s.c); }
+  { tinySTL::swap(c, __s.c); }
 
   friend auto operator<=>(const queue& __x, const queue& __y) 
   { return operator<=>(__x.c, __y.c); }
@@ -92,7 +92,7 @@ class priority_queue {
   using _Compare = typename _Cp_traits<_Tp, _Cp>::type;
 
  public:
-  using value_type = typename	_Sequence::value_type;
+  using value_type = typename  _Sequence::value_type;
   using reference = typename _Sequence::reference;
   using const_reference = typename _Sequence::const_reference;
   using size_type = typename _Sequence::size_type;
@@ -105,7 +105,7 @@ class priority_queue {
 
  public:
   priority_queue()
-	: c(), comp() { }
+  : c(), comp() { }
 
   explicit
   priority_queue(const _Sequence& __s)
@@ -113,43 +113,43 @@ class priority_queue {
   { tinySTL::make_heap(c.begin(), c.end(), comp); }
 
   explicit
-	priority_queue(_Sequence&& __c)
-	: c(tinySTL::move(__c)), comp()
-	{ tinySTL::make_heap(c.begin(), c.end(), comp); }
+  priority_queue(_Sequence&& __c)
+  : c(tinySTL::move(__c)), comp()
+  { tinySTL::make_heap(c.begin(), c.end(), comp); }
 
   priority_queue(const priority_queue& __q)
-	: c(__q.c), comp(__q.comp) { }
+  : c(__q.c), comp(__q.comp) { }
 
   priority_queue(priority_queue&& __q)
-	: c(tinySTL::move(__q.c)), comp(tinySTL::move(__q.comp)) { }
+  : c(tinySTL::move(__q.c)), comp(tinySTL::move(__q.comp)) { }
 
   template<Iterable _InputIterator>
-	priority_queue(_InputIterator __first, _InputIterator __last,
-		       const _Compare& __x,
-		       const _Sequence& __s)
-	: c(__s), comp(__x)
-	{ 
+  priority_queue(_InputIterator __first, _InputIterator __last,
+           const _Compare& __x,
+           const _Sequence& __s)
+  : c(__s), comp(__x)
+  { 
     c.insert(c.end(), __first, __last);
-	  tinySTL::make_heap(c.begin(), c.end(), comp);
-	}
+    tinySTL::make_heap(c.begin(), c.end(), comp);
+  }
 
   template<Iterable _InputIterator>
-	priority_queue(_InputIterator __first, _InputIterator __last,
-		       const _Compare& __x = _Compare(),
-		       _Sequence&& __s = _Sequence())
-	: c(tinySTL::move(__s)), comp(__x)
-	{ 
+  priority_queue(_InputIterator __first, _InputIterator __last,
+           const _Compare& __x = _Compare(),
+           _Sequence&& __s = _Sequence())
+  : c(tinySTL::move(__s)), comp(__x)
+  { 
     c.insert(c.end(), __first, __last);
-	  tinySTL::make_heap(c.begin(), c.end(), comp);
-	}
+    tinySTL::make_heap(c.begin(), c.end(), comp);
+  }
 
  public:
   template <class... _Args>
   auto emplace(_Args&& ...__args)
   { 
     c.emplace_back(tinySTL::forward<_Args>(__args)...);
-	  tinySTL::push_heap(c.begin(), c.end(), comp);
-	}
+    tinySTL::push_heap(c.begin(), c.end(), comp);
+  }
 
   bool empty() const
   { return c.empty(); }
@@ -157,19 +157,19 @@ class priority_queue {
   void pop()
   { 
     tinySTL::pop_heap(c.begin(), c.end(), comp);
-	  c.pop_back();
+    c.pop_back();
   }
 
   void push(const_reference __x)
   { 
     c.push_back(__x);
-	  tinySTL::push_heap(c.begin(), c.end(), comp);
+    tinySTL::push_heap(c.begin(), c.end(), comp);
   }
 
   void push(value_type&& __x)
   { 
     c.push_back(tinySTL::move(__x));
-	  tinySTL::push_heap(c.begin(), c.end(), comp);
+    tinySTL::push_heap(c.begin(), c.end(), comp);
   }
 
   size_type size() const

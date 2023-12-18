@@ -51,7 +51,7 @@ class stack {
     { return c.size(); }
 
   void swap(stack& __s)
-	  { tinySTL::swap(c, __s.c); }
+    { tinySTL::swap(c, __s.c); }
 
   const_reference top() const
     { return c.back(); }

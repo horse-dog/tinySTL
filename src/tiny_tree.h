@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tiny_pair.h"
 #include "tiny_alloc.h"
 #include "tiny_iterator.h"
 #include "tiny_construct.h"
@@ -146,6 +147,15 @@ struct _Rb_tree_header
       _M_header._M_color = _Rb_tree_color::_S_red;
       _M_reset();
     }
+  }
+
+  _Rb_tree_header& operator=(_Rb_tree_header&& __x) noexcept 
+  {
+    if (this != &__x) {
+      this->_M_reset();
+      tinySTL::construct(this, tinySTL::move(__x));
+    }
+    return *this;
   }
 
   void _M_move_data(_Rb_tree_header& __from)
@@ -313,12 +323,13 @@ struct _Rb_tree_iterator
 };
 
 template<typename _Key, typename _Val, typename _KeyOfValue,
-	   typename _Compare, typename _Alloc = alloc >
+     typename _Compare, typename _Alloc = alloc >
 class _Rb_tree 
 {
 
  protected: 
-  typedef simple_alloc<_Rb_tree_node<_Val>, _Alloc> _Node_allocator;
+  typedef typename _Alloc_rebind<_Alloc, _Rb_tree_node<_Val>>
+            ::type _Node_allocator;
   typedef _Rb_tree_node_base* _Base_ptr;
   typedef const _Rb_tree_node_base* _Const_Base_ptr;
   typedef _Rb_tree_node<_Val>* _Link_type;
@@ -340,8 +351,36 @@ class _Rb_tree
   typedef tinySTL::reverse_iterator<iterator> reverse_iterator;
 
  protected:
-  _Rb_tree_header _M_impl;
-  _Compare _M_key_compare;
+  struct _Rb_tree_impl
+  : public _Node_allocator, public _Rb_tree_header
+  {
+    _Compare _M_key_compare;
+
+    _Rb_tree_impl()
+    : _Node_allocator(), _M_key_compare(), _Rb_tree_header()
+    { }
+
+    _Rb_tree_impl(const _Rb_tree_impl& __x)
+    : _Node_allocator(__x), 
+      _M_key_compare(__x._M_key_compare), _Rb_tree_header()
+    { }
+
+    _Rb_tree_impl(_Rb_tree_impl&& __x) = default;
+
+    explicit
+    _Rb_tree_impl(_Node_allocator&& __a)
+    : _Node_allocator(tinySTL::move(__a)), 
+      _M_key_compare(), _Rb_tree_header()
+    { }
+
+    _Rb_tree_impl(const _Compare& __comp, _Node_allocator&& __a)
+    : _Node_allocator(tinySTL::move(__a)), _M_key_compare(__comp),
+      _Rb_tree_header()
+    { }
+
+  };
+
+  _Rb_tree_impl _M_impl;
   
   _Link_type _M_get_node()
   { return _Node_allocator::allocate(1); }
@@ -462,24 +501,13 @@ class _Rb_tree
  public:
   _Rb_tree() = default;
 
-  _Rb_tree(const _Compare& __comp)
-  : _M_impl(), _M_key_compare(__comp) 
-  {}
+  _Rb_tree(const _Compare& __comp, 
+     const allocator_type& __a = allocator_type())
+  : _M_impl(__comp, _Node_allocator(__a)) { }
 
-  _Rb_tree(const _Compare& __comp, const allocator_type& __a)
-  : _M_impl(), _M_key_compare(__comp)
-  {}
-  
   _Rb_tree(const _Rb_tree& __x)
-  : _M_impl(), _M_key_compare(__x._M_key_compare)
-  {
-    if (__x._M_root() != 0) {
-      _M_root() = _M_copy(__x._M_root(), &_M_impl._M_header);
-      _M_leftmost() = _S_minimum(_M_root());
-      _M_rightmost() = _S_maximum(_M_root());
-    }
-    _M_impl._M_node_count = __x._M_impl._M_node_count;
-  }
+  : _M_impl(__x._M_impl)
+  { _M_copy(__x); }
 
   _Rb_tree(_Rb_tree&& __x) = default;
 
@@ -489,13 +517,8 @@ class _Rb_tree
   {
     if (this != &__x) {
       clear();
-      _M_key_compare = __x._M_key_compare;
-      if (__x._M_root() != 0) {
-        _M_root() = _M_copy(__x._M_root(), &_M_impl._M_header);
-        _M_leftmost() = _S_minimum(_M_root());
-        _M_rightmost() = _S_maximum(_M_root());
-        _M_impl._M_node_count = __x._M_impl._M_node_count;
-      }
+      _M_impl._M_key_compare = __x._M_impl._M_key_compare;
+      _M_copy(__x);
     }
     return *this;
   }
@@ -504,20 +527,145 @@ class _Rb_tree
   {
     if (this != &__x) {
       clear();
-      _M_key_compare = tinySTL::move(__x._M_key_compare);
+      _M_impl._M_key_compare = 
+        tinySTL::move(__x._M_impl._M_key_compare);
+      if (__x._M_root())
+        _M_impl._M_move_data(__x._M_impl);
     }
   }
 
  public:
+  _Compare key_comp() const 
+  { return _M_impl._M_key_compare; }
+
+  iterator begin() noexcept
+  { return iterator(_M_impl._M_header._M_left); }
+
+  const_iterator begin() const noexcept
+  { return const_iterator(_M_impl._M_header._M_left); }
+
+  iterator end() noexcept 
+  { return iterator(&_M_impl._M_header); }
+
+  const_iterator end() const noexcept 
+  { return const_iterator(&_M_impl._M_header); }
+
+  reverse_iterator rbegin() noexcept 
+  { return reverse_iterator(end()); }
+
+  const_reverse_iterator rbegin() const noexcept
+  { return const_reverse_iterator(end()); }
+
+  reverse_iterator rend() noexcept
+  { return reverse_iterator(begin()); }
+
+  const_reverse_iterator rend() const noexcept 
+  { return const_reverse_iterator(begin()); }
+
+  bool empty() const noexcept 
+  { return _M_impl._M_node_count == 0; }
+
+  size_type size() const noexcept 
+  { return _M_impl._M_node_count; }
+
+  size_type max_size() const noexcept 
+  { return size_type(-1); }
+
+  void swap(_Rb_tree& __t) 
+  {
+    tinySTL::swap(_M_impl._M_key_compare, __t._M_impl._M_key_compare);
+    tinySTL::swap(_Rb_tree_header(_M_impl), _Rb_tree_header(__t._M_impl));
+  }
+
   void clear() 
   {
-    if (_M_impl._M_node_count != 0) {
-      _M_erase(_M_root());
-      _M_impl._M_reset();
+    _M_erase(_M_root());
+    _M_impl._M_reset();
+  }
+
+  template <class _Arg>
+  tinySTL::pair<iterator, bool>
+  _M_insert_unique(_Arg&& __x);
+
+  template <class _Arg> iterator
+  _M_insert_equal(_Arg&& __x);
+  
+  template <class _Arg> iterator
+  _M_insert_unique(const_iterator __pos, _Arg&& __x);
+  
+  template <class _Arg> iterator
+  _M_insert_equal(const_iterator __pos, _Arg&& __x);
+
+  template <class... _Args>
+  tinySTL::pair<iterator, bool>
+  _M_emplace_unique(_Args&&... __args);
+
+  template <class... _Args> iterator
+  _M_emplace_equal(_Args&&... __args);
+
+  template <class... _Args> iterator
+  _M_emplace_hint_unique(const_iterator __pos, _Args&&... __args);
+
+  template <class... _Args> iterator
+  _M_emplace_hint_equal(const_iterator __pos, _Args&&... __args);
+
+  template <class _InputIterator>
+  void _M_insert_range_unique(_InputIterator __first, _InputIterator __last);
+
+  template <class _InputIterator>
+  void _M_insert_range_equal(_InputIterator __first, _InputIterator __last);
+
+  iterator 
+  erase(const_iterator __pos);
+
+  size_type 
+  erase(const key_type& __x);
+
+  iterator
+  erase(const_iterator __first, const_iterator __last);
+
+  void 
+  erase(const key_type* __first, const key_type* __last);
+
+  iterator
+  find(const key_type& __k);
+
+  const_iterator
+  find(const key_type& __k) const;
+
+  size_type
+  count(const key_type& __k) const;
+
+  iterator
+  lower_bound(const key_type& __k);
+
+  const_iterator
+  lower_bound(const key_type& __k) const;
+
+  iterator
+  upper_bound(const key_type& __k);
+
+  const_iterator
+  upper_bound(const key_type& __k) const;
+
+  tinySTL::pair<iterator, iterator>
+  equal_range(const key_type& __k);
+
+  tinySTL::pair<const_iterator, const_iterator>
+  equal_range(const key_type& __k) const;
+
+ protected:
+  void _M_copy(const _Rb_tree& __x)
+  {
+    if (__x._M_root()) {
+      _Link_type __tmp = _M_copy(__x._M_root(), &_M_impl._M_header);
+      _M_root() = __tmp;
+      _M_leftmost() = _S_minimum(__tmp);
+      _M_rightmost() = _S_maximum(__tmp);
+      _M_impl._M_node_count = __x._M_impl._M_node_count;
     }
   }
 
- protected:
   _Link_type _M_copy(_Link_type __x, _Link_type __p)
   {
     _Link_type __top = _M_clone_node(__x);

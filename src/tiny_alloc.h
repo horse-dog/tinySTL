@@ -65,8 +65,8 @@ class simple_alloc {
  int xxxSS = 0;
 
   template<typename _Tp1>
-	struct rebind
-	{ 
+  struct rebind
+  { 
     typedef simple_alloc<_Tp1, _Alloc> other; 
   };
 
@@ -74,8 +74,8 @@ class simple_alloc {
   { }
 
   template<typename _Tp1>
-	constexpr
-	simple_alloc(const simple_alloc<_Tp1, _Alloc>&) noexcept 
+  constexpr
+  simple_alloc(const simple_alloc<_Tp1, _Alloc>&) noexcept 
   { }
 
   pointer allocate(size_type __n) { 
@@ -463,7 +463,7 @@ _S_chunk_alloc(size_t __size, int& __nobjs) {
           // right free list.
         }
       }
-      _S_end_free = 0;	// In case of exception.
+      _S_end_free = 0;  // In case of exception.
       _S_start_free = (char*)malloc_alloc::allocate(__bytes_to_get);
       // This should either throw an
       // exception or remedy the situation.  Thus we assume it

@@ -267,7 +267,7 @@ pop_heap(_RandomAccessIterator __first, _RandomAccessIterator __last)
 template<typename _RandomAccessIterator, typename _Compare>
 inline void
 sort_heap(_RandomAccessIterator __first, _RandomAccessIterator __last,
-	       _Compare __comp)
+         _Compare __comp)
 {
   while (__last - __first > 1)
     tinySTL::pop_heap(__first, __last--, __comp);

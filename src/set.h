@@ -108,10 +108,10 @@ class set {
   void swap(set& __x);
 
   template<typename... _Args> std::pair<iterator, bool> // TODO: std -> tiny.
-	emplace(_Args&&... __args);
+  emplace(_Args&&... __args);
 
   template<typename... _Args> iterator
-	emplace_hint(const_iterator __pos, _Args&&... __args);
+  emplace_hint(const_iterator __pos, _Args&&... __args);
 
   std::pair<iterator, bool> // TODO: std -> tiny.
   insert(const value_type& __x);
@@ -126,7 +126,7 @@ class set {
   insert(const_iterator __position, value_type&& __x);
 
   template<typename _InputIterator> void
-	insert(_InputIterator __first, _InputIterator __last);
+  insert(_InputIterator __first, _InputIterator __last);
 
   void insert(std::initializer_list<value_type> __l);
 
