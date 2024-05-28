@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tiny_tree.h"
 #include "tiny_pair.h"
 #include "tiny_alloc.h"
 #include "tiny_errors.h"
@@ -7,8 +8,6 @@
 #include "tiny_iterator.h"
 #include "tiny_function.h"
 #include "tiny_uninitialized.h"
-
-#include <bits/stl_tree.h>
 
 namespace tinySTL
 {
@@ -40,8 +39,8 @@ class set {
   typedef _Alloc   allocator_type;
 
  protected:
-  typedef std::_Rb_tree<key_type, value_type, _Identity<value_type>, key_compare>
-          _Rep_type; // TODO: std -> tiny.
+  typedef tinySTL::_Rb_tree<key_type, value_type, _Identity<value_type>, key_compare>
+            _Rep_type;
   _Rep_type _M_t;
  
  public:
@@ -57,7 +56,7 @@ class set {
   typedef typename _Rep_type::difference_type difference_type;
 
  public:
-  set();
+  set() : _M_t() {}
 
   set(const set&);
 
@@ -68,7 +67,7 @@ class set {
   template <InputIterator Iterator>
   set(Iterator __first, Iterator __last);
 
-  ~set();
+  ~set() {}
 
   set& operator=(const set&);
 
@@ -83,41 +82,46 @@ class set {
  public:
   allocator_type get_allocator() const;
 
-  iterator begin() const;
+  iterator begin() { return _M_t.begin(); }
+
+  iterator begin() const { return _M_t.begin(); }
  
-  iterator cbegin() const;
+  iterator cbegin() const { return _M_t.begin(); }
 
-  iterator end() const;
+  iterator end() { return _M_t.end(); }
 
-  iterator cend() const;
+  iterator end() const { return _M_t.end(); }
 
-  reverse_iterator rbegin() const;
+  iterator cend() const { return _M_t.end(); }
 
-  reverse_iterator crbegin() const;
+  reverse_iterator rbegin() { return _M_t.rbegin(); }
 
-  reverse_iterator rend() const;
+  reverse_iterator rbegin() const { return _M_t.rbegin(); }
 
-  reverse_iterator crend() const;
+  reverse_iterator crbegin() const { return _M_t.rbegin(); }
 
-  bool empty() const;
+  reverse_iterator rend() { return _M_t.rend(); }
 
-  size_type size() const;
+  reverse_iterator rend() const { return _M_t.rend(); }
 
-  size_type max_size() const;
+  reverse_iterator crend() const { return _M_t.rend(); }
+
+  bool empty() const { return _M_t.size() == 0; }
+
+  size_type size() const { return _M_t.size(); }
+
+  size_type max_size() const { return _M_t.max_size(); }
 
   void swap(set& __x);
 
-  template<typename... _Args> std::pair<iterator, bool> // TODO: std -> tiny.
-  emplace(_Args&&... __args);
+  template<typename... _Args> tinySTL::pair<iterator, bool>
+  emplace(_Args&&... __args) { return _M_t._M_emplace_unique(tinySTL::forward<_Args>(__args)...); }
 
-  template<typename... _Args> iterator
-  emplace_hint(const_iterator __pos, _Args&&... __args);
+  tinySTL::pair<iterator, bool>
+  insert(const value_type& __x) { return _M_t._M_insert_unique(__x); }
 
-  std::pair<iterator, bool> // TODO: std -> tiny.
-  insert(const value_type& __x);
-
-  std::pair<iterator, bool> // TODO: std -> tiny.
-  insert(value_type&& __x);
+  tinySTL::pair<iterator, bool>
+  insert(value_type&& __x) { return _M_t._M_insert_unique(tinySTL::move(__x)); }
 
   iterator
   insert(const_iterator __position, const value_type& __x);
@@ -159,6 +163,9 @@ class set {
 
   std::pair<const_iterator, const_iterator>  // TODO: std -> tiny.
   equal_range(const key_type& __x) const;
+
+  // TODO: unfinished...
+  // void merge();
 
   // TODO: opeartor==
   // TODO: opeartor <
