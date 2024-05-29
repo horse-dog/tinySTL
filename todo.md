@@ -12,13 +12,13 @@
 
 [X] forward_list.
 
-[ ] deque.
+[X] deque.
 
-[ ] stack.
+[X] stack.
 
-[ ] queue.
+[X] queue.
 
-[ ] heap.
+[X] heap.
 
 [ ] rb_tree.
 

@@ -58,29 +58,31 @@ class set {
  public:
   set() : _M_t() {}
 
-  set(const set&);
+  set(const set&) = default;
 
-  set(set&&);
+  set(set&&) = default;
 
-  set(std::initializer_list<value_type> __l);
+  set(std::initializer_list<value_type> __l) : _M_t() 
+  { insert(__l); }
 
   template <InputIterator Iterator>
-  set(Iterator __first, Iterator __last);
+  set(Iterator __first, Iterator __last) : _M_t() 
+  { insert(__first, __last); }
 
   ~set() {}
 
-  set& operator=(const set&);
+  set& operator=(const set&) = default;
 
-  set& operator=(set&&);
+  set& operator=(set&&) = default;
 
   set& operator=(std::initializer_list<value_type> __l);
 
-  key_compare key_comp() const;
+  key_compare key_comp() const { return _M_t.key_comp(); }
 
-  value_compare value_comp() const;
+  value_compare value_comp() const { return _M_t.key_comp(); }
 
  public:
-  allocator_type get_allocator() const;
+  allocator_type get_allocator() const { return _M_t._M_node_allocator; }
 
   iterator begin() { return _M_t.begin(); }
 
@@ -112,7 +114,7 @@ class set {
 
   size_type max_size() const { return _M_t.max_size(); }
 
-  void swap(set& __x);
+  void swap(set& __x) { tinySTL::swap(*this, __x); }
 
   template<typename... _Args> tinySTL::pair<iterator, bool>
   emplace(_Args&&... __args) { return _M_t._M_emplace_unique(tinySTL::forward<_Args>(__args)...); }
@@ -123,49 +125,52 @@ class set {
   tinySTL::pair<iterator, bool>
   insert(value_type&& __x) { return _M_t._M_insert_unique(tinySTL::move(__x)); }
 
-  iterator
-  insert(const_iterator __position, const value_type& __x);
-
-  iterator
-  insert(const_iterator __position, value_type&& __x);
-
   template<typename _InputIterator> void
-  insert(_InputIterator __first, _InputIterator __last);
+  insert(_InputIterator __first, _InputIterator __last) 
+  {
+    for (; __first != __last; ++__first) {
+      insert(*__first);
+    }
+  }
 
-  void insert(std::initializer_list<value_type> __l);
+  void insert(std::initializer_list<value_type> __l) {
+    insert(__l.begin(), __l.end());
+  }
 
-  size_type erase(const key_type& __x);
+  size_type erase(const key_type& __x); // TODO.
 
-  iterator erase(const_iterator __position);
+  iterator erase(const_iterator __position); // TODO.
 
-  iterator erase(const_iterator __first, const_iterator __last);
+  iterator erase(const_iterator __first, const_iterator __last); // TODO.
 
-  void clear();
+  void clear() { _M_t.clear(); }
 
-  size_type count(const key_type& __x) const;
+  size_type count(const key_type& __x) const { return _M_t.count_unique(__x); }
 
-  bool contains(const key_type& __x) const;
+  bool contains(const key_type& __x) const { return find(__x) != end(); }
 
-  iterator find(const key_type& __x);
+  iterator find(const key_type& __x) { return _M_t.find(__x); }
 
-  const_iterator find(const key_type& __x) const;
+  const_iterator find(const key_type& __x) const { return _M_t.find(__x); }
 
-  iterator lower_bound(const key_type& __x);
+  iterator lower_bound(const key_type& __x) { return _M_t.lower_bound(__x); }
 
-  const_iterator lower_bound(const key_type& __x) const;
+  const_iterator lower_bound(const key_type& __x) const { return _M_t.lower_bound(__x); }
 
-  iterator upper_bound(const key_type& __x);
+  iterator upper_bound(const key_type& __x) { return _M_t.upper_bound(__x); }
   
-  const_iterator upper_bound(const key_type& __x) const;
+  const_iterator upper_bound(const key_type& __x) const { return _M_t.upper_bound(__x); }
 
-  std::pair<iterator, iterator> // TODO: std -> tiny.
+  tinySTL::pair<iterator, iterator> // TODO.
   equal_range(const key_type& __x);
 
-  std::pair<const_iterator, const_iterator>  // TODO: std -> tiny.
+  tinySTL::pair<const_iterator, const_iterator>  // TODO.
   equal_range(const key_type& __x) const;
 
-  // TODO: unfinished...
-  // void merge();
+  void merge(set& __source);
+  void merge(set&& __source);
+  // void merge(multiset& __source);  // TODO.
+  // void merge(multiset&& __source); // TODO.
 
   // TODO: opeartor==
   // TODO: opeartor <

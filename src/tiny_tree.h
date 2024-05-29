@@ -125,64 +125,69 @@ struct _Rb_tree_node_base
 };
 
 
-struct _Rb_tree_header
-{
-  _Rb_tree_node_base  _M_header;
-  size_t _M_node_count;
+// struct _Rb_tree_header
+// {
+//   _Rb_tree_node_base  _M_header;
+//   size_t _M_node_count;
 
-  _Rb_tree_header() noexcept
-  {
-    _M_header._M_color = _Rb_tree_color::_S_red;
-    _M_reset();
-  }
+//   _Rb_tree_header() noexcept
+//   {
+//     _M_header._M_color = _Rb_tree_color::_S_red;
+//     _M_reset();
+//   }
 
-  _Rb_tree_header(_Rb_tree_header&& __x) noexcept
-  {
-    /**
-     * when __x._M_header._M_parent == 0, __x is
-     * an empty tree (just has head node). 
-     */
-    if (__x._M_header._M_parent != nullptr)
-      _M_move_data(__x);
-    else {
-      _M_header._M_color = _Rb_tree_color::_S_red;
-      _M_reset();
-    }
-  }
+//   _Rb_tree_header(const _Rb_tree_header&) = delete;
+//   _Rb_tree_header(_Rb_tree_header&&) = delete;
+//   _Rb_tree_header& operator=(const _Rb_tree_header&) = delete;
+//   _Rb_tree_header& operator=(_Rb_tree_header&&) = delete;
 
-  _Rb_tree_header& operator=(_Rb_tree_header&& __x) noexcept 
-  {
-    if (this != &__x) {
-      this->_M_reset(); // TODO: 内存未释放？
-      tinySTL::construct(this, tinySTL::move(__x));
-    }
-    return *this;
-  }
+//   _Rb_tree_header(_Rb_tree_header&& __x) noexcept
+//   {
+//     /**
+//      * when __x._M_header._M_parent == 0, __x is
+//      * an empty tree (just has head node). 
+//      */
+//     if (__x._M_header._M_parent != nullptr)
+//       _M_move_data(__x);
+//     else {
+//       _M_header._M_color = _Rb_tree_color::_S_red;
+//       _M_reset();
+//     }
+//   }
 
-  void _M_move_data(_Rb_tree_header& __from)
-  {
-    _M_header._M_color = __from._M_header._M_color;
-    _M_header._M_parent = __from._M_header._M_parent;
-    _M_header._M_left = __from._M_header._M_left;
-    _M_header._M_right = __from._M_header._M_right;
-    _M_node_count = __from._M_node_count;
-    __from._M_reset();
-  }
+//   _Rb_tree_header& operator=(_Rb_tree_header&& __x) noexcept 
+//   {
+//     if (this != &__x) {
+//       this->_M_reset(); // TODO: 内存未释放？
+//       tinySTL::construct(this, tinySTL::move(__x));
+//     }
+//     return *this;
+//   }
 
-  /**
-   *  If the red-black tree is empty, we set the parent node
-   *  of the head node to nil, the left child of the head 
-   *  node to the head node itself, and the right child to 
-   *  the head node itself.
-   */
-  void _M_reset()
-  {
-    _M_header._M_parent = 0;
-    _M_header._M_left = &_M_header;
-    _M_header._M_right = &_M_header;
-    _M_node_count = 0;
-  }
-};
+//   void _M_move_data(_Rb_tree_header& __from)
+//   {
+//     _M_header._M_color = __from._M_header._M_color;
+//     _M_header._M_parent = __from._M_header._M_parent;
+//     _M_header._M_left = __from._M_header._M_left;
+//     _M_header._M_right = __from._M_header._M_right;
+//     _M_node_count = __from._M_node_count;
+//     __from._M_reset();
+//   }
+
+//   /**
+//    *  If the red-black tree is empty, we set the parent node
+//    *  of the head node to nil, the left child of the head 
+//    *  node to the head node itself, and the right child to 
+//    *  the head node itself.
+//    */
+//   void _M_reset()
+//   {
+//     _M_header._M_parent = 0;
+//     _M_header._M_left = &_M_header;
+//     _M_header._M_right = &_M_header;
+//     _M_node_count = 0;
+//   }
+// };
 
 template <class _Val>
 struct _Rb_tree_node : public _Rb_tree_node_base
@@ -331,6 +336,8 @@ class _Rb_tree
  protected: 
   typedef typename _Alloc_rebind<_Alloc, _Rb_tree_node<_Val>>
             ::type _Node_allocator;
+  typedef typename _Alloc_rebind<_Alloc, _Rb_tree_node_base>
+            ::type _Head_allocator;
   typedef _Rb_tree_node_base* _Base_ptr;
   typedef const _Rb_tree_node_base* _Const_Base_ptr;
   typedef _Rb_tree_node<_Val>* _Link_type;
@@ -352,42 +359,133 @@ class _Rb_tree
   typedef tinySTL::reverse_iterator<iterator> reverse_iterator;
 
  protected:
-  struct _Rb_tree_impl
-  : public _Node_allocator, public _Rb_tree_header
-  {
-    _Compare _M_key_compare;
+  // struct _Rb_tree_impl : public _Node_allocator, public _Head_allocator, public _Compare
+  // {
+  //   _Base_ptr _M_header;
+  //    size_t   _M_node_count;
 
-    _Rb_tree_impl()
-    : _Node_allocator(), _M_key_compare(), _Rb_tree_header()
-    { }
+  //   _Rb_tree_impl()
+  //   : _Node_allocator(), _Head_allocator(), _Compare(), _M_header(0), _M_node_count(0)
+  //   { }
 
-    _Rb_tree_impl(const _Rb_tree_impl& __x)
-    : _Node_allocator(__x), 
-      _M_key_compare(__x._M_key_compare), _Rb_tree_header()
-    { }
+  //   _Rb_tree_impl(const _Rb_tree_impl& __x)
+  //   : _Node_allocator(__x), _Head_allocator(__x), _Compare(__x) 
+  //   { 
+  //     _M_header = _M_get_node();
+  //     _M_copy(__x);
+  //     _M_node_count = __x._M_node_count;
+  //   }
 
-    _Rb_tree_impl(_Rb_tree_impl&& __x) = default;
+  //   _Rb_tree_impl(_Rb_tree_impl&& __x) 
+  //   : _Node_allocator(tinySTL::move(__x)), 
+  //     _Head_allocator(tinySTL::move(__x)), 
+  //     _Compare(tinySTL::move(__x)) 
+  //   { 
+  //     _M_header = __x._M_header;
+  //     _M_node_count = __x._M_node_count;
+  //     __x._M_header = 0;
+  //     __x._M_node_count = 0;
+  //   }
 
-    explicit
-    _Rb_tree_impl(_Node_allocator&& __a)
-    : _Node_allocator(tinySTL::move(__a)), 
-      _M_key_compare(), _Rb_tree_header()
-    { }
+  //   explicit
+  //   _Rb_tree_impl(_Node_allocator&& __a)
+  //   : _Node_allocator(tinySTL::move(__a)), _Head_allocator(), 
+  //     _Compare(), _M_header(0), _M_node_count(0)
+  //   { }
 
-    _Rb_tree_impl(const _Compare& __comp, _Node_allocator&& __a)
-    : _Node_allocator(tinySTL::move(__a)), _M_key_compare(__comp),
-      _Rb_tree_header()
-    { }
+  //   _Rb_tree_impl(const _Compare& __comp, _Node_allocator&& __a)
+  //   : _Node_allocator(tinySTL::move(__a)), _Head_allocator(),
+  //     _Compare(__comp), _M_header(0), _M_node_count(0) 
+  //   { }
 
-  };
+  //   ~_Rb_tree_impl() 
+  //   {
+  //     if (_M_header != nullptr) {
+  //       _M_put_node(_Link_type(_M_header));
+  //     }
+  //   }
 
-  _Rb_tree_impl _M_impl;
+  //   _Rb_tree_impl& operator=(const _Rb_tree_impl&) = delete;
+  //   _Rb_tree_impl& operator=(_Rb_tree_impl&&) = delete;
+
+  // };
+  
+  _Rb_tree_node_base* _M_header;
+  size_t _M_node_count;
+  _Node_allocator _M_node_allocator;
+  _Head_allocator _M_head_allocator;
+  _Compare _M_compare;
   
   _Link_type _M_get_node()
-  { return _M_impl.allocate(1); }
+  { return _M_node_allocator.allocate(1); }
 
   void _M_put_node(_Link_type __p)
-  { return _M_impl.deallocate(__p, 1); }
+  { return _M_node_allocator.deallocate(__p, 1); }
+
+  /**
+   *  If the red-black tree is empty, we set the parent node
+   *  of the head node to nil, the left child of the head 
+   *  node to the head node itself, and the right child to 
+   *  the head node itself.
+   */
+  void _M_reset()
+  {
+    if (_M_header != nullptr) {
+      _M_header->_M_parent = 0;
+      _M_header->_M_left = _M_header;
+      _M_header->_M_right = _M_header;
+      _M_header->_M_color = _Rb_tree_color::_S_red;
+    }
+    _M_node_count = 0;
+  }
+  
+  void _M_copy(const _Rb_tree& __x)
+  {
+    if (__x._M_header->_M_parent != nullptr) {
+      if (_M_header == nullptr) {
+        _M_header = _M_head_allocator.allocate(1);
+      }
+      _Link_type __tmp = _M_copy((_Link_type)__x._M_header->_M_parent, (_Link_type)_M_header);
+      _M_header->_M_parent = __tmp;
+      _M_header->_M_left = _Rb_tree::_S_minimum(__tmp);
+      _M_header->_M_right = _Rb_tree::_S_maximum(__tmp);
+      _M_node_count = __x._M_node_count;
+    }
+  }
+
+  _Link_type _M_copy(_Link_type __x, _Link_type __p)
+  {
+    _Link_type __top = _M_clone_node(__x);
+    __top->_M_parent = __p;
+
+    try {
+      if (__x->_M_right)
+        __top->_M_right = _M_copy(_S_right(__x), __top);
+      __p = __top;
+      __x = _S_left(__x);
+      while (__x != 0) {
+        _Link_type __y = _M_clone_node(__x);
+        __p->_M_left = __y;
+        __y->_M_parent = __p;
+        if (__x->_M_right)
+          __y->_M_right = _M_copy(_S_right(__x), __y);
+        __p = __y;
+        __x = _S_left(__x);
+      }
+    } catch (...) {
+      _M_erase(__top);
+    }
+    return __top;
+  }
+
+  _Link_type _M_clone_node(_Link_type __x)
+  {
+    _Link_type __tmp = _M_create_node(*__x->_M_valptr());
+    __tmp->_M_color = __x->_M_color;
+    __tmp->_M_left = 0;
+    __tmp->_M_right = 0;
+    return __tmp;
+  }
 
   template <class... _Args>
   void _M_construct_node(_Link_type __node, _Args&&... __args)
@@ -401,6 +499,11 @@ class _Rb_tree
     }
   }
 
+  void _M_destroy_node(_Link_type __p) noexcept
+  {
+    tinySTL::destroy(__p->_M_valptr());
+  }
+
   template <class... _Args>
   _Link_type _M_create_node(_Args&&... __args)
   {
@@ -409,46 +512,35 @@ class _Rb_tree
     return __tmp;
   }
 
-  void _M_destroy_node(_Link_type __p) noexcept
-  {
-    tinySTL::destroy(__p->_M_valptr());
-  }
-
   void _M_drop_node(_Link_type __p) noexcept
   {
     _M_destroy_node(__p);
     _M_put_node(__p);
   }
 
-  _Link_type _M_clone_node(_Link_type __x)
-  {
-    _Link_type __tmp = _M_create_node(*__x->_M_valptr());
-    __tmp->_M_color = __x->_M_color;
-    __tmp->_M_left = 0;
-    __tmp->_M_right = 0;
-    return __tmp;
-  }
-
   _Base_ptr& _M_root() noexcept
-  { return _M_impl._M_header._M_parent; }
+  { return _M_header->_M_parent; }
 
   _Const_Base_ptr _M_root() const noexcept
-  { return _M_impl._M_header._M_parent; }
+  { return _M_header->_M_parent; }
 
   _Base_ptr& _M_leftmost() noexcept
-  { return _M_impl._M_header._M_left; }
+  { return _M_header->_M_left; }
 
   _Const_Base_ptr _M_leftmost() const noexcept
-  { return _M_impl._M_header._M_left; }
+  { return _M_header->_M_left; }
 
   _Base_ptr& _M_rightmost() noexcept
-  { return _M_impl._M_header._M_right; }
+  { return _M_header->_M_right; }
 
   _Const_Base_ptr _M_rightmost() const noexcept
-  { return _M_impl._M_header._M_right; }
+  { return _M_header->_M_right; }
 
-  _Base_ptr _M_head()  
-  { return &_M_impl._M_header; }
+  _Base_ptr _M_head() noexcept 
+  { return _M_header; }
+
+  _Const_Base_ptr _M_head() const noexcept 
+  { return _M_header; }
 
   static const_reference
   _S_value(_Const_Link_type __x)
@@ -497,26 +589,57 @@ class _Rb_tree
   { return _Rb_tree_node_base::_S_maximum(__x); }
 
  public:
-  _Rb_tree() = default;
+  _Rb_tree() 
+  : _M_header(0), _M_node_count(0), 
+    _M_node_allocator(), _M_head_allocator(), _M_compare() 
+  { }
 
   _Rb_tree(const _Compare& __comp, 
      const allocator_type& __a = allocator_type())
-  : _M_impl(__comp, _Node_allocator(__a)) { }
+  : _M_header(0), _M_node_count(0), 
+    _M_node_allocator(__a), _M_head_allocator(), _M_compare(__comp)
+  { }
 
   _Rb_tree(const _Rb_tree& __x)
-  : _M_impl(__x._M_impl)
-  { _M_copy(__x); }
+  : _M_node_allocator(__x._M_node_allocator), 
+    _M_head_allocator(__x._M_head_allocator), 
+    _M_compare(__x._M_compare) 
+  { 
+    _M_header = nullptr;
+    _M_node_count = 0;
+    if (!__x.empty()) {
+      _M_copy(__x);
+    } 
+  }
 
-  _Rb_tree(_Rb_tree&& __x) = default;
+  _Rb_tree(_Rb_tree&& __x) 
+  : _M_node_allocator(tinySTL::move(__x._M_node_allocator)), 
+    _M_head_allocator(tinySTL::move(__x._M_head_allocator)), 
+    _M_compare(tinySTL::move(__x._M_compare)) 
+  { 
+    _M_header = __x._M_header;
+    _M_node_count = __x._M_node_count;
+    __x._M_header = 0;
+    __x._M_node_count = 0;
+  }
 
-  ~_Rb_tree() { clear(); }
+  ~_Rb_tree() 
+  { 
+    clear();
+    if (_M_header != nullptr) {
+      _M_head_allocator.deallocate(_M_header);
+    }
+  }
 
   _Rb_tree& operator=(const _Rb_tree& __x)
   {
     if (this != &__x) {
       clear();
-      _M_impl._M_key_compare = __x._M_impl._M_key_compare;
-      _M_copy(__x);
+      if (!__x.empty()) {
+        _M_copy(__x);
+      } else {
+        _M_reset();
+      }
     }
     return *this;
   }
@@ -525,28 +648,35 @@ class _Rb_tree
   {
     if (this != &__x) {
       clear();
-      _M_impl._M_key_compare = 
-        tinySTL::move(__x._M_impl._M_key_compare);
-      if (__x._M_root())
-        _M_impl._M_move_data(__x._M_impl);
+      if (_M_header != nullptr) {
+        _M_head_allocator.deallocate(_M_header);
+      }
+      _M_node_allocator = tinySTL::move(_M_node_allocator);
+      _M_head_allocator = tinySTL::move(_M_head_allocator);
+      _M_compare = tinySTL::move(_M_compare);
+      _M_header = __x._M_header;
+      _M_node_count = __x._M_node_count;
+      __x._M_header = 0;
+      __x._M_node_count = 0;
     }
+    return *this;
   }
 
  public:
   _Compare key_comp() const 
-  { return _M_impl._M_key_compare; }
+  { return _M_compare; }
 
   iterator begin() noexcept
-  { return iterator(_M_impl._M_header._M_left); }
+  { return iterator(_M_header ? _M_header->_M_left : 0); }
 
   const_iterator begin() const noexcept
-  { return const_iterator(_M_impl._M_header._M_left); }
+  { return const_iterator(_M_header ? _M_header->_M_left : 0); }
 
   iterator end() noexcept 
-  { return iterator(&_M_impl._M_header); }
+  { return iterator(_M_header); }
 
   const_iterator end() const noexcept 
-  { return const_iterator(const_cast<_Base_ptr>(&_M_impl._M_header)); }
+  { return const_iterator(_Base_ptr(_M_header)); }
 
   reverse_iterator rbegin() noexcept 
   { return reverse_iterator(end()); }
@@ -561,31 +691,39 @@ class _Rb_tree
   { return const_reverse_iterator(begin()); }
 
   bool empty() const noexcept 
-  { return _M_impl._M_node_count == 0; }
+  { return _M_node_count == 0; }
 
   size_type size() const noexcept 
-  { return _M_impl._M_node_count; }
+  { return _M_node_count; }
 
   size_type max_size() const noexcept 
   { return size_type(-1); }
 
   void swap(_Rb_tree& __t) 
   {
-    tinySTL::swap(_M_impl._M_key_compare, __t._M_impl._M_key_compare);
-    // tinySTL::swap(_Rb_tree_header(_M_impl), _Rb_tree_header(__t._M_impl)); // TODO.
-    tinySTL::swap(_M_impl, __t._M_impl);
+    tinySTL::swap(_M_header, __t._M_header);
+    tinySTL::swap(_M_node_count, __t._M_node_count);
+    tinySTL::swap(_M_node_allocator, __t._M_node_allocator);
+    tinySTL::swap(_M_head_allocator, __t._M_head_allocator);
+    tinySTL::swap(_M_compare, __t._M_compare);
   }
 
   void clear() 
   {
-    _M_erase(_Link_type(_M_root()));
-    _M_impl._M_reset();
+    if (_M_header != nullptr) {
+      _M_erase(_Link_type(_M_root()));
+    }
+    _M_reset();
   }
 
   template <class _Arg>
   tinySTL::pair<iterator, bool>
   _M_insert_unique(_Arg&& __x) 
   {
+    if (_M_header == nullptr) {
+      _M_header = _M_head_allocator.allocate(1);
+      _M_reset();
+    }
     _Base_ptr pos = _M_root();
     _Base_ptr pos_parent = _M_head();
     bool __comp = true;
@@ -611,6 +749,10 @@ class _Rb_tree
   template <class _Arg> iterator
   _M_insert_equal(_Arg&& __x) 
   {
+    if (_M_header == nullptr) {
+      _M_header = _M_head_allocator.allocate(1);
+      _M_reset();
+    }
     _Base_ptr pos = _M_root();
     _Base_ptr pos_parent = _M_head();
     while (pos != nullptr) {
@@ -633,7 +775,7 @@ class _Rb_tree
       new_node->_M_setBlk();
       new_node->_M_parent = __pos_parent;
       new_node->_M_left = new_node->_M_right = 0;
-      ++_M_impl._M_node_count;
+      ++_M_node_count;
       return iterator(new_node);
     } 
 
@@ -651,7 +793,7 @@ class _Rb_tree
     new_node->_M_parent = __pos_parent;
     new_node->_M_left = new_node->_M_right = 0;
     _M_pre_fix_insert(new_node);
-    ++_M_impl._M_node_count;
+    ++_M_node_count;
     return iterator(new_node);
   }
 
@@ -786,25 +928,161 @@ class _Rb_tree
   erase(const key_type* __first, const key_type* __last);
 
   iterator
-  find(const key_type& __k);
+  find(const key_type& __k) 
+  {
+    iterator j = lower_bound(__k);
+    return (j == end() || key_comp()(__k, _S_key(j._M_node))) ? end() : j;
+  }
 
   const_iterator
-  find(const key_type& __k) const;
+  find(const key_type& __k) const 
+  {
+    const_iterator j = lower_bound(__k);
+    return (j == end() || key_comp()(__k, _S_key(j.base()._M_node))) ? end() : j;
+  }
 
   size_type
-  count(const key_type& __k) const;
+  count_unique(const key_type& __k) const 
+  {
+    if (_M_header == nullptr) {
+      return 0;
+    }
+    _Const_Base_ptr x = _M_root();
+    while (x != nullptr) {
+      if (key_comp()(__k, _S_key(x))) {
+        x = x->_M_left;
+      } else if (key_comp()(_S_key(x), __k)) {
+        x = x->_M_right;
+      } else {
+        return 1;
+      }
+    }
+    return 0;
+  }
+
+  size_type
+  count_multi(const key_type& __k) const 
+  {
+    if (_M_header == nullptr) {
+      return 0;
+    }
+    _Const_Base_ptr y = _M_head();
+    _Const_Base_ptr x = _M_root();
+    while (x != nullptr) {
+      if (key_comp()(__k, _S_key(x))) {
+        y = x;
+        x = x->_M_left;
+      } else if (key_comp()(_S_key(x), __k)) {
+        x = x->_M_right;
+      } else {
+        return tinySTL::distance(
+          __lower_bound(__k, x->_M_left, x), 
+          __upper_bound(__k, x->_M_right, y)
+        );
+      }
+    }
+    return 0;
+  }
 
   iterator
-  lower_bound(const key_type& __k);
-
-  const_iterator
-  lower_bound(const key_type& __k) const;
+  lower_bound(const key_type& __k) 
+  {
+    if (_M_header == nullptr) {
+      return end();
+    }
+    _Base_ptr y = _M_head();
+    _Base_ptr x = _M_root();
+    return __lower_bound(__k, x, y);
+  }
 
   iterator
-  upper_bound(const key_type& __k);
+  __lower_bound(const key_type& __k, _Base_ptr x, _Base_ptr y) 
+  {
+    while (x != nullptr) {
+      if (!key_comp()(_S_key(x), __k)) {
+        y = x;
+        x = x->_M_left;
+      } else {
+        x = x->_M_right;
+      }
+    }
+    return iterator(y);
+  }
 
   const_iterator
-  upper_bound(const key_type& __k) const;
+  lower_bound(const key_type& __k) const 
+  {
+    if (_M_header == nullptr) {
+      return end();
+    }
+    _Const_Base_ptr y = _M_head();
+    _Const_Base_ptr x = _M_root();
+    return __lower_bound(__k, x, y);
+  }
+
+  const_iterator
+  __lower_bound(const key_type& __k, _Const_Base_ptr x, _Const_Base_ptr y) const 
+  {
+    while (x != nullptr) {
+      if (!key_comp()(_S_key(x), __k)) {
+        y = x;
+        x = x->_M_left;
+      } else {
+        x = x->_M_right;
+      }
+    }
+    return const_iterator((_Base_ptr)y);
+  }
+
+  iterator
+  upper_bound(const key_type& __k) 
+  {
+    if (_M_header == nullptr) {
+      return end();
+    }
+    _Base_ptr y = _M_head();
+    _Base_ptr x = _M_root();
+    return __upper_bound(__k, x, y);
+  }
+
+  iterator
+  __upper_bound(const key_type& __k, _Base_ptr x, _Base_ptr y) 
+  {
+    while (x != nullptr) {
+      if (key_comp()(__k, _S_key(x))) {
+        y = x;
+        x = x->_M_left;
+      } else {
+        x = x->_M_right;
+      }
+    }
+    return iterator(y);
+  }
+
+  const_iterator
+  upper_bound(const key_type& __k) const 
+  {
+    if (_M_header == nullptr) {
+      return end();
+    }
+    _Const_Base_ptr y = _M_head();
+    _Const_Base_ptr x = _M_root();
+    return __upper_bound(__k, x, y);
+  }
+
+  const_iterator
+  __upper_bound(const key_type& __k, _Const_Base_ptr x, _Const_Base_ptr y) const 
+  {
+    while (x != nullptr) {
+      if (key_comp()(__k, _S_key(x))) {
+        y = x;
+        x = x->_M_left;
+      } else {
+        x = x->_M_right;
+      }
+    }
+    return const_iterator((_Base_ptr)y);
+  }
 
   tinySTL::pair<iterator, iterator>
   equal_range(const key_type& __k);
@@ -813,47 +1091,12 @@ class _Rb_tree
   equal_range(const key_type& __k) const;
 
  protected:
-  void _M_copy(const _Rb_tree& __x)
-  {
-    if (__x._M_root()) {
-      _Link_type __tmp = _M_copy(__x._M_root(), &_M_impl._M_header);
-      _M_root() = __tmp;
-      _M_leftmost() = _S_minimum(__tmp);
-      _M_rightmost() = _S_maximum(__tmp);
-      _M_impl._M_node_count = __x._M_impl._M_node_count;
-    }
-  }
-
-  _Link_type _M_copy(_Link_type __x, _Link_type __p)
-  {
-    _Link_type __top = _M_clone_node(__x);
-    __top->_M_parent = __p;
-
-    try {
-      if (__x->_M_right)
-        __top->_M_right = _M_copy(_S_right(__x, __top));
-      __p = __top;
-      __x = _S_left(__x);
-      while (__x != 0) {
-        _Link_type __y = _M_clone_node(__x);
-        __p->_M_left = __y;
-        __y->_M_parent = __p;
-        if (__x->_M_right)
-          __y->_M_right = _M_copy(_S_right(__x), __y);
-        __p = __y;
-        __x = _S_left(__x);
-      }
-    } catch (...) {
-      _M_erase(__top);
-    }
-  }
-
   void _M_erase(_Link_type __x)
   {
     while (__x != 0) {
       _M_erase(_S_right(__x));
       _Link_type __y = _S_left(__x);
-      _M_put_node(__x);
+      _M_drop_node(__x);
       __x = __y;
     }
   }

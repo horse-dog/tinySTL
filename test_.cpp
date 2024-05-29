@@ -901,8 +901,17 @@ class map {
 
 };
 
+struct A1 {};
+struct A2 {};
+
+struct B : public A1, public A2
+{
+  void* ptr;
+};
+
 int main(int argc, const char* argv[]) {
   std::set<int> s{1, 2, 3};
+  const int x = sizeof(B);
   printf("Hello world!\n");
   return 0;
 }

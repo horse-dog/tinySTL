@@ -62,8 +62,6 @@ class simple_alloc {
   typedef const _Tp& const_reference;
   typedef _Tp        value_type;
 
- int xxxSS = 0;
-
   template<typename _Tp1>
   struct rebind
   { 

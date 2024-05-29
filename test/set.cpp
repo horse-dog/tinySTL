@@ -6,21 +6,29 @@
 #include "set.h"
 
 using namespace tinySTL;
-
+#include <set>
 TEST(set, constructor) {
   /**
    * @test  set()
    * @brief default constructor. 
    */
   SUBTEST(constructor) {
-    set<int> s;
-    s.insert(1);
-    s.insert(4);
-    s.insert(2);
-    s.insert(5);
-    s.insert(0);
-    EXPECT_EQ(s.size(), 5);
+    const int a = sizeof(set<int>);
+    // const int b = sizeof(std::set<int>::__base);
+    set<int> s = {1, 4, 2, 5, 0};
+    // s1.insert(333);
+    // s.swap(s1);
+    // EXPECT_EQ(s.size(), 5);
     EXPECT_STRING_EQ(s, [0, 1, 2, 4, 5]);
+
+    // set<int> s1;
+    // set<int> s2;
+    // s2 = s;
+    // s2.insert(3);
+    // tinySTL::swap(s, s2);
+    // EXPECT_STRING_EQ(s, [0, 1, 2, 3, 4, 5]);
+    // EXPECT_STRING_EQ(s1, []);
+    // EXPECT_STRING_EQ(s2, [0, 1, 2, 4, 5]);
   }
   
   // /**
