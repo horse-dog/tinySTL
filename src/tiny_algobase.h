@@ -503,7 +503,6 @@ lexicographical_compare(const unsigned char* __first1,
 inline bool lexicographical_compare(const char* __first1, const char* __last1,
                                     const char* __first2, const char* __last2)
 {
-// TODO: why #if?.
 #if CHAR_MAX == SCHAR_MAX
   return lexicographical_compare((const signed char*) __first1,
                                  (const signed char*) __last1,

@@ -18,6 +18,11 @@ struct pair {
   template <class _U1, class _U2>
   pair(const pair<_U1, _U2>& __p) : first(__p.first), second(__p.second) {}
 
+  friend std::ostream& operator<<(std::ostream& os, const pair& __pair) 
+  {
+    return os << '{' << __pair.first << ", " << __pair.second << '}';
+  }
+
 };
 
 template <class _T1, class _T2>

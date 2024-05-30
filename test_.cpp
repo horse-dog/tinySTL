@@ -2,7 +2,6 @@
 #include <set>
 using namespace std;
 
-#pragma once
 
 #include <atomic>
 #include <memory>
@@ -904,14 +903,30 @@ class map {
 struct A1 {};
 struct A2 {};
 
+template <class T>
 struct B : public A1, public A2
 {
   void* ptr;
+  void fn(T&& x) {
+    std::cout << x << std::endl;
+  }
 };
 
+#include <map>
 int main(int argc, const char* argv[]) {
-  std::set<int> s{1, 2, 3};
-  const int x = sizeof(B);
-  printf("Hello world!\n");
+  // std::multiset<int> s1 {1, 4, 4, 3, 2};
+  std::multiset<int> s2 {1, 4, 2, 5, 0};
+  std::set<int> s1 {-1, -4, -2, -5, -0};
+  s1.merge(s2);
+  for (auto x : s1) {
+    printf("%d ", x);
+  }
+  printf("\n");
+  for (auto x : s2) {
+    printf("%d ", x);
+  }
+  printf("\n");
+  std::map<int, double> m;
+  std::multimap<int, double> m1;
   return 0;
 }
