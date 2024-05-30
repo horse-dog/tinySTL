@@ -17,7 +17,8 @@ template<class, class, class> class multiset;
 template<class _Key, class _Cp = void , class _Alloc = alloc>
 class set {
  
- template<class, class, class> friend class multiset;
+template<class, class, class> friend class set;
+template<class, class, class> friend class multiset;
 
  protected:
   template <class _Tx, class _Ty>
@@ -231,7 +232,8 @@ class set {
 template<class _Key, class _Cp = void , class _Alloc = alloc>
 class multiset {
  
- template<class, class, class> friend class set;
+template<class, class, class> friend class set;
+template<class, class, class> friend class multiset;
 
  protected:
   template <class _Tx, class _Ty>

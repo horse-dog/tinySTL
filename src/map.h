@@ -16,8 +16,9 @@ template<class, class, class, class> class multimap;
 
 template<class _Key, class _Val, class _Cp = void , class _Alloc = alloc>
 class map {
- 
- template<class, class, class, class> friend class multimap;
+
+template<class, class, class, class> friend class map;
+template<class, class, class, class> friend class multimap;
 
  protected:
   template <class _Tx, class _Ty>
@@ -239,7 +240,8 @@ class map {
 template<class _Key, class _Val, class _Cp = void , class _Alloc = alloc>
 class multimap {
  
- template<class, class, class, class> friend class map;
+template<class, class, class, class> friend class map;
+template<class, class, class, class> friend class multimap;
 
  protected:
   template <class _Tx, class _Ty>

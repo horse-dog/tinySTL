@@ -30,17 +30,27 @@ TEST(set, constructor) {
    * @brief default constructor. 
    */
   SUBTEST(constructor) {
-    const int a = sizeof(set<int>);
+    // const int a = sizeof(set<int>);
     // const int b = sizeof(std::set<int>::__base);
-    set<int> s1 = {1, 4, 2, 5, 0};
+    // std::set<int> s = {1, 5, 0};
+    // auto [it, ok] = s.insert(3);
+    // printf("%d\n", *it);
+    // it = ss.insert(it, 4);
+    // printf("%d\n", *it);
+    // int a = 1;
+    // printf("%d\n", a);
+
+    set<int> s1 = {12, 4, 21, 5, 0};
+    set<int, decltype([](const int x, const int y) { return x > y; })> s3 {1, 4, 2, 5, 0};
     multiset<int> s2 = {-1, -4, -4, -4, -0};
-    // set<int> s3 = {5, 4, 3, 2, 1};
-    // s1.disp(std::cout);
-    // s2.disp(std::cout);
+    s1.disp(std::cout);
+    s2.disp(std::cout);
     s1.merge(s2);
-    // s1.disp(std::cout);
+    s1.disp(std::cout);
+    s1.merge(s3);
     std::cout << s1 << std::endl;
     std::cout << s2 << std::endl;
+    std::cout << s3 << std::endl;
     // test_set();
     // auto it = s.erase(++s.begin());
     // printf("%d\n", *it);

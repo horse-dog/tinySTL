@@ -915,18 +915,11 @@ struct B : public A1, public A2
 #include <map>
 int main(int argc, const char* argv[]) {
   // std::multiset<int> s1 {1, 4, 4, 3, 2};
-  std::multiset<int> s2 {1, 4, 2, 5, 0};
+  std::set<int> s2 {1, 5, 0};
   std::set<int> s1 {-1, -4, -2, -5, -0};
-  s1.merge(s2);
-  for (auto x : s1) {
-    printf("%d ", x);
-  }
-  printf("\n");
-  for (auto x : s2) {
-    printf("%d ", x);
-  }
-  printf("\n");
-  std::map<int, double> m;
-  std::multimap<int, double> m1;
+  auto r = s2.insert(3);
+  printf("%d\n", *r.first);
+  auto it = s2.insert(r.first, 4);
+  printf("%d\n", *it);
   return 0;
 }

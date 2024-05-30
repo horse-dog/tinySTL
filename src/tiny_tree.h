@@ -269,6 +269,12 @@ template<typename _Key, typename _Val, typename _KeyOfValue,
 class _Rb_tree 
 {
 
+template<class, class, class> friend class set;
+template<class, class, class> friend class multiset;
+template<class, class, class, class> friend class map;
+template<class, class, class, class> friend class multimap;
+template<class, class, class, class, class> friend class _Rb_tree;
+
  protected: 
   typedef typename _Alloc_rebind<_Alloc, _Rb_tree_node<_Val>>
             ::type _Node_allocator;
@@ -279,7 +285,7 @@ class _Rb_tree
   typedef _Rb_tree_node<_Val>* _Link_type;
   typedef const _Rb_tree_node<_Val>* _Const_Link_type;
 
- public:
+ protected:
   typedef _Key key_type;
   typedef _Val value_type;
   typedef value_type* pointer;
@@ -547,7 +553,7 @@ class _Rb_tree
     return *this;
   }
 
- public:
+ protected:
   _Compare key_comp() const 
   { return _M_compare; }
 
@@ -1350,8 +1356,8 @@ class _Rb_tree
       return;
     }
     if (_M_header == nullptr) {
-      *this = tinySTL::move(__tree);
-      return;
+      _M_header = _M_head_allocator.allocate(1);
+      _M_reset();
     }
     iterator pos = end();
     _Rb_tree<_Key, _Val, _KeyOfValue, _Compare2, _Alloc> tmp;
@@ -1367,8 +1373,8 @@ class _Rb_tree
       return;
     }
     if (_M_header == nullptr) {
-      *this = tinySTL::move(__tree);
-      return;
+      _M_header = _M_head_allocator.allocate(1);
+      _M_reset();
     }
     iterator pos = end();
     _M_merge_equal_aux((_Link_type)__tree._M_root(), pos);
@@ -1566,7 +1572,6 @@ class _Rb_tree
   equal_range(const key_type& __k) const
   { return {lower_bound(__k), upper_bound(__k)}; }
 
- protected:
   void _M_erase(_Link_type __x)
   {
     while (__x != 0) {
