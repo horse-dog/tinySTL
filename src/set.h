@@ -92,27 +92,27 @@ template<class, class, class> friend class multiset;
   value_compare value_comp() const { return _M_t.key_comp(); }
 
  public:
-  allocator_type get_allocator() const { return _M_t._M_node_allocator; }
+  allocator_type get_allocator() const { return allocator_type{}; }
 
-  iterator begin() { return _M_t.begin(); }
+  iterator begin() { return _M_t.cbegin(); }
 
   iterator begin() const { return _M_t.begin(); }
  
   iterator cbegin() const { return _M_t.begin(); }
 
-  iterator end() { return _M_t.end(); }
+  iterator end() { return _M_t.cend(); }
 
   iterator end() const { return _M_t.end(); }
 
   iterator cend() const { return _M_t.end(); }
 
-  reverse_iterator rbegin() { return _M_t.rbegin(); }
+  reverse_iterator rbegin() { return _M_t.crbegin(); }
 
   reverse_iterator rbegin() const { return _M_t.rbegin(); }
 
   reverse_iterator crbegin() const { return _M_t.rbegin(); }
 
-  reverse_iterator rend() { return _M_t.rend(); }
+  reverse_iterator rend() { return _M_t.crend(); }
 
   reverse_iterator rend() const { return _M_t.rend(); }
 
@@ -299,25 +299,25 @@ template<class, class, class> friend class multiset;
  public:
   allocator_type get_allocator() const { return _M_t._M_node_allocator; }
 
-  iterator begin() { return _M_t.begin(); }
+  iterator begin() { return _M_t.cbegin(); }
 
   iterator begin() const { return _M_t.begin(); }
  
   iterator cbegin() const { return _M_t.begin(); }
 
-  iterator end() { return _M_t.end(); }
+  iterator end() { return _M_t.cend(); }
 
   iterator end() const { return _M_t.end(); }
 
   iterator cend() const { return _M_t.end(); }
 
-  reverse_iterator rbegin() { return _M_t.rbegin(); }
+  reverse_iterator rbegin() { return _M_t.crbegin(); }
 
   reverse_iterator rbegin() const { return _M_t.rbegin(); }
 
   reverse_iterator crbegin() const { return _M_t.rbegin(); }
 
-  reverse_iterator rend() { return _M_t.rend(); }
+  reverse_iterator rend() { return _M_t.crend(); }
 
   reverse_iterator rend() const { return _M_t.rend(); }
 

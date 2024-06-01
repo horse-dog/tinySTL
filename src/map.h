@@ -96,27 +96,27 @@ template<class, class, class, class> friend class multimap;
 
   iterator begin() { return _M_t.begin(); }
 
-  iterator begin() const { return _M_t.begin(); }
+  const_iterator begin() const { return _M_t.begin(); }
  
-  iterator cbegin() const { return _M_t.begin(); }
+  const_iterator cbegin() const { return _M_t.begin(); }
 
   iterator end() { return _M_t.end(); }
 
-  iterator end() const { return _M_t.end(); }
+  const_iterator end() const { return _M_t.end(); }
 
-  iterator cend() const { return _M_t.end(); }
+  const_iterator cend() const { return _M_t.end(); }
 
   reverse_iterator rbegin() { return _M_t.rbegin(); }
 
-  reverse_iterator rbegin() const { return _M_t.rbegin(); }
+  const_reverse_iterator rbegin() const { return _M_t.rbegin(); }
 
-  reverse_iterator crbegin() const { return _M_t.rbegin(); }
+  const_reverse_iterator crbegin() const { return _M_t.rbegin(); }
 
   reverse_iterator rend() { return _M_t.rend(); }
 
-  reverse_iterator rend() const { return _M_t.rend(); }
+  const_reverse_iterator rend() const { return _M_t.rend(); }
 
-  reverse_iterator crend() const { return _M_t.rend(); }
+  const_reverse_iterator crend() const { return _M_t.rend(); }
 
   bool empty() const { return _M_t.size() == 0; }
 
@@ -132,6 +132,28 @@ template<class, class, class, class> friend class multimap;
       __i = insert(__i, value_type(__k, _Val()));
     }
     return (*__i).second;
+  }
+
+  const _Val& operator[](const key_type& __k) const {
+    const_iterator __i = lower_bound(__k);
+    if (__i == end() || key_comp()(__k, (*__i).first)) {
+      __tiny_throw_range_error("map::operator[] const: key not found");
+    }
+    return (*__i).second;
+  }
+
+  _Val& at(const key_type& __k) 
+  {
+    return this->operator[](__k);
+  }
+
+  const _Val& at(const key_type& __k) const 
+  {
+    try {
+      return this->operator[](__k);
+    } catch (...) {
+      __tiny_throw_range_error("map::at() const: key not found");
+    }
   }
 
   template<typename... _Args> tinySTL::pair<iterator, bool>
@@ -309,27 +331,27 @@ template<class, class, class, class> friend class multimap;
 
   iterator begin() { return _M_t.begin(); }
 
-  iterator begin() const { return _M_t.begin(); }
+  const_iterator begin() const { return _M_t.begin(); }
  
-  iterator cbegin() const { return _M_t.begin(); }
+  const_iterator cbegin() const { return _M_t.begin(); }
 
   iterator end() { return _M_t.end(); }
 
-  iterator end() const { return _M_t.end(); }
+  const_iterator end() const { return _M_t.end(); }
 
-  iterator cend() const { return _M_t.end(); }
+  const_iterator cend() const { return _M_t.end(); }
 
   reverse_iterator rbegin() { return _M_t.rbegin(); }
 
-  reverse_iterator rbegin() const { return _M_t.rbegin(); }
+  const_reverse_iterator rbegin() const { return _M_t.rbegin(); }
 
-  reverse_iterator crbegin() const { return _M_t.rbegin(); }
+  const_reverse_iterator crbegin() const { return _M_t.rbegin(); }
 
   reverse_iterator rend() { return _M_t.rend(); }
 
-  reverse_iterator rend() const { return _M_t.rend(); }
+  const_reverse_iterator rend() const { return _M_t.rend(); }
 
-  reverse_iterator crend() const { return _M_t.rend(); }
+  const_reverse_iterator crend() const { return _M_t.rend(); }
 
   bool empty() const { return _M_t.size() == 0; }
 

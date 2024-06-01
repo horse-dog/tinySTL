@@ -2,6 +2,7 @@
 
 #include "tiny_pair.h"
 #include "tiny_alloc.h"
+#include "tiny_errors.h"
 #include "tiny_algobase.h"
 #include "tiny_iterator.h"
 #include "tiny_construct.h"
@@ -51,6 +52,9 @@ struct _Rb_tree_node_base
 
   static _Base_ptr _Rb_tree_increment(_Base_ptr __x)
   {
+    if (__x == nullptr) {
+      return nullptr;
+    }
     if (__x->_M_color == _Rb_tree_color::_S_red
      && __x->_M_parent->_M_parent == __x)
     {
@@ -95,6 +99,9 @@ struct _Rb_tree_node_base
 
   static _Base_ptr _Rb_tree_decrement(_Base_ptr __x) 
   { // Symmetric functions of _Rb_tree_increment.
+    if (__x == nullptr) {
+      return nullptr;
+    }
     if (__x->_M_color == _Rb_tree_color::_S_red
      && __x->_M_parent->_M_parent == __x)
     {
@@ -563,10 +570,16 @@ template<class, class, class, class, class> friend class _Rb_tree;
   const_iterator begin() const noexcept
   { return const_iterator(_M_header ? _M_header->_M_left : 0); }
 
+  const_iterator cbegin() const noexcept
+  { return const_iterator(_M_header ? _M_header->_M_left : 0); }
+
   iterator end() noexcept 
   { return iterator(_M_header); }
 
   const_iterator end() const noexcept 
+  { return const_iterator(_Base_ptr(_M_header)); }
+
+  const_iterator cend() const noexcept 
   { return const_iterator(_Base_ptr(_M_header)); }
 
   reverse_iterator rbegin() noexcept 
@@ -575,10 +588,16 @@ template<class, class, class, class, class> friend class _Rb_tree;
   const_reverse_iterator rbegin() const noexcept
   { return const_reverse_iterator(end()); }
 
+  const_reverse_iterator crbegin() const noexcept
+  { return const_reverse_iterator(end()); }
+
   reverse_iterator rend() noexcept
   { return reverse_iterator(begin()); }
 
   const_reverse_iterator rend() const noexcept 
+  { return const_reverse_iterator(begin()); }
+
+  const_reverse_iterator crend() const noexcept 
   { return const_reverse_iterator(begin()); }
 
   bool empty() const noexcept 
@@ -1108,6 +1127,9 @@ template<class, class, class, class, class> friend class _Rb_tree;
   iterator 
   erase(iterator __pos) 
   {
+    if (empty() || __pos == end()) {
+      __tiny_throw_range_error("erase");
+    }
     _Base_ptr pos = __pos._M_node;
     iterator it(pos);
     ++it;
@@ -1352,7 +1374,7 @@ template<class, class, class, class, class> friend class _Rb_tree;
   template <class _Compare2>
   void _M_merge_unique(_Rb_tree<_Key, _Val, _KeyOfValue, _Compare2, _Alloc>&& __tree) 
   {
-    if (_M_header == nullptr && __tree._M_header == nullptr) {
+    if (__tree.empty()) {
       return;
     }
     if (_M_header == nullptr) {
@@ -1369,7 +1391,7 @@ template<class, class, class, class, class> friend class _Rb_tree;
   template <class _Compare2>
   void _M_merge_equal(_Rb_tree<_Key, _Val, _KeyOfValue, _Compare2, _Alloc>&& __tree) 
   {
-    if (_M_header == nullptr && __tree._M_header == nullptr) {
+    if (__tree.empty()) {
       return;
     }
     if (_M_header == nullptr) {
