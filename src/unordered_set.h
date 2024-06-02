@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tiny_hash.h"
+
 namespace tinySTL
 {
 

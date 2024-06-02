@@ -6,3 +6,7 @@
 #include "unordered_set.h"
 
 using namespace tinySTL;
+
+TEST(unordered_set, constructor) {
+  hashtable<int, std::hash<int>, Eq__> x;
+}
