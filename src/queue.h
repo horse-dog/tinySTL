@@ -3,6 +3,7 @@
 #include "deque.h"
 #include "vector.h"
 #include "tiny_heap.h"
+#include "tiny_function.h"
 
 namespace tinySTL {
 template <typename _Tp, typename _Sequence = deque<_Tp>>
@@ -65,32 +66,16 @@ class queue {
   void swap(queue& __s)
   { tinySTL::swap(c, __s.c); }
 
-  friend auto operator<=>(const queue& __x, const queue& __y) 
-  { return operator<=>(__x.c, __y.c); }
+  friend bool operator<(const queue& __x, const queue& __y) 
+  { return __x.c < __y.c; }
 
   friend bool operator==(const queue& __x, const queue& __y)
-  { return operator==(__x.c, __y.c); }
+  { return __x.c == __y.c; }
 
 };
 
-template < class _Tp, class _Sequence = vector<_Tp>, class _Cp = void >
+template <class _Tp, class _Sequence = vector<_Tp>, class _Compare = less<_Tp>>
 class priority_queue {
- protected:
-  template <class _Tx, class _Ty>
-  struct _Cp_traits { using type = _Ty; };
-
-  template <class _Tx>
-  struct _Cp_traits<_Tx, void> { 
-    struct _Less { 
-      bool operator() 
-      (const _Tp& a, const _Tp& b) const
-      { return a < b; }
-    }; 
-    using type = _Less;
-  };
-
-  using _Compare = typename _Cp_traits<_Tp, _Cp>::type;
-
  public:
   using value_type = typename  _Sequence::value_type;
   using reference = typename _Sequence::reference;

@@ -305,6 +305,17 @@ TEST(set, erase) {
     EXPECT_EQ(*it, 1);
     EXPECT_THROW(s.erase(s.end()), std::range_error);
   }
+
+  /**
+   * @test  iterator erase(const_iterator __first, const_iterator __last) 
+   * @brief erase by range.
+   */
+  SUBTEST(erase) {
+    set<int> s = {1, 4, 2, 5, 0};
+    auto it = s.erase(s.begin(), ----s.end());
+    EXPECT_EQ(*it, 4);
+    EXPECT_STRING_EQ(s, [4, 5]);
+  }
 }
 
 TEST(set, clear) {

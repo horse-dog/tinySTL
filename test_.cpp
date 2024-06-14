@@ -917,6 +917,9 @@ int main(int argc, const char* argv[]) {
   // std::multiset<int> s1 {1, 4, 4, 3, 2};
   std::set<int> s2 {1, 5, 0};
   std::set<int> s1 {-1, -4, -2, -5, -0};
+  std::multiset<int> s;
+  auto x = s.emplace(3);
+  // std::lexicographical_compare_three_way()
   auto r = s2.insert(3);
   printf("%d\n", *r.first);
   auto it = s2.insert(r.first, 4);

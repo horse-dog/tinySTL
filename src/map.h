@@ -14,27 +14,11 @@ namespace tinySTL
 
 template<class, class, class, class> class multimap;
 
-template<class _Key, class _Val, class _Cp = void , class _Alloc = alloc>
+template<class _Key, class _Val, class _Compare = less<_Key>, class _Alloc = alloc>
 class map {
 
 template<class, class, class, class> friend class map;
 template<class, class, class, class> friend class multimap;
-
- protected:
-  template <class _Tx, class _Ty>
-  struct _Cp_traits { using type = _Ty; };
-
-  template <class _Tx>
-  struct _Cp_traits<_Tx, void> { 
-    struct _Less { 
-      bool operator() 
-      (const _Key& a, const _Key& b) const
-      { return a < b; }
-    }; 
-    using type = _Less;
-  };
-
-  using _Compare = typename _Cp_traits<_Key, _Cp>::type;
 
  public:
   typedef _Key     key_type;
@@ -259,17 +243,11 @@ template<class, class, class, class> friend class multimap;
 
 };
 
-template<class _Key, class _Val, class _Cp = void , class _Alloc = alloc>
+template<class _Key, class _Val, class _Compare = less<_Key>, class _Alloc = alloc>
 class multimap {
  
 template<class, class, class, class> friend class map;
 template<class, class, class, class> friend class multimap;
-
- protected:
-  template <class _Tx, class _Ty>
-  using _Cp_traits = map<_Key, _Val, _Cp, _Alloc>::template _Cp_traits<_Tx, _Ty>;
-
-  using _Compare = typename _Cp_traits<_Key, _Cp>::type;
 
  public:
   typedef _Key     key_type;

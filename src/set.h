@@ -14,27 +14,11 @@ namespace tinySTL
 
 template<class, class, class> class multiset;
 
-template<class _Key, class _Cp = void , class _Alloc = alloc>
+template<class _Key, class _Compare = less<_Key>, class _Alloc = alloc>
 class set {
  
 template<class, class, class> friend class set;
 template<class, class, class> friend class multiset;
-
- protected:
-  template <class _Tx, class _Ty>
-  struct _Cp_traits { using type = _Ty; };
-
-  template <class _Tx>
-  struct _Cp_traits<_Tx, void> { 
-    struct _Less { 
-      bool operator() 
-      (const _Key& a, const _Key& b) const
-      { return a < b; }
-    }; 
-    using type = _Less;
-  };
-
-  using _Compare = typename _Cp_traits<_Key, _Cp>::type;
 
  public:
   typedef _Key     key_type;
@@ -229,17 +213,11 @@ template<class, class, class> friend class multiset;
 
 };
 
-template<class _Key, class _Cp = void , class _Alloc = alloc>
+template<class _Key, class _Compare = less<_Key>, class _Alloc = alloc>
 class multiset {
  
 template<class, class, class> friend class set;
 template<class, class, class> friend class multiset;
-
- protected:
-  template <class _Tx, class _Ty>
-  using _Cp_traits = set<_Key, _Cp, _Alloc>::template _Cp_traits<_Tx, _Ty>;
-
-  using _Compare = typename _Cp_traits<_Key, _Cp>::type;
 
  public:
   typedef _Key     key_type;
@@ -297,7 +275,7 @@ template<class, class, class> friend class multiset;
   value_compare value_comp() const { return _M_t.key_comp(); }
 
  public:
-  allocator_type get_allocator() const { return _M_t._M_node_allocator; }
+  allocator_type get_allocator() const { return allocator_type{}; }
 
   iterator begin() { return _M_t.cbegin(); }
 
@@ -331,17 +309,17 @@ template<class, class, class> friend class multiset;
 
   void swap(multiset& __x) { tinySTL::swap(*this, __x); }
 
-  template<typename... _Args> tinySTL::pair<iterator, bool>
+  template<typename... _Args> iterator
   emplace(_Args&&... __args) { return _M_t._M_emplace_equal(tinySTL::forward<_Args>(__args)...); }
 
   template<typename... _Args> iterator
   emplace_hint(const_iterator __hint, _Args &&...__args) 
   { return _M_t._M_emplace_hint_equal(__hint.base(), tinySTL::forward<_Args>(__args)...); }
 
-  tinySTL::pair<iterator, bool>
+  iterator
   insert(const value_type& __x) { return _M_t._M_insert_equal(__x); }
 
-  tinySTL::pair<iterator, bool>
+  iterator
   insert(value_type&& __x) { return _M_t._M_insert_equal(tinySTL::move(__x)); }
 
   iterator insert(const_iterator __hint, const value_type& __x) 

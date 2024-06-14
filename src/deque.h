@@ -764,6 +764,18 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     this->swap(__tmp);
   }
 
+  bool operator<(const deque& __x) const {
+    return lexicographical_compare(
+      this->begin(), this->end(), 
+      __x.begin(), __x.end()
+    );
+  }
+
+  bool operator==(const deque& __x) const {
+    return this->size() == __x.size() 
+      && equal(__x.begin(), __x.end(), begin());
+  }
+
  protected:
   void _M_range_check(size_type __n) const {
     if (__n >= this->size())

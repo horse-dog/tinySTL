@@ -67,4 +67,39 @@ struct _Select1st
   { return __x.first; }
 };
 
+template <class _Tp>
+struct less : binary_function<_Tp, _Tp, bool>
+{
+  bool operator()(const _Tp& __x, const _Tp& __y) const
+  { return __x < __y; }
+};
+
+template <class _Tp>
+struct greater : binary_function<_Tp, _Tp, bool>
+{
+  bool operator()(const _Tp& __x, const _Tp& __y) const
+  { return __x > __y; }
+};
+
+template <class _Tp>
+struct greater_equal : binary_function<_Tp, _Tp, bool>
+{
+  bool operator()(const _Tp& __x, const _Tp& __y) const
+  { return __x >= __y; }
+};
+
+template <class _Tp>
+struct less_equal : binary_function<_Tp, _Tp, bool>
+{
+  bool operator()(const _Tp& __x, const _Tp& __y) const
+  { return __x <= __y; }
+};
+
+template <class _Tp>
+struct equal_to : binary_function<_Tp, _Tp, bool>
+{
+  bool operator()(const _Tp& __x, const _Tp& __y) const
+  { return __x == __y; }
+};
+
 }
