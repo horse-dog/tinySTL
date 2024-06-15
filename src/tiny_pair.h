@@ -1,4 +1,5 @@
 #pragma once
+#include "tiny_traits.h"
 
 namespace tinySTL 
 {
@@ -17,6 +18,27 @@ struct pair {
 
   template <class _U1, class _U2>
   pair(const pair<_U1, _U2>& __p) : first(__p.first), second(__p.second) {}
+
+  template <class _U1, class _U2>
+  pair(pair<_U1, _U2>&& __p) : first(tinySTL::move(__p.first)), second(tinySTL::move(__p.second)) {}
+
+  template <class _U1, class _U2>
+  pair& operator=(const pair<_U1, _U2>& __p) {
+    if (this != &__p) {
+      first = __p.first;
+      second = __p.second;
+    }
+    return *this;
+  }
+
+  template <class _U1, class _U2>
+  pair& operator=(pair<_U1, _U2>&& __p) {
+    if (this != &__p) {
+      first = tinySTL::move(__p.first);
+      second = tinySTL::move(__p.second);
+    }
+    return *this;
+  }
 
   friend std::ostream& operator<<(std::ostream& os, const pair& __pair) 
   {
