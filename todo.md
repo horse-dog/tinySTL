@@ -1,24 +1,24 @@
-[X] move.
+[x] move.
 
-[X] uninitialized_move.
+[x] uninitialized_move.
 
-[X] move_backward.
+[x] move_backward.
 
-[X] vector.
+[x] vector.
 
-[X] array.
+[x] array.
 
-[X] list.
+[x] list.
 
-[X] forward_list.
+[x] forward_list.
 
-[X] deque.
+[x] deque.
 
-[X] stack.
+[x] stack.
 
-[X] queue.
+[x] queue.
 
-[X] heap.
+[x] heap.
 
     -- [ ] rb_tree: 
 
@@ -31,15 +31,15 @@
     template <class _Tp, class _Compare, class _Alloc = tinySTL::allocator<_Val>>
     class _Rb_tree;
 
-[ ] rb_tree.
+[x] rb_tree.
 
-[ ] set.
+[x] set.
 
-[ ] map.
+[x] map.
 
-[ ] multiset.
+[x] multiset.
 
-[ ] multimap.
+[x] multimap.
 
 [ ] unordered_set.
 
