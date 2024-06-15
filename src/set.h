@@ -14,7 +14,7 @@ namespace tinySTL
 
 template<class, class, class> class multiset;
 
-template<class _Key, class _Compare = less<_Key>, class _Alloc = alloc>
+template<class _Key, class _Compare = less<_Key>, class _Alloc = tinySTL::allocator<_Key>>
 class set {
  
 template<class, class, class> friend class set;
@@ -28,7 +28,7 @@ template<class, class, class> friend class multiset;
   typedef _Alloc   allocator_type;
 
  protected:
-  typedef tinySTL::_Rb_tree<key_type, value_type, _Identity<value_type>, key_compare>
+  typedef tinySTL::_Rb_tree<key_type, value_type, _Identity<value_type>, key_compare, _Alloc>
             _Rep_type;
   _Rep_type _M_t;
  
@@ -213,7 +213,7 @@ template<class, class, class> friend class multiset;
 
 };
 
-template<class _Key, class _Compare = less<_Key>, class _Alloc = alloc>
+template<class _Key, class _Compare = less<_Key>, class _Alloc = tinySTL::allocator<_Key>>
 class multiset {
  
 template<class, class, class> friend class set;
@@ -227,7 +227,7 @@ template<class, class, class> friend class multiset;
   typedef _Alloc   allocator_type;
 
  protected:
-  typedef tinySTL::_Rb_tree<key_type, value_type, _Identity<value_type>, key_compare>
+  typedef tinySTL::_Rb_tree<key_type, value_type, _Identity<value_type>, key_compare, _Alloc>
             _Rep_type;
   _Rep_type _M_t;
  

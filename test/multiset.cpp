@@ -443,7 +443,7 @@ TEST(multiset, merge) {
    * @brief merge another different compare multiset.
    */
   SUBTEST(merge) {
-    using smset = multiset<int, std::greater<int>>;
+    using smset = multiset<int, tinySTL::greater<int>>;
     multiset<int> s1;
     smset s2 = {1, 4, 2, 5, 2};
     s1.merge(s2);
@@ -498,7 +498,7 @@ TEST(multiset, merge) {
    * @brief merge another different compare set.
    */
   SUBTEST(merge) {
-    using sset = set<int, std::greater<int>>;
+    using sset = set<int, tinySTL::greater<int>>;
     multiset<int> s1;
     sset s2 = {1, 4, 2, 5, 0};
     s1.merge(s2);

@@ -14,7 +14,7 @@ namespace tinySTL
 
 template<class, class, class, class> class multimap;
 
-template<class _Key, class _Val, class _Compare = less<_Key>, class _Alloc = alloc>
+template<class _Key, class _Val, class _Compare = less<_Key>, class _Alloc = tinySTL::allocator<tinySTL::pair<_Key, _Val>>>
 class map {
 
 template<class, class, class, class> friend class map;
@@ -24,11 +24,23 @@ template<class, class, class, class> friend class multimap;
   typedef _Key     key_type;
   typedef tinySTL::pair<const _Key, _Val> value_type;
   typedef _Compare key_compare;
-  typedef _Compare value_compare; // TODO.
   typedef _Alloc   allocator_type;
 
+  class value_compare 
+  : public binary_function<value_type, value_type, bool> 
+  {
+    friend class map;
+   protected:
+    key_compare comp;
+    value_compare(key_compare __c) : comp(__c) {}
+   public:
+    bool operator()
+    (const value_type& __x, const value_type& __y) const 
+    { return comp(__x.first, __y.first); }
+  };
+
  protected:
-  typedef tinySTL::_Rb_tree<key_type, value_type, _Select1st<value_type>, key_compare>
+  typedef tinySTL::_Rb_tree<key_type, value_type, _Select1st<value_type>, key_compare, _Alloc>
             _Rep_type;
   _Rep_type _M_t;
  
@@ -76,7 +88,7 @@ template<class, class, class, class> friend class multimap;
   value_compare value_comp() const { return _M_t.key_comp(); }
 
  public:
-  allocator_type get_allocator() const { return _M_t._M_node_allocator; }
+  allocator_type get_allocator() const { return allocator_type{}; }
 
   iterator begin() { return _M_t.begin(); }
 
@@ -243,7 +255,7 @@ template<class, class, class, class> friend class multimap;
 
 };
 
-template<class _Key, class _Val, class _Compare = less<_Key>, class _Alloc = alloc>
+template<class _Key, class _Val, class _Compare = less<_Key>, class _Alloc = tinySTL::allocator<tinySTL::pair<_Key, _Val>>>
 class multimap {
  
 template<class, class, class, class> friend class map;
@@ -253,11 +265,23 @@ template<class, class, class, class> friend class multimap;
   typedef _Key     key_type;
   typedef tinySTL::pair<const _Key, _Val> value_type;
   typedef _Compare key_compare;
-  typedef _Compare value_compare; // TODO.
   typedef _Alloc   allocator_type;
 
+  class value_compare 
+  : public binary_function<value_type, value_type, bool> 
+  {
+    friend class multimap;
+   protected:
+    key_compare comp;
+    value_compare(key_compare __c) : comp(__c) {}
+   public:
+    bool operator()
+    (const value_type& __x, const value_type& __y) const 
+    { return comp(__x.first, __y.first); }
+  };
+
  protected:
-  typedef tinySTL::_Rb_tree<key_type, value_type, _Select1st<value_type>, key_compare>
+  typedef tinySTL::_Rb_tree<key_type, value_type, _Select1st<value_type>, key_compare, _Alloc>
             _Rep_type;
   _Rep_type _M_t;
  
@@ -305,7 +329,7 @@ template<class, class, class, class> friend class multimap;
   value_compare value_comp() const { return _M_t.key_comp(); }
 
  public:
-  allocator_type get_allocator() const { return _M_t._M_node_allocator; }
+  allocator_type get_allocator() const { return allocator_type{}; }
 
   iterator begin() { return _M_t.begin(); }
 
