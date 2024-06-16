@@ -8,5 +8,9 @@
 using namespace tinySTL;
 
 TEST(unordered_set, constructor) {
-  hashtable<int, std::hash<int>, Eq__> x;
+  std::hash<int> hf;
+  Eq__ __eql;
+  _Identity<int> __ext;
+  tinySTL::hashtable<int, int, std::hash<int>, _Identity<int>, Eq__>
+  x(8, hf, __eql, __ext);
 }

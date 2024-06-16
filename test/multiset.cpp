@@ -66,7 +66,7 @@ TEST(multiset, constructor) {
 
 TEST(multiset, assign_operator) {
   /**
-   * @test multiset& operator=(initializer_list l)
+   * @test  multiset& operator=(initializer_list l)
    * @brief assign operator by initializer_list.
    */
   SUBTEST(operator=) {
@@ -77,7 +77,7 @@ TEST(multiset, assign_operator) {
   }
   
   /**
-   * @test multiset& operator=(const multiset& x)
+   * @test  multiset& operator=(const multiset& x)
    * @brief assign operator by copy.
    */
   SUBTEST(operator=) {
@@ -91,7 +91,7 @@ TEST(multiset, assign_operator) {
   }
 
   /**
-   * @test multiset& operator=(multiset&& x)
+   * @test  multiset& operator=(multiset&& x)
    * @brief assign operator by move.
    */
   SUBTEST(operator=) {

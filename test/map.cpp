@@ -66,7 +66,7 @@ TEST(map, constructor) {
 
 TEST(map, assign_operator) {
   /**
-   * @test map& operator=(initializer_list l)
+   * @test  map& operator=(initializer_list l)
    * @brief assign operator by initializer_list.
    */
   SUBTEST(operator=) {
@@ -77,7 +77,7 @@ TEST(map, assign_operator) {
   }
 
   /**
-   * @test map& operator=(const map& x)
+   * @test  map& operator=(const map& x)
    * @brief assign operator by copy.
    */
   SUBTEST(operator=) {
@@ -91,7 +91,7 @@ TEST(map, assign_operator) {
   }
 
   /**
-   * @test map& operator=(map&& x)
+   * @test  map& operator=(map&& x)
    * @brief assign operator by move.
    */
   SUBTEST(operator=) {

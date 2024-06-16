@@ -363,17 +363,17 @@ template<class, class, class, class> friend class multimap;
 
   void swap(multimap& __x) { tinySTL::swap(*this, __x); }
 
-  template<typename... _Args> tinySTL::pair<iterator, bool>
+  template<typename... _Args> iterator
   emplace(_Args&&... __args) { return _M_t._M_emplace_equal(tinySTL::forward<_Args>(__args)...); }
 
   template<typename... _Args> iterator
   emplace_hint(const_iterator __hint, _Args &&...__args) 
   { return _M_t._M_emplace_hint_equal(__hint.base(), tinySTL::forward<_Args>(__args)...); }
 
-  tinySTL::pair<iterator, bool>
+  iterator
   insert(const value_type& __x) { return _M_t._M_insert_equal(__x); }
 
-  tinySTL::pair<iterator, bool>
+  iterator
   insert(value_type&& __x) { return _M_t._M_insert_equal(tinySTL::move(__x)); }
 
   iterator insert(const_iterator __hint, const value_type& __x) 

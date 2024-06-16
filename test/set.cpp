@@ -64,7 +64,7 @@ TEST(set, constructor) {
 
 TEST(set, assign_operator) {
   /**
-   * @test set& operator=(initializer_list l)
+   * @test  set& operator=(initializer_list l)
    * @brief assign operator by initializer_list.
    */
   SUBTEST(operator=) {
@@ -75,7 +75,7 @@ TEST(set, assign_operator) {
   }
   
   /**
-   * @test set& operator=(const set& x)
+   * @test  set& operator=(const set& x)
    * @brief assign operator by copy.
    */
   SUBTEST(operator=) {
@@ -89,7 +89,7 @@ TEST(set, assign_operator) {
   }
 
   /**
-   * @test set& operator=(set&& x)
+   * @test  set& operator=(set&& x)
    * @brief assign operator by move.
    */
   SUBTEST(operator=) {

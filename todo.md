@@ -39,7 +39,7 @@
 
 [x] multiset.
 
-[x] multimap.
+[x] multimap. TODO: auto&& [k, v] 不起作用。
 
 [ ] unordered_set.
 
