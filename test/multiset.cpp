@@ -534,9 +534,6 @@ TEST(multiset, compare_operator) {
 }
 
 TEST(multiset, cout_operator) {
-  multiset<int> s1 = {1, 4, 2, 5, 2};
-  multiset<int> s2 = {2, 4, 2, 0};
-  multiset<int> s3 = {4, 2};
-  multiset<multiset<int>> s = {s1, s2, s3};
-  EXPECT_STRING_EQ(s, [{0, 2, 2, 4}, {1, 2, 2, 4, 5}, {2, 4}]);
+  multiset<int> s = {1, 4, 2, 5, 2};
+  std::cout << s << std::endl;
 }

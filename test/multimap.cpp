@@ -383,22 +383,168 @@ TEST(multimap, find) {
 }
 
 TEST(multimap, lower_bound) {
+  multimap<int, int> m;
+  EXPECT_EQ(m.lower_bound(0), m.begin());
+  m = {{1,1}, {0,0}, {2,2}, {5,5}, {0,0}};
+  EXPECT_EQ(m.lower_bound(0), m.begin());
+  EXPECT_EQ(m.lower_bound(100), m.end());
+  EXPECT_EQ(m.lower_bound(2)->first, 2);
+  EXPECT_EQ(m.lower_bound(4)->first, 5);
+  EXPECT_EQ(m.lower_bound(5)->first, 5);
 }
 
 TEST(multimap, upper_bound) {
+  multimap<int, int> m;
+  EXPECT_EQ(m.upper_bound(0), m.end());
+  m = {{1,1}, {0,0}, {2,2}, {5,5}, {0,0}};
+  EXPECT_EQ(m.upper_bound(0)->first, 1);
+  EXPECT_EQ(m.upper_bound(100), m.end());
+  EXPECT_EQ(m.upper_bound(1)->first, 2);
+  EXPECT_EQ(m.upper_bound(2)->first, 5);
+  EXPECT_EQ(m.upper_bound(4)->first, 5);
+  EXPECT_EQ(m.upper_bound(5), m.end());
 }
 
 TEST(multimap, equal_range) {
+  multimap<int, int> m {{1,1}, {0,0}, {2,2}, {5,5}, {0,0}};
+  auto [l1, r1] = m.equal_range(3);
+  EXPECT_EQ(l1, r1);
+  auto [l2, r2] = m.equal_range(0);
+  EXPECT_EQ(l2->first, 0);
+  EXPECT_EQ(r2->first, 1);
+  EXPECT_EQ(++++l2, r2);
 }
 
 TEST(multimap, disp) {
+  multimap<int, int> m;
+  m.disp(std::cout);
+  m = {{1,1}, {0,0}, {2,2}, {5,5}, {0,0}};
+  m.disp(std::cout);
 }
 
 TEST(multimap, merge) {
+  /**
+   * @brief merge another same compare multimap.
+   */
+  SUBTEST(merge) {
+    multimap<int, int> m1;
+    multimap<int, int> m2 {{1,1}, {4,4}, {2,2}, {5,5}, {2,2}};
+    m1.merge(m2);
+    EXPECT_STRING_EQ(m1, [{1, 1}, {2, 2}, {2, 2}, {4, 4}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_EQ(m1.size(), 5);
+    EXPECT_EQ(m2.size(), 0);
+
+    m2 = {{3,3}, {4,4}, {3,3}};
+    m1.merge(m2);
+    EXPECT_STRING_EQ(m1, [{1, 1}, {2, 2}, {2, 2}, {3, 3}, {3, 3}, {4, 4}, {4, 4}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_EQ(m1.size(), 8);
+    EXPECT_EQ(m2.size(), 0);
+
+    multimap<int, int> m3;
+    m2.merge(m3);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_STRING_EQ(m3, []);
+    EXPECT_EQ(m2.size(), 0);
+    EXPECT_EQ(m3.size(), 0);
+  }
+
+  /**
+   * @brief merge another different compare multimap.
+   */
+  SUBTEST(merge) {
+    using smmap = multimap<int, int, tinySTL::greater<int>>;
+    multimap<int, int> m1;
+    smmap m2 = {{1,1}, {4,4}, {2,2}, {5,5}, {2,2}};
+    m1.merge(m2);
+    EXPECT_STRING_EQ(m1, [{1, 1}, {2, 2}, {2, 2}, {4, 4}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_EQ(m1.size(), 5);
+    EXPECT_EQ(m2.size(), 0);
+
+    m2 = {{3,3}, {3,3}, {4,4}};
+    m1.merge(m2);
+    EXPECT_STRING_EQ(m1, [{1, 1}, {2, 2}, {2, 2}, {3, 3}, {3, 3}, {4, 4}, {4, 4}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_EQ(m1.size(), 8);
+    EXPECT_EQ(m2.size(), 0);
+
+    map<int, int> m3;
+    m2.merge(m3);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_STRING_EQ(m3, []);
+    EXPECT_EQ(m2.size(), 0);
+    EXPECT_EQ(m3.size(), 0);
+  }
+
+  /**
+   * @brief merge another same compare map.
+   */
+  SUBTEST(merge) {
+    multimap<int, int> m1;
+    map<int, int> m2 {{1,1}, {4,4}, {2,2}, {5,5}, {0,0}};
+    m1.merge(m2);
+    EXPECT_STRING_EQ(m1, [{0, 0}, {1, 1}, {2, 2}, {4, 4}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_EQ(m1.size(), 5);
+    EXPECT_EQ(m2.size(), 0);
+
+    m2 = {{3,3}, {4,4}, {5,5}};
+    m1.merge(m2);
+    EXPECT_STRING_EQ(m1, [{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {4, 4}, {5, 5}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_EQ(m1.size(), 8);
+    EXPECT_EQ(m2.size(), 0);
+
+    map<int, int> m3;
+    m2.merge(m3);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_STRING_EQ(m3, []);
+    EXPECT_EQ(m2.size(), 0);
+    EXPECT_EQ(m3.size(), 0);
+  }
+
+  /**
+   * @brief merge another different compare map.
+   */
+  SUBTEST(merge) {
+    using smap = map<int, int, tinySTL::greater<int>>;
+    multimap<int, int> m1;
+    smap m2 {{1,1}, {4,4}, {2,2}, {5,5}, {0,0}};
+    m1.merge(m2);
+    EXPECT_STRING_EQ(m1, [{0, 0}, {1, 1}, {2, 2}, {4, 4}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_EQ(m1.size(), 5);
+    EXPECT_EQ(m2.size(), 0);
+
+    m2 = {{3,3}, {4,4}, {5,5}};
+    m1.merge(m2);
+    EXPECT_STRING_EQ(m1, [{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {4, 4}, {5, 5}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_EQ(m1.size(), 8);
+    EXPECT_EQ(m2.size(), 0);
+
+    map<int, int> m3;
+    m2.merge(m3);
+    EXPECT_STRING_EQ(m2, []);
+    EXPECT_STRING_EQ(m3, []);
+    EXPECT_EQ(m2.size(), 0);
+    EXPECT_EQ(m3.size(), 0);
+  }
 }
 
 TEST(multimap, compare_operator) {
+  multimap<int, int> m1 {{1,1}, {2,2}, {2,2}, {5,5}, {0,0}};
+  multimap<int, int> m2 {{1,1}, {2,2}, {2,2}, {0,0}};
+  multimap<int, int> m3 {{4,4}, {2,2}};
+  EXPECT_TRUE(m1 == m1);
+  EXPECT_FALSE(m1 == m2);
+  EXPECT_TRUE(m2 < m1);
+  EXPECT_TRUE(m2 < m3);
 }
 
 TEST(multimap, cout_operator) {
+  multimap<int, int> m {{1,1}, {4,4}, {2,2}, {5,5}, {2,2}};
+  std::cout << m << std::endl;
 }
