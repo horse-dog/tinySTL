@@ -138,9 +138,8 @@ template<class, class, class> friend class multiset;
     }
   }
 
-  void insert(std::initializer_list<value_type> __l) {
-    insert(__l.begin(), __l.end());
-  }
+  void insert(std::initializer_list<value_type> __l) 
+  { insert(__l.begin(), __l.end()); }
 
   size_type erase(const key_type& __k) 
   { return _M_t.erase(__k); }
@@ -197,8 +196,12 @@ template<class, class, class> friend class multiset;
 
   friend bool operator==(const set& __x, const set& __y) 
   {
-    return __x.size() == __y.size()
-    && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+    if (&__x != &__y) {
+      return __x.size() == __y.size()
+        && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+    } else {
+      return true;
+    }
   }
   friend bool operator<(const set& __x, const set& __y) 
   {
@@ -396,8 +399,12 @@ template<class, class, class> friend class multiset;
 
   friend bool operator==(const multiset& __x, const multiset& __y) 
   {
-    return __x.size() == __y.size()
-    && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+    if (&__x != &__y) {
+      return __x.size() == __y.size()
+        && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+    } else {
+      return true;
+    }
   }
   friend bool operator<(const multiset& __x, const multiset& __y) 
   {

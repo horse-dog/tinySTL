@@ -239,8 +239,12 @@ template<class, class, class, class> friend class multimap;
 
   friend bool operator==(const map& __x, const map& __y) 
   {
-    return __x.size() == __y.size()
-    && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+    if (&__x != &__y) {
+      return __x.size() == __y.size()
+        && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+    } else {
+      return true;
+    }
   }
   friend bool operator<(const map& __x, const map& __y) 
   {
@@ -450,8 +454,12 @@ template<class, class, class, class> friend class multimap;
 
   friend bool operator==(const multimap& __x, const multimap& __y) 
   {
-    return __x.size() == __y.size()
-    && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+    if (&__x != &__y) {
+      return __x.size() == __y.size()
+        && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+    } else {
+      return true;
+    }
   }
   friend bool operator<(const multimap& __x, const multimap& __y) 
   {

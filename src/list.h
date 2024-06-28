@@ -650,7 +650,6 @@ class list
 
   void sort() { sort(less()); }
 
-  // TODO: why it work?.
   template <class _StrictWeakOrdering>
   void sort(_StrictWeakOrdering __comp)
   { 

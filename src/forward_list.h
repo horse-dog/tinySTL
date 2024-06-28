@@ -12,7 +12,6 @@ namespace tinySTL
 struct _Slist_node_base {
   _Slist_node_base* _M_next = 0;
 
-  // TODO: Read.
   _Slist_node_base* _M_transfer_after(
                      _Slist_node_base*__begin,
                      _Slist_node_base*__end) noexcept 

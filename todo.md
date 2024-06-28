@@ -31,6 +31,10 @@
     template <class _Tp, class _Compare, class _Alloc = tinySTL::allocator<_Val>>
     class _Rb_tree;
 
+- set, map operator==，>, < 移到 rbtree, 需要使用 compare，不能直接调用 <.
+
+- 实现 hash 函数
+
 [x] rb_tree.
 
 [x] set.
@@ -39,7 +43,7 @@
 
 [x] multiset.
 
-[x] multimap. TODO: auto&& [k, v] 不起作用。
+[x] multimap. 
 
 [ ] unordered_set.
 

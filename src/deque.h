@@ -16,6 +16,7 @@ class _Deque_base {
  protected:
   class _Deque_iterator {
    friend class _Deque_base;
+   template<class, class> friend class deque;
    public:
     using iterator_category = tinySTL::random_access_iterator_tag;
     using value_type = _Tp;
@@ -29,13 +30,10 @@ class _Deque_base {
     static constexpr inline size_t 
     __deque_buf_size(size_t __size)
     {
-      // TODO: replace by _S_deque_buffer_size ? .
-      // TODO: 8 -> 512.
-      return __size < 8 ? (8 / __size) : 1;
+      return __size < _S_deque_buffer_size ? (_S_deque_buffer_size / __size) : 1;
     }
 
-   // TODO: protected.
-   public:
+   protected:
     using _Map_pointer = _Tp**;
 
     pointer       _M_cur;
@@ -132,7 +130,6 @@ class _Deque_base {
     operator[](difference_type __n) const
     { return *(*this + __n); }
 
-    // TODO: what ? .
     constexpr difference_type
     operator-(const _Deque_iterator& __right) const {
       return difference_type(_S_buffer_size()) 
@@ -184,8 +181,7 @@ class _Deque_base {
   typedef _Alloc _Node_alloc_type;
 
   enum { _S_initial_map_size = 8 };
-  // const static size_type _S_initial_map_size = 8;
-  const static size_type _S_deque_buffer_size = 8; // TODO: 8 -> 512.
+  const static size_type _S_deque_buffer_size = 512;
 
  public:
   _Deque_base(const allocator_type& __a)
@@ -759,7 +755,6 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
     if (__front_capacity + __back_capacity 
       < iterator::_S_buffer_size()) return;
 
-    // TODO: check this ?.
     deque __tmp(begin(), end());
     this->swap(__tmp);
   }
