@@ -23,9 +23,9 @@ TEST(unordered_map, constructor) {
    */
   SUBTEST(constructor) {
     unordered_map<int, std::string> m1 {{1, "hello"}, {2, "world"}};
-    EXPECT_STRING_EQ(m1, [{2, world}, {1, hello}]);
+    EXPECT_STRING_EQ(m1, [{1, hello}, {2, world}]);
     unordered_map<int, std::string> m2(m1);
-    EXPECT_STRING_EQ(m2, [{2, world}, {1, hello}]);
+    EXPECT_STRING_EQ(m2, [{1, hello}, {2, world}]);
   }
 
   /**
@@ -34,12 +34,12 @@ TEST(unordered_map, constructor) {
    */
   SUBTEST(constructor) {
     unordered_map<int, std::string> m1 {{1, "hello"}, {2, "world"}};
-    EXPECT_STRING_EQ(m1, [{2, world}, {1, hello}]);
+    EXPECT_STRING_EQ(m1, [{1, hello}, {2, world}]);
     unordered_map<int, std::string> m2(tinySTL::move(m1));
     EXPECT_EQ(m1.size(), 0);
     EXPECT_EQ(m2.size(), 2);
     EXPECT_STRING_EQ(m1, []);
-    EXPECT_STRING_EQ(m2, [{2, world}, {1, hello}]);
+    EXPECT_STRING_EQ(m2, [{1, hello}, {2, world}]);
   }
 
   /**
@@ -184,14 +184,14 @@ TEST(unordered_map, emplace) {
   unordered_map<int, std::string> m;
   m.emplace(1, "Hello");
   m.emplace(2, "World");
-  EXPECT_STRING_EQ(m, [{2, World}, {1, Hello}]);
+  EXPECT_STRING_EQ(m, [{1, Hello}, {2, World}]);
 }
 
 TEST(unordered_map, emplace_hint) {
   unordered_map<int, std::string> m;
   auto it = m.emplace_hint(m.end(), 2, "World");
   it = m.emplace_hint(it, 1, "Hello");
-  EXPECT_STRING_EQ(m, [{2, World}, {1, Hello}]);
+  EXPECT_STRING_EQ(m, [{1, Hello}, {2, World}]);
 }
 
 TEST(unordered_map, empty) {
@@ -411,13 +411,13 @@ TEST(unordered_map, merge) {
     m2 = {{3,3}, {4,4}, {5,5}};
     m1.merge(m2);
     EXPECT_STRING_EQ(m1, [{0, 0}, {1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}]);
-    EXPECT_STRING_EQ(m2, [{4, 4}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, [{5, 5}, {4, 4}]);
     EXPECT_EQ(m1.size(), 6);
     EXPECT_EQ(m2.size(), 2);
 
     unordered_map<int, int> m3;
     m2.merge(m3);
-    EXPECT_STRING_EQ(m2, [{4, 4}, {5, 5}]);
+    EXPECT_STRING_EQ(m2, [{5, 5}, {4, 4}]);
     EXPECT_STRING_EQ(m3, []);
     EXPECT_EQ(m2.size(), 2);
     EXPECT_EQ(m3.size(), 0);
@@ -431,7 +431,7 @@ TEST(unordered_map, merge) {
     unordered_multimap<int, int> m2 = {{1,1}, {1,1}, {4,4}, {2,2}, {2,2}, {5,5}, {0,0}};
     m1.merge(m2);
     EXPECT_STRING_EQ(m1, [{0, 0}, {1, 1}, {2, 2}, {4, 4}, {5, 5}]);
-    EXPECT_STRING_EQ(m2, [{2, 2}, {1, 1}]);
+    EXPECT_STRING_EQ(m2, [{1, 1}, {2, 2}]);
     EXPECT_EQ(m1.size(), 5);
     EXPECT_EQ(m2.size(), 2);
 
@@ -482,7 +482,7 @@ TEST(unordered_map, swap) {
   EXPECT_STRING_EQ(m2, []);
   m2 = {{1, "aa"}, {3, "bb"}};
   m1.swap(m2);
-  EXPECT_STRING_EQ(m1, [{3, bb}, {1, aa}]);
+  EXPECT_STRING_EQ(m1, [{1, aa}, {3, bb}]);
   EXPECT_STRING_EQ(m2, [{1, Hello}, {2, STL}, {3, World}]);
 }
 

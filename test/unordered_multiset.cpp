@@ -58,7 +58,7 @@ TEST(unordered_multiset, constructor) {
   SUBTEST(constructor) {
     vector<double> l = { 3.14, 6.28, 0.25, 0.618 };
     unordered_multiset<int> s(l.begin(), l.end());
-    EXPECT_STRING_EQ(s, [0, 0, 6, 3]);
+    EXPECT_STRING_EQ(s, [0, 0, 3, 6]);
   }
 }
 
@@ -198,7 +198,7 @@ TEST(unordered_multiset, emplace_hint) {
     })> s;
   auto it = s.emplace_hint(s.end(), 2, "World");
   it = s.emplace_hint(it, 1, "Hello");
-  EXPECT_STRING_EQ(s, [{2, World}, {1, Hello}]);
+  EXPECT_STRING_EQ(s, [{1, Hello}, {2, World}]);
 }
 
 TEST(unordered_multiset, empty) {
@@ -271,7 +271,7 @@ TEST(unordered_multiset, find) {
       s2.insert(x);
     }
   }
-  EXPECT_STRING_EQ(s2, [5, 1, 2, 4]);
+  EXPECT_STRING_EQ(s2, [1, 2, 4, 5]);
 }
 
 TEST(unordered_multiset, get_allocator) {
@@ -352,7 +352,7 @@ TEST(unordered_multiset, insert) {
     unordered_multiset<int> s;
     vector<int> vc {1, 2, 2, 5, 2};
     s.insert(vc.begin(), vc.begin()+4);
-    EXPECT_STRING_EQ(s, [5, 1, 2, 2]);
+    EXPECT_STRING_EQ(s, [1, 2, 2, 5]);
   }
 
   /**

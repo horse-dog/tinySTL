@@ -49,7 +49,7 @@ TEST(unordered_set, constructor) {
    */
   SUBTEST(constructor) {
     unordered_set<std::string> s = { "Hello", "Standard", "Template", "Library" };
-    EXPECT_STRING_EQ(s, [Hello, Library, Template, Standard]);
+    EXPECT_STRING_EQ(s, [Hello, Standard, Template, Library]);
   }
 
   /**
@@ -180,7 +180,7 @@ TEST(unordered_set, emplace) {
   })> s;
   s.emplace(1, "Hello");
   s.emplace(2, "World");
-  EXPECT_STRING_EQ(s, [{2, World}, {1, Hello}]);
+  EXPECT_STRING_EQ(s, [{1, Hello}, {2, World}]);
 }
 
 TEST(unordered_set, emplace_hint) {
@@ -190,7 +190,7 @@ TEST(unordered_set, emplace_hint) {
   })> s;
   auto it = s.emplace_hint(s.end(), 2, "World");
   it = s.emplace_hint(it, 1, "Hello");
-  EXPECT_STRING_EQ(s, [{2, World}, {1, Hello}]);
+  EXPECT_STRING_EQ(s, [{1, Hello}, {2, World}]);
 }
 
 TEST(unordered_set, empty) {
@@ -333,7 +333,7 @@ TEST(unordered_set, insert) {
     unordered_set<int> s;
     vector<int> vc {1, 4, 2, 5, 0};
     s.insert(vc.begin(), vc.begin()+4);
-    EXPECT_STRING_EQ(s, [5, 1, 2, 4]);
+    EXPECT_STRING_EQ(s, [1, 2, 4, 5]);
   }
 
   /**
@@ -390,13 +390,13 @@ TEST(unordered_set, merge) {
     s2 = {3, 4, 5};
     s1.merge(s2);
     EXPECT_STRING_EQ(s1, [0, 1, 2, 3, 4, 5]);
-    EXPECT_STRING_EQ(s2, [4, 5]);
+    EXPECT_STRING_EQ(s2, [5, 4]);
     EXPECT_EQ(s1.size(), 6);
     EXPECT_EQ(s2.size(), 2);
 
     unordered_set<int> s3;
     s2.merge(s3);
-    EXPECT_STRING_EQ(s2, [4, 5]);
+    EXPECT_STRING_EQ(s2, [5, 4]);
     EXPECT_STRING_EQ(s3, []);
     EXPECT_EQ(s2.size(), 2);
     EXPECT_EQ(s3.size(), 0);
@@ -410,7 +410,7 @@ TEST(unordered_set, merge) {
     unordered_multiset<int> s2 = {1, 1, 4, 2, 2, 5, 0};
     s1.merge(s2);
     EXPECT_STRING_EQ(s1, [0, 1, 2, 4, 5]);
-    EXPECT_STRING_EQ(s2, [2, 1]);
+    EXPECT_STRING_EQ(s2, [1, 2]);
     EXPECT_EQ(s1.size(), 5);
     EXPECT_EQ(s2.size(), 2);
 

@@ -152,11 +152,11 @@ struct _Hashtable_const_iterator
 };
 
 // Note: assumes long is at least 32 bits.
-enum { __tiny_num_primes = 32 };
+enum { __tiny_num_primes = 31 };
 
 static const unsigned long __tiny_prime_list[__tiny_num_primes] =
 {
-  2ul,          5ul,          11ul,         23ul,
+  5ul,          11ul,         23ul,
   53ul,         97ul,         193ul,       389ul,       769ul,
   1543ul,       3079ul,       6151ul,      12289ul,     24593ul,
   49157ul,      98317ul,      196613ul,    393241ul,    786433ul,
@@ -866,7 +866,7 @@ private:
   {
     const size_type __old_n = _M_buckets.size();
     if (__num_elements_hint > __old_n * _M_factor) {
-      const size_type __n = _M_next_size(__num_elements_hint/_M_factor);
+      const size_type __n = _M_next_size(ceil(__num_elements_hint/_M_factor));
       if (__n > __old_n) {
         decltype(_M_buckets) __tmp(__n, (_Node*)(0),
                                    _M_buckets.get_allocator());

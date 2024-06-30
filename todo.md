@@ -2,8 +2,6 @@
 
 - 实现 hash 函数
 
-[ ] unordered_multimap.
-
 [ ] algorithms.
 
 [ ] inserter.
