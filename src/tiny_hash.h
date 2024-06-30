@@ -184,6 +184,8 @@ template<class, class, class, class> friend class unordered_multiset;
 template<class, class, class, class, class> friend class unordered_map;
 template<class, class, class, class, class> friend class unordered_multimap;
 template<class, class, class, class, class, class> friend class hashtable;
+template<class, class, class, class, class, class> friend class _Hashtable_iterator;
+template<class, class, class, class, class, class> friend class _Hashtable_const_iterator;
 
 protected:
   typedef _Key key_type;
@@ -202,7 +204,7 @@ protected:
   key_equal key_eq() const { return _M_equals; }
 
 private:
-  typedef _Hashtable_node<_Val> _Node;
+  typedef _Hashtable_node<value_type> _Node;
   typedef typename _Alloc_rebind<_Alloc, _Node>::type _Node_allocator;
 
 protected:
@@ -211,9 +213,9 @@ protected:
   _Node* _M_get_node() { return _M_alloc.allocate(1); }
   void _M_put_node(_Node* __p) { _M_alloc.deallocate(__p, 1); }
 
-  typedef _Hashtable_iterator<_Val, _Key, _Hash, _ExtractKey, _EqualKey, _Alloc>
+  typedef _Hashtable_iterator<_Key, _Val, _Hash, _ExtractKey, _EqualKey, _Alloc>
           iterator;
-  typedef _Hashtable_const_iterator<_Val, _Key, _Hash, _ExtractKey, _EqualKey, _Alloc>
+  typedef _Hashtable_const_iterator<_Key, _Val, _Hash, _ExtractKey, _EqualKey, _Alloc>
           const_iterator;
 
   friend struct
@@ -439,7 +441,7 @@ protected:
 
 
   tinySTL::pair<iterator, bool>
-  _M_insert_unique(iterator __position, _Node* __node) 
+  _M_insert_node_unique(_Node* __node) 
   {
     _M_ensure(_M_num_elements + 1);
     value_type* valptr = __node->_M_storage.ptr();
@@ -456,7 +458,7 @@ protected:
     return pair<iterator, bool>(iterator(__tmp, this), true);
   }
 
-  iterator _M_insert_equal(iterator __position, _Node* __node)
+  iterator _M_insert_node_equal(_Node* __node)
   {
     _M_ensure(_M_num_elements + 1);
     value_type* valptr = __node->_M_storage.ptr();
@@ -502,24 +504,6 @@ protected:
   _M_emplace_hint_equal(iterator __position, _Args&&... __args) 
   {
     return _M_insert_equal(__position, value_type(tinySTL::forward<_Args>(__args)...));
-  }
-
-  reference find_or_insert(const value_type& __obj) 
-  {
-    _M_ensure(_M_num_elements + 1);
-
-    size_type __n = _M_bkt_num(__obj);
-    _Node* __first = _M_buckets[__n];
-
-    for (_Node* __cur = __first; __cur; __cur = __cur->_M_next)
-      if (_M_equals(_M_get_key(*__cur->_M_storage.ptr()), _M_get_key(__obj)))
-        return *__cur->_M_storage.ptr();
-
-    _Node* __tmp = _M_new_node(__obj);
-    __tmp->_M_next = __first;
-    _M_buckets[__n] = __tmp;
-    ++_M_num_elements;
-    return *__tmp->_M_storage.ptr();
   }
 
   iterator find(const key_type& __key) 
@@ -911,28 +895,59 @@ private:
       }
     }
   }
+
+  void _M_reset() {
+    for (size_type i = 0; i < bucket_count(); i++) {
+      _M_buckets[i] = 0;
+    }
+    _M_num_elements = 0;
+  }
+
+  template <class _EqualKey2>
+  void _M_merge_unique(hashtable<_Key, _Val, _Hash, _ExtractKey, _EqualKey2, _Alloc>&& __table) 
+  {
+    if (__table.empty()) {
+      return;
+    }
+    hashtable<_Key, _Val, _Hash, _ExtractKey, _EqualKey2, _Alloc> __tmp(0, hasher(), _EqualKey2(), allocator_type());
+
+    size_type __num_buckets_x = __table.bucket_count();
+    size_type __num_elements_x = __table.size();
+    for (size_type i = 0; __num_elements_x > 0 && i < __num_buckets_x; i++) {
+      _Node* __cur = __table._M_buckets[i];
+      while (__cur) {
+        _Node* __next = __cur->_M_next;
+        --__num_elements_x;
+        auto [it, ok] = _M_insert_node_unique(__cur);
+        if (!ok) {
+          __tmp._M_insert_node_equal(__cur);
+        }
+        __cur = __next;
+      }
+    }
+    __table._M_reset();
+    __table = tinySTL::move(__tmp);
+  }
+
+  template <class _EqualKey2>
+  void _M_merge_equal(hashtable<_Key, _Val, _Hash, _ExtractKey, _EqualKey2, _Alloc>&& __table) 
+  {
+    if (__table.empty()) {
+      return;
+    }
+    size_type __num_buckets_x = __table.bucket_count();
+    size_type __num_elements_x = __table.size();
+    for (size_type i = 0; __num_elements_x > 0 && i < __num_buckets_x; i++) {
+      _Node* __cur = __table._M_buckets[i];
+      while (__cur) {
+        _Node* __next = __cur->_M_next;
+        --__num_elements_x;
+        _M_insert_node_equal(__cur);
+        __cur = __next;
+      }
+    }
+    __table._M_reset();
+  }
 };
 
-}
-
-#include <set>
-#include <unordered_set>
-#include <unordered_map>
-#include "tiny_function.h"
-
-class Eq__ {
-
-bool operator()(const int& a, const int& b) const {
-  return a == b;
-}
-
-};
-
-int xx__x() {
-  const int a = sizeof(tinySTL::hashtable<int, int, std::hash<int>, tinySTL::_Identity<int>, Eq__>);
-  const int b = sizeof(std::unordered_set<int>);
-  const int c = sizeof(tinySTL::vector<int>);
-  const int d = sizeof(std::unordered_map<int, int>);
-  std::set<int> s;
-  return 0;
 }

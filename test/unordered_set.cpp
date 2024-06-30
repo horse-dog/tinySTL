@@ -94,10 +94,13 @@ TEST(unordered_set, assign_operator) {
    * @brief assign operator by move.
    */
   SUBTEST(operator=) {
-    unordered_set<int> s = {1, 2, 3, 4};
-    s = unordered_set<int>({1, 2, 3});
-    EXPECT_STRING_EQ(s, [1, 2, 3]);
-    EXPECT_EQ(s.size(), 3);
+    unordered_set<int> s1 = {1, 2, 3, 4};
+    unordered_set<int> s2 = {1, 2, 3};
+    s1 = tinySTL::move(s2);
+    EXPECT_STRING_EQ(s1, [1, 2, 3]);
+    EXPECT_EQ(s1.size(), 3);
+    EXPECT_STRING_EQ(s2, []);
+    EXPECT_EQ(s2.size(), 0);
   }
 }
 
@@ -275,10 +278,11 @@ TEST(unordered_set, insert) {
    */
   SUBTEST(insert) {
     unordered_set<int> s;
-    auto [it, ok] = s.insert(1);
+    int value = 1;
+    auto [it, ok] = s.insert(value);
     EXPECT_EQ(*it, 1);
     EXPECT_TRUE(ok);
-    auto pr = s.insert(1);
+    auto pr = s.insert(value);
     EXPECT_EQ(*pr.first, 1);
     EXPECT_FALSE(pr.second);
   }
@@ -371,20 +375,78 @@ TEST(unordered_set, max_size) {
 }
 
 TEST(unordered_set, merge) {
-  // TODO.
+  /**
+   * @brief merge another unordered_set.
+   */
+  SUBTEST(merge) {
+    unordered_set<int> s1;
+    unordered_set<int> s2 = {1, 4, 2, 5, 0};
+    s1.merge(s2);
+    EXPECT_STRING_EQ(s1, [0, 1, 2, 4, 5]);
+    EXPECT_STRING_EQ(s2, []);
+    EXPECT_EQ(s1.size(), 5);
+    EXPECT_EQ(s2.size(), 0);
+
+    s2 = {3, 4, 5};
+    s1.merge(s2);
+    EXPECT_STRING_EQ(s1, [0, 1, 2, 3, 4, 5]);
+    EXPECT_STRING_EQ(s2, [4, 5]);
+    EXPECT_EQ(s1.size(), 6);
+    EXPECT_EQ(s2.size(), 2);
+
+    unordered_set<int> s3;
+    s2.merge(s3);
+    EXPECT_STRING_EQ(s2, [4, 5]);
+    EXPECT_STRING_EQ(s3, []);
+    EXPECT_EQ(s2.size(), 2);
+    EXPECT_EQ(s3.size(), 0);
+  }
+
+  /**
+   * @brief merge another unordered_multiset.
+   */
+  SUBTEST(merge) {
+    unordered_set<int> s1;
+    unordered_multiset<int> s2 = {1, 1, 4, 2, 2, 5, 0};
+    s1.merge(s2);
+    EXPECT_STRING_EQ(s1, [0, 1, 2, 4, 5]);
+    EXPECT_STRING_EQ(s2, [2, 1]);
+    EXPECT_EQ(s1.size(), 5);
+    EXPECT_EQ(s2.size(), 2);
+
+    s2 = {3, 4, 4, 5};
+    s1.merge(s2);
+    EXPECT_STRING_EQ(s1, [0, 1, 2, 3, 4, 5]);
+    EXPECT_STRING_EQ(s2, [5, 4, 4]);
+    EXPECT_EQ(s1.size(), 6);
+    EXPECT_EQ(s2.size(), 3);
+
+    unordered_set<int> s3;
+    s2.merge(s3);
+    EXPECT_STRING_EQ(s2, [5, 4, 4]);
+    EXPECT_STRING_EQ(s3, []);
+    EXPECT_EQ(s2.size(), 3);
+    EXPECT_EQ(s3.size(), 0);
+  }
 }
 
 TEST(unordered_set, rehash) {
   unordered_set<int> s {1, 4, 2, 5, 0};
+  s.rehash(3);
+  EXPECT_EQ(s.bucket_count(), 11);
+  EXPECT_STRING_EQ(s, [0, 1, 2, 4, 5]);
   s.rehash(5);
   EXPECT_EQ(s.bucket_count(), 11);
+  EXPECT_STRING_EQ(s, [0, 1, 2, 4, 5]);
   s.rehash(21);
   EXPECT_EQ(s.bucket_count(), 23);
+  EXPECT_STRING_EQ(s, [0, 1, 2, 4, 5]);
 }
 
 TEST(unordered_set, reserve) {
   unordered_set<int> s {1, 4, 2, 5, 0};
   s.reserve(25);
+  EXPECT_STRING_EQ(s, [0, 1, 2, 4, 5]);
 }
 
 TEST(unordered_set, size) {

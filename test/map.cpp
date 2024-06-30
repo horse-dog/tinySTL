@@ -102,6 +102,15 @@ TEST(map, assign_operator) {
   }
 }
 
+TEST(map, at_operator) {
+  const map<int, std::string> m = {{1, "Hello"}};
+  EXPECT_EQ(m[1], "Hello");
+  EXPECT_THROW(m[2], std::range_error);
+  map<int, std::string> m1 = m;
+  m1[2] = "World";
+  EXPECT_EQ(m1[2], "World");
+}
+
 TEST(map, key_compare) {
   map<int, std::string> m {{1, "he"}, {2, "she"}};
   auto comp = m.key_comp();
@@ -115,8 +124,8 @@ TEST(map, value_compare) {
 }
 
 TEST(map, get_allocator) {
-  map<int, std::string> s;
-  auto alloc = s.get_allocator();
+  map<int, std::string> m;
+  auto alloc = m.get_allocator();
   static_assert(
     tinySTL::is_same_v<decltype(alloc.allocate(1)), tinySTL::pair<int, std::string>*>, 
     "alloc doesn't match pair<int, std::string>*"
@@ -225,11 +234,13 @@ TEST(map, insert) {
    */
   SUBTEST(insert) {
     map<int, std::string> m;
-    auto [it, ok] = m.insert({1, "Hello"});
+    tinySTL::pair<int, std::string> value {1, "Hello"};
+    auto [it, ok] = m.insert(value);
     EXPECT_EQ(it->first, 1);
     EXPECT_EQ(it->second, "Hello");
     EXPECT_TRUE(ok);
-    auto pr = m.insert({1, "World"});
+    value.second = "World";
+    auto pr = m.insert(value);
     EXPECT_EQ(pr.first->first, 1);
     EXPECT_EQ(pr.first->second, "Hello");
     EXPECT_FALSE(pr.second);

@@ -210,10 +210,11 @@ TEST(set, insert) {
    */
   SUBTEST(insert) {
     set<int> s;
-    auto [it, ok] = s.insert(1);
+    int value = 1;
+    auto [it, ok] = s.insert(value);
     EXPECT_EQ(*it, 1);
     EXPECT_TRUE(ok);
-    auto pr = s.insert(1);
+    auto pr = s.insert(value);
     EXPECT_EQ(*pr.first, 1);
     EXPECT_FALSE(pr.second);
   }

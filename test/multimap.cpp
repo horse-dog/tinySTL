@@ -224,15 +224,18 @@ TEST(multimap, insert) {
    */
   SUBTEST(insert) {
     multimap<int, int> m;
-    auto it = m.insert({1, 111});
+    tinySTL::pair<int, int> value {1, 111};
+    auto it = m.insert(value);
     EXPECT_EQ(it->first, 1);
     EXPECT_EQ(it->second, 111);
     EXPECT_EQ(m.size(), 1);
-    it = m.insert({1, 112});
+    value.second = 112;
+    it = m.insert(value);
     EXPECT_EQ(it->first, 1);
     EXPECT_EQ(it->second, 112);
     EXPECT_EQ(m.size(), 2);
-    it = m.insert({5, 520});
+    value = {5, 520};
+    it = m.insert(value);
     EXPECT_EQ(it->first, 5);
     EXPECT_EQ(it->second, 520);
     EXPECT_EQ(m.size(), 3);

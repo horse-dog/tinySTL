@@ -221,13 +221,15 @@ TEST(multiset, insert) {
    */
   SUBTEST(insert) {
     multiset<int> s;
-    auto it = s.insert(1);
+    int value = 1;
+    auto it = s.insert(value);
     EXPECT_EQ(*it, 1);
     EXPECT_EQ(s.size(), 1);
-    it = s.insert(1);
+    it = s.insert(value);
     EXPECT_EQ(*it, 1);
     EXPECT_EQ(s.size(), 2);
-    it = s.insert(5);
+    value = 5;
+    it = s.insert(value);
     EXPECT_EQ(*it, 5);
     EXPECT_EQ(s.size(), 3);
     EXPECT_STRING_EQ(s, [1, 1, 5]);

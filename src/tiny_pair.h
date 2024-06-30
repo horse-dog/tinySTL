@@ -27,6 +27,9 @@ struct pair {
   template <class _U1, class _U2>
   pair(pair<_U1, _U2>&& __p) : first(tinySTL::move(__p.first)), second(tinySTL::move(__p.second)) {}
 
+  pair& operator=(const pair& __p) = default;
+  pair& operator=(pair&& __p) = default;
+
   template <class _U1, class _U2>
   pair& operator=(const pair<_U1, _U2>& __p) {
     if (this != &__p) {
