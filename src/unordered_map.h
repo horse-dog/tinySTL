@@ -202,7 +202,11 @@ public:
     if (&__x != &__y) {
       return __x.size() == __y.size() 
         && __x.bucket_count() == __y.bucket_count()
-        && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+        && tinySTL::equal(__x.begin(), __x.end(), __y.begin(), 
+          [eq = __x.key_eq()](const value_type& __a, const value_type& __b) {
+            return eq(__a.first, __b.first) && (__a.second == __b.second);
+          }
+        );
     } else {
       return true;
     }
@@ -432,7 +436,11 @@ public:
     if (&__x != &__y) {
       return __x.size() == __y.size() 
         && __x.bucket_count() == __y.bucket_count()
-        && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+        && tinySTL::equal(__x.begin(), __x.end(), __y.begin(), 
+          [eq = __x.key_eq()](const value_type& __a, const value_type& __b) {
+            return eq(__a.first, __b.first) && (__a.second == __b.second);
+          }
+        );
     } else {
       return true;
     }

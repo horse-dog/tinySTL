@@ -246,11 +246,15 @@ template<class, class, class, class> friend class multimap;
       return true;
     }
   }
+
   friend bool operator<(const map& __x, const map& __y) 
   {
     return lexicographical_compare(
       __x.begin(), __x.end(),
-      __y.begin(), __y.end()
+      __y.begin(), __y.end(),
+      [comp = __x.value_comp()](const value_type& __a, const value_type& __b) {
+        return comp(__a, __b) || (!comp(__b, __a) && __a.second < __b.second); 
+      }
     );
   }
 
@@ -461,11 +465,15 @@ template<class, class, class, class> friend class multimap;
       return true;
     }
   }
+
   friend bool operator<(const multimap& __x, const multimap& __y) 
   {
     return lexicographical_compare(
       __x.begin(), __x.end(),
-      __y.begin(), __y.end()
+      __y.begin(), __y.end(),
+      [comp = __x.value_comp()](const value_type& __a, const value_type& __b) {
+        return comp(__a, __b) || (!comp(__b, __a) && __a.second < __b.second); 
+      }
     );
   }
 

@@ -204,7 +204,7 @@ template<class, class, class, class> friend class unordered_multiset;
     if (&__x != &__y) {
       return __x.size() == __y.size() 
         && __x.bucket_count() == __y.bucket_count()
-        && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+        && tinySTL::equal(__x.begin(), __x.end(), __y.begin(), __x.key_eq());
     } else {
       return true;
     }
@@ -407,7 +407,7 @@ template<class, class, class, class> friend class unordered_multiset;
     if (&__x != &__y) {
       return __x.size() == __y.size() 
         && __x.bucket_count() == __y.bucket_count()
-        && tinySTL::equal(__x.begin(), __x.end(), __y.begin());
+        && tinySTL::equal(__x.begin(), __x.end(), __y.begin(), __x.key_eq());
     } else {
       return true;
     }

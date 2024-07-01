@@ -203,11 +203,13 @@ template<class, class, class> friend class multiset;
       return true;
     }
   }
+
   friend bool operator<(const set& __x, const set& __y) 
   {
     return lexicographical_compare(
       __x.begin(), __x.end(),
-      __y.begin(), __y.end()
+      __y.begin(), __y.end(), 
+      __x.key_comp()
     );
   }
 
@@ -406,11 +408,13 @@ template<class, class, class> friend class multiset;
       return true;
     }
   }
+
   friend bool operator<(const multiset& __x, const multiset& __y) 
   {
     return lexicographical_compare(
       __x.begin(), __x.end(),
-      __y.begin(), __y.end()
+      __y.begin(), __y.end(),
+      __x.key_comp()
     );
   }
 
