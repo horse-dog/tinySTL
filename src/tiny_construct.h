@@ -8,13 +8,13 @@ namespace tinySTL
 {
 
 template <class _T1, class... _Args>
-inline void _Construct(_T1* __p, _Args&& ...__args) {
+inline void __tiny_construct(_T1* __p, _Args&& ...__args) {
   ::new ((void*) __p) _T1(tinySTL::forward<_Args>(__args)...);
 }
 
 // Single destory.
 template <class _Tp>
-inline void _Destroy(_Tp* __pointer) {
+inline void __tiny_destroy(_Tp* __pointer) {
   __pointer->~_Tp();
 }
 
@@ -23,7 +23,7 @@ void
 __destroy_aux(_ForwardIterator __first, _ForwardIterator __last, false_type)
 {
   for ( ; __first != __last; ++__first)
-    tinySTL::_Destroy(&*__first);
+    tinySTL::__tiny_destroy(&*__first);
 }
 
 template <class _ForwardIterator> 
@@ -40,28 +40,28 @@ inline void __destroy(_ForwardIterator __first, _ForwardIterator __last, _Tp*)
 
 // Range destory [first, last).
 template <class _ForwardIterator>
-inline void _Destroy(_ForwardIterator __first, _ForwardIterator __last) {
+inline void __tiny_destroy(_ForwardIterator __first, _ForwardIterator __last) {
   tinySTL::__destroy(__first, __last, value_type(__first));
 }
 
 template <class _ForwardIterator>
 requires tinySTL::is_arithmetic_v<_ForwardIterator>
-inline void _Destroy(_ForwardIterator __first, _ForwardIterator __last) {}
+inline void __tiny_destroy(_ForwardIterator __first, _ForwardIterator __last) {}
 
 
 template <class _T1, class... _Args>
 inline void construct(_T1* __p, _Args&& ...__args) {
-  tinySTL::_Construct(__p, tinySTL::forward<_Args>(__args)...);
+  tinySTL::__tiny_construct(__p, tinySTL::forward<_Args>(__args)...);
 }
 
 template <class _Tp>
 inline void destroy(_Tp* __pointer) {
-  tinySTL::_Destroy(__pointer);
+  tinySTL::__tiny_destroy(__pointer);
 }
 
 template <class _ForwardIterator>
 inline void destroy(_ForwardIterator __first, _ForwardIterator __last) {
-  tinySTL::_Destroy(__first, __last);
+  tinySTL::__tiny_destroy(__first, __last);
 }
 
 }

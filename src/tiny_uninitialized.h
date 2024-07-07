@@ -33,12 +33,12 @@ __uninitialized_copy_aux(_InputIter __first, _InputIter __last,
   try 
   {
     for ( ; __first != __last; ++__first, ++__cur)
-      tinySTL::_Construct(tinySTL::addressof(*__cur), *__first);
+      tinySTL::__tiny_construct(tinySTL::addressof(*__cur), *__first);
     return __cur;
   } 
   catch(...)
   { 
-    tinySTL::_Destroy(__result, __cur);
+    tinySTL::__tiny_destroy(__result, __cur);
     throw;
   }
 }
@@ -97,12 +97,12 @@ __uninitialized_move_aux(_ForwardIter1 __first, _ForwardIter1 __last,
   try 
   {
     for ( ; __first != __last; ++__first, ++__cur)
-      tinySTL::_Construct(tinySTL::addressof(*__cur), tinySTL::move(*__first));
+      tinySTL::__tiny_construct(tinySTL::addressof(*__cur), tinySTL::move(*__first));
     return __cur;
   } 
   catch(...)
   { 
-    tinySTL::_Destroy(__result, __cur);
+    tinySTL::__tiny_destroy(__result, __cur);
     throw;
   }
 }
@@ -145,10 +145,10 @@ __uninitialized_default_aux(_ForwardIter __first, _ForwardIter __last,
   _ForwardIter __cur = __first;
   try {
     for ( ; __cur != __last; ++__cur)
-      tinySTL::_Construct(tinySTL::addressof(*__cur));
+      tinySTL::__tiny_construct(tinySTL::addressof(*__cur));
   }
   catch (...) {
-    tinySTL::_Destroy(__first, __cur);
+    tinySTL::__tiny_destroy(__first, __cur);
     throw;
   }
 }
@@ -186,10 +186,10 @@ __uninitialized_fill_aux(_ForwardIter __first, _ForwardIter __last,
   _ForwardIter __cur = __first;
   try {
     for ( ; __cur != __last; ++__cur)
-      tinySTL::_Construct(tinySTL::addressof(*__cur), __x);
+      tinySTL::__tiny_construct(tinySTL::addressof(*__cur), __x);
   }
   catch (...) {
-    tinySTL::_Destroy(__first, __cur);
+    tinySTL::__tiny_destroy(__first, __cur);
     throw;
   }
 }
@@ -224,11 +224,11 @@ __uninitialized_copy_n(_InputIter __first, _Size __count,
   _ForwardIter __cur = __result;
   try {
     for ( ; __count > 0 ; --__count, ++__first, ++__cur) 
-      tinySTL::_Construct(tinySTL::addressof(*__cur), *__first);
+      tinySTL::__tiny_construct(tinySTL::addressof(*__cur), *__first);
     return pair<_InputIter, _ForwardIter>(__first, __cur);
   }
   catch (...) {
-    tinySTL::_Destroy(__result, __cur);
+    tinySTL::__tiny_destroy(__result, __cur);
     throw;
   }
 }
@@ -281,11 +281,11 @@ __uninitialized_default_n_aux(_ForwardIter __first, _Size __n, false_type)
   _ForwardIter __cur = __first;
   try {
     for ( ; __n > 0; --__n, ++__cur)
-      tinySTL::_Construct(tinySTL::addressof(*__cur));
+      tinySTL::__tiny_construct(tinySTL::addressof(*__cur));
     return __cur;
   }
   catch (...) {
-    tinySTL::_Destroy(__first, __cur);
+    tinySTL::__tiny_destroy(__first, __cur);
     throw;
   }
 }
@@ -326,11 +326,11 @@ __uninitialized_fill_n_aux(_ForwardIter __first, _Size __n,
   _ForwardIter __cur = __first;
   try {
     for ( ; __n > 0; --__n, ++__cur)
-      tinySTL::_Construct(tinySTL::addressof(*__cur), __x);
+      tinySTL::__tiny_construct(tinySTL::addressof(*__cur), __x);
     return __cur;
   }
   catch (...) {
-    tinySTL::_Destroy(__first, __cur);
+    tinySTL::__tiny_destroy(__first, __cur);
     throw;
   }
 }
@@ -368,7 +368,7 @@ __uninitialized_copy_copy(_InputIter1 __first1, _InputIter1 __last1,
   try {
     return tinySTL::uninitialized_copy(__first2, __last2, __mid);
   } catch (...) {
-    tinySTL::_Destroy(__result, __mid);
+    tinySTL::__tiny_destroy(__result, __mid);
     throw;
   }
 }
@@ -386,7 +386,7 @@ __uninitialized_fill_copy(_ForwardIter __result, _ForwardIter __mid,
   try {
     return tinySTL::uninitialized_copy(__first, __last, __mid);
   } catch (...) {
-    tinySTL::_Destroy(__result, __mid);
+    tinySTL::__tiny_destroy(__result, __mid);
     throw;
   }
 }
@@ -404,7 +404,7 @@ __uninitialized_copy_fill(_InputIter __first1, _InputIter __last1,
   try {
     tinySTL::uninitialized_fill(__mid2, __last2, __x);
   } catch (...) {
-    tinySTL::_Destroy(__first2, __mid2);
+    tinySTL::__tiny_destroy(__first2, __mid2);
     throw;
   }
 }
