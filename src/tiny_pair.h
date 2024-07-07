@@ -1,5 +1,6 @@
 #pragma once
 #include <tuple>
+#include <sstream>
 #include "tiny_traits.h"
 
 namespace tinySTL 

@@ -1,6 +1,7 @@
 // malloc_alloc_template, default_alloc_template, simple_alloc.
 
 #pragma once
+#include <cstddef>
 #include <mutex>
 #include <string.h>
 #include <inttypes.h>
@@ -207,7 +208,7 @@ class __debug_alloc_template {
 template <bool _Log>
 std::atomic_uint64_t __debug_alloc_template<_Log>::_S_bytes = 0;
 
-
+template <size_t _Inst>
 class __default_alloc_template {
  private:
   enum { _ALIGN = 8 };
@@ -327,7 +328,7 @@ class __default_alloc_template {
 
 };
 
-typedef __default_alloc_template alloc;
+typedef __default_alloc_template<0> alloc;
 // typedef __debug_alloc_template<false> alloc;
 // typedef __malloc_alloc_template<0> alloc;
 
@@ -342,28 +343,38 @@ template <template <typename, typename...> class _Template,
 struct _Alloc_rebind<_Template<_Tp, _Types...>, _Up>
 { using type = _Template<_Up, _Types...>; };
 
-char* __default_alloc_template::_S_start_free = 0;
+template <size_t _Inst>
+char* __default_alloc_template<_Inst>::_S_start_free = 0;
 
-char* __default_alloc_template::_S_end_free = 0;
+template <size_t _Inst>
+char* __default_alloc_template<_Inst>::_S_end_free = 0;
 
-size_t __default_alloc_template::_S_heap_size = 0;
+template <size_t _Inst>
+size_t __default_alloc_template<_Inst>::_S_heap_size = 0;
 
-void** __default_alloc_template::_S_malloc_ptr = 0;
+template <size_t _Inst>
+void** __default_alloc_template<_Inst>::_S_malloc_ptr = 0;
 
-size_t __default_alloc_template::_S_malloc_ptr_size = 0;
+template <size_t _Inst>
+size_t __default_alloc_template<_Inst>::_S_malloc_ptr_size = 0;
 
-size_t __default_alloc_template::_S_malloc_ptr_cap = 0;
+template <size_t _Inst>
+size_t __default_alloc_template<_Inst>::_S_malloc_ptr_cap = 0;
 
-std::mutex __default_alloc_template::_S_mutex;
+template <size_t _Inst>
+std::mutex __default_alloc_template<_Inst>::_S_mutex;
 
-typename __default_alloc_template::_Obj* volatile
-__default_alloc_template::_S_free_list[__default_alloc_template::_NFREELISTS] 
-                          = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+template <size_t _Inst>
+typename __default_alloc_template<_Inst>::_Obj* volatile
+__default_alloc_template<_Inst>::
+_S_free_list[__default_alloc_template<_Inst>::_NFREELISTS] 
+  = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /* Returns an object of size __n, and optionally adds to size __n free list.*/
 /* We assume that __n is properly aligned.                                  */
 /* We hold the allocation lock.                                             */
-void* __default_alloc_template::_S_refill(size_t __n) {
+template <size_t _Inst>
+void* __default_alloc_template<_Inst>::_S_refill(size_t __n) {
   int __nobjs = 20;
   char* __chunk = _S_chunk_alloc(__n, __nobjs);
   _Obj* volatile* __my_free_list;
@@ -396,7 +407,8 @@ void* __default_alloc_template::_S_refill(size_t __n) {
 /* the malloc heap too much.                                            */
 /* We assume that size is properly aligned.                             */
 /* We hold the allocation lock.                                         */
-char* __default_alloc_template::
+template <size_t _Inst>
+char* __default_alloc_template<_Inst>::
 _S_chunk_alloc(size_t __size, int& __nobjs) {
   char* __result;
   size_t __total_bytes = __size * __nobjs;
