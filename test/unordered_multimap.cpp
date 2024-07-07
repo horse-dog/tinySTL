@@ -186,7 +186,7 @@ TEST(unordered_multimap, emplace_hint) {
   auto it = m.emplace_hint(m.end(), 2, "World");
   it = m.emplace_hint(it, 1, "Hello");
   it = m.emplace_hint(it, 1, "Fuck");
-  EXPECT_STRING_EQ(m, [{1, Hello}, {1, Fuck}, {2, World}]);
+  EXPECT_STRING_EQ(m, [{1, Fuck}, {1, Hello}, {2, World}]);
 }
 
 TEST(unordered_multimap, empty) {
@@ -337,8 +337,9 @@ TEST(unordered_multimap, insert) {
     m.insert(m.begin(), node);
     --node.first;
     m.insert(m.begin(), node);
+    --node.second;
     m.insert(m.begin(), node);
-    EXPECT_STRING_EQ(m, [{2, 5}, {2, 5}, {3, 5}, {4, 5}]);
+    EXPECT_STRING_EQ(m, [{2, 4}, {2, 5}, {3, 5}, {4, 5}]);
   }
 
   /**

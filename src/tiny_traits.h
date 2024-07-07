@@ -245,6 +245,14 @@ template <bool test, class T = void >
 using enable_if_t = typename enable_if<test, T>::type;
 
 
+template <bool _Bp, class _If, class _Then>
+struct conditional { using type = _If; };
+template <class _If, class _Then>
+struct conditional<false, _If, _Then> { using type = _Then; };
+
+template <bool _Bp, class _IfRes, class _ElseRes>
+using conditional_t = typename conditional<_Bp, _IfRes, _ElseRes>::type;
+
 // is_pointer.
 template <class>
 inline constexpr bool is_pointer_v = false;

@@ -1,7 +1,9 @@
 // malloc_alloc_template, default_alloc_template, simple_alloc.
 
 #pragma once
+#include <mutex>
 #include <string.h>
+#include <inttypes.h>
 #include <stdexcept>
 
 // defination of throw bad alloc.
@@ -177,10 +179,8 @@ class __debug_alloc_template {
  public:
   static void* allocate(size_t __n) 
   {
-    if (_S_atexit == false) {
-      atexit(_S_log);
-      _S_atexit = true;
-    }
+    static std::once_flag flag;
+    std::call_once(flag, [] { atexit(_S_log); });
 
     void* __result = malloc(__n);
     if constexpr (_Log)
@@ -198,24 +198,16 @@ class __debug_alloc_template {
   }
 
   static void _S_log() {
-    printf("memory at exit: %zd\n", _S_bytes);
+    printf("memory at exit: %" PRIu64 "\n", _S_bytes.load());
   }
 
-  static bool _S_atexit;
-  static size_t _S_bytes;
+  static std::atomic_uint64_t _S_bytes;
 };
 
 template <bool _Log>
-size_t __debug_alloc_template<_Log>::_S_bytes = 0;
-
-template <bool _Log>
-bool __debug_alloc_template<_Log>::_S_atexit = false;
+std::atomic_uint64_t __debug_alloc_template<_Log>::_S_bytes = 0;
 
 
-// second memory adaptor. __inst is useless.
-// threads == true : ==> multi-threads environment.
-// threads == false: ==> single-thread environment.
-template <bool threads, int inst>
 class __default_alloc_template {
  private:
   enum { _ALIGN = 8 };
@@ -253,6 +245,7 @@ class __default_alloc_template {
   static void** _S_malloc_ptr;
   static size_t _S_malloc_ptr_size;
   static size_t _S_malloc_ptr_cap;
+  static std::mutex _S_mutex;
 
  private:
   static void _S_add_malloc_ptr(void* __ptr) {
@@ -271,6 +264,7 @@ class __default_alloc_template {
   }
 
   static void _S_mempool_free(void) {
+    std::lock_guard<std::mutex> guard(_S_mutex);
     for (size_t i = 0; i < _S_malloc_ptr_size; i++) {
       free(_S_malloc_ptr[i]);
       _S_malloc_ptr[i] = 0;
@@ -286,6 +280,7 @@ class __default_alloc_template {
     if (__n > (size_t) _MAX_BYTES) {
       __ret = malloc_alloc::allocate(__n);
     } else {
+      std::lock_guard<std::mutex> guard(_S_mutex);
       _Obj* volatile * __my_free_list
           = _S_free_list + _S_freelist_index(__n);
       _Obj* __result = *__my_free_list;
@@ -303,6 +298,7 @@ class __default_alloc_template {
     if (__n > (size_t) _MAX_BYTES)
       malloc_alloc::deallocate(__p, __n);
     else {
+      std::lock_guard<std::mutex> guard(_S_mutex);
       _Obj* volatile * __my_free_list
           = _S_free_list + _S_freelist_index(__n);
       _Obj* __q = (_Obj*)__p;
@@ -331,10 +327,8 @@ class __default_alloc_template {
 
 };
 
-// TODO： Singleton.
-// TODO: multi-thread env.
-// typedef __default_alloc_template<false, 0> alloc;
-typedef __debug_alloc_template<false> alloc;
+typedef __default_alloc_template alloc;
+// typedef __debug_alloc_template<false> alloc;
 // typedef __malloc_alloc_template<0> alloc;
 
 template <class _Tp>
@@ -348,35 +342,28 @@ template <template <typename, typename...> class _Template,
 struct _Alloc_rebind<_Template<_Tp, _Types...>, _Up>
 { using type = _Template<_Up, _Types...>; };
 
-template <bool __threads, int __inst>
-char* __default_alloc_template<__threads, __inst>::_S_start_free = 0;
+char* __default_alloc_template::_S_start_free = 0;
 
-template <bool __threads, int __inst>
-char* __default_alloc_template<__threads, __inst>::_S_end_free = 0;
+char* __default_alloc_template::_S_end_free = 0;
 
-template <bool __threads, int __inst>
-size_t __default_alloc_template<__threads, __inst>::_S_heap_size = 0;
+size_t __default_alloc_template::_S_heap_size = 0;
 
-template <bool __threads, int __inst>
-void** __default_alloc_template<__threads, __inst>::_S_malloc_ptr = 0;
+void** __default_alloc_template::_S_malloc_ptr = 0;
 
-template <bool __threads, int __inst>
-size_t __default_alloc_template<__threads, __inst>::_S_malloc_ptr_size = 0;
+size_t __default_alloc_template::_S_malloc_ptr_size = 0;
 
-template <bool __threads, int __inst>
-size_t __default_alloc_template<__threads, __inst>::_S_malloc_ptr_cap = 0;
+size_t __default_alloc_template::_S_malloc_ptr_cap = 0;
 
-template <bool __threads, int __inst>
-typename __default_alloc_template<__threads, __inst>::_Obj* volatile
-__default_alloc_template<__threads, __inst>::_S_free_list[
-  __default_alloc_template<__threads, __inst>::_NFREELISTS
-] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+std::mutex __default_alloc_template::_S_mutex;
+
+typename __default_alloc_template::_Obj* volatile
+__default_alloc_template::_S_free_list[__default_alloc_template::_NFREELISTS] 
+                          = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /* Returns an object of size __n, and optionally adds to size __n free list.*/
 /* We assume that __n is properly aligned.                                  */
 /* We hold the allocation lock.                                             */
-template <bool __threads, int __inst> void*
-__default_alloc_template<__threads, __inst>::_S_refill(size_t __n) {
+void* __default_alloc_template::_S_refill(size_t __n) {
   int __nobjs = 20;
   char* __chunk = _S_chunk_alloc(__n, __nobjs);
   _Obj* volatile* __my_free_list;
@@ -409,8 +396,7 @@ __default_alloc_template<__threads, __inst>::_S_refill(size_t __n) {
 /* the malloc heap too much.                                            */
 /* We assume that size is properly aligned.                             */
 /* We hold the allocation lock.                                         */
-template <bool __threads, int __inst> char*
-__default_alloc_template<__threads, __inst>::
+char* __default_alloc_template::
 _S_chunk_alloc(size_t __size, int& __nobjs) {
   char* __result;
   size_t __total_bytes = __size * __nobjs;

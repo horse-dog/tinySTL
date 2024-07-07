@@ -48,7 +48,7 @@ TEST(unordered_multiset, constructor) {
    */
   SUBTEST(constructor) {
     unordered_multiset<std::string> s = { "Hello", "Standard", "Hello", "Template", "Library" };
-    EXPECT_STRING_EQ(s, [Hello, Hello, Standard, Template, Library]);
+    EXPECT_STRING_EQ(s, [Library, Template, Hello, Hello, Standard]);
   }
   
   /**

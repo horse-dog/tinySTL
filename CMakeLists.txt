@@ -84,3 +84,15 @@ add_test(NAME test_unordered_multiset COMMAND test_unordered_multiset)
 add_executable(test_unordered_multimap test/unordered_multimap.cpp)
 target_link_libraries(test_unordered_multimap PRIVATE gtest_main gmock_main)
 add_test(NAME test_unordered_multimap COMMAND test_unordered_multimap)
+
+add_executable(test_algorithm test/algorithm.cpp)
+target_link_libraries(test_algorithm PRIVATE gtest_main gmock_main)
+add_test(NAME test_algorithm COMMAND test_algorithm)
+
+add_executable(test_numeric test/numeric.cpp)
+target_link_libraries(test_numeric PRIVATE gtest_main gmock_main)
+add_test(NAME test_numeric COMMAND test_numeric)
+
+add_executable(test_inserter test/inserter.cpp)
+target_link_libraries(test_inserter PRIVATE gtest_main gmock_main)
+add_test(NAME test_inserter COMMAND test_inserter)

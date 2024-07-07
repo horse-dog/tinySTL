@@ -8,7 +8,7 @@ namespace tinySTL
 
 template<class, class, class, class> class unordered_multiset;
 
-template<class _Key, class _Hash = std::hash<_Key>, class _Pred = tinySTL::equal_to<_Key>, class _Alloc = tinySTL::allocator<_Key>>
+template<class _Key, class _Hash = tinySTL::hash<_Key>, class _Pred = tinySTL::equal_to<_Key>, class _Alloc = tinySTL::allocator<_Key>>
 class unordered_set {
 
 template<class, class, class, class> friend class unordered_set;
@@ -212,7 +212,7 @@ template<class, class, class, class> friend class unordered_multiset;
 };
 
 
-template<class _Key, class _Hash = std::hash<_Key>, class _Pred = tinySTL::equal_to<_Key>, class _Alloc = tinySTL::allocator<_Key>>
+template<class _Key, class _Hash = tinySTL::hash<_Key>, class _Pred = tinySTL::equal_to<_Key>, class _Alloc = tinySTL::allocator<_Key>>
 class unordered_multiset {
 
 template<class, class, class, class> friend class unordered_set;

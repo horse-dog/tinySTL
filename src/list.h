@@ -381,7 +381,7 @@ class list
     { tinySTL::swap(_M_impl._M_header, __x._M_impl._M_header); }
 
   iterator insert(const_iterator __position, _Tp&& __x) 
-    { return emplace(__position, std::move(__x)); }
+    { return emplace(__position, tinySTL::move(__x)); }
 
   iterator insert(const_iterator __position, const _Tp& __x) 
     { return emplace(__position, __x); }

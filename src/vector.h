@@ -15,6 +15,48 @@ namespace tinySTL
 
 template <class _Tp, class _Alloc> 
 class _Vector_base {
+
+ protected:
+  class _Vector_iterator {
+  protected:
+    friend class _Vector_base;
+    template <class, class> friend class vector;
+
+  public:
+    using iterator_category = tinySTL::random_access_iterator_tag;
+    using value_type = _Tp;
+    using difference_type = ptrdiff_t;
+    using pointer = _Tp*;
+    using reference = _Tp&;
+
+  protected:
+    pointer _M_ptr;
+
+    constexpr _Vector_iterator(pointer __x) : _M_ptr(__x) {}
+
+  public:
+    constexpr _Vector_iterator() : _M_ptr() {}
+    constexpr reference operator*() const { return *_M_ptr; }
+    constexpr pointer  operator->() const { return  _M_ptr; }
+    constexpr _Vector_iterator& operator++() { ++_M_ptr; return *this; }
+    constexpr _Vector_iterator& operator--() { --_M_ptr; return *this; }
+    constexpr _Vector_iterator  operator++(int) { _Vector_iterator __tmp = *this; ++(*this); return __tmp; }
+    constexpr _Vector_iterator  operator--(int) { _Vector_iterator __tmp = *this; --(*this); return __tmp; }
+    constexpr _Vector_iterator& operator+=(difference_type __n) { _M_ptr += __n; return *this; }
+    constexpr _Vector_iterator& operator-=(difference_type __n) { _M_ptr -= __n; return *this; }
+    constexpr _Vector_iterator  operator+ (difference_type __n) const { _Vector_iterator __tmp = *this; __tmp += __n; return __tmp; }
+    constexpr _Vector_iterator  operator- (difference_type __n) const { _Vector_iterator __tmp = *this; __tmp -= __n; return __tmp; }
+    constexpr reference operator[](difference_type __n) const { return _M_ptr[__n]; }
+    constexpr difference_type   operator-(const _Vector_iterator& __right) const { return difference_type(_M_ptr - __right._M_ptr); }
+    friend constexpr _Vector_iterator operator+(difference_type __n, const _Vector_iterator& __x) { return __x + __n; }
+    friend constexpr bool operator==(const _Vector_iterator& __x, const _Vector_iterator& __y) { return __x._M_ptr == __y._M_ptr; }
+    friend constexpr bool operator!=(const _Vector_iterator& __x, const _Vector_iterator& __y) { return __x._M_ptr != __y._M_ptr; }
+    friend constexpr bool operator< (const _Vector_iterator& __x, const _Vector_iterator& __y) { return __x._M_ptr <  __y._M_ptr; }
+    friend constexpr bool operator> (const _Vector_iterator& __x, const _Vector_iterator& __y) { return __x._M_ptr >  __y._M_ptr; }
+    friend constexpr bool operator<=(const _Vector_iterator& __x, const _Vector_iterator& __y) { return __x._M_ptr <= __y._M_ptr; }
+    friend constexpr bool operator>=(const _Vector_iterator& __x, const _Vector_iterator& __y) { return __x._M_ptr >= __y._M_ptr; }
+  };
+
  public:
   typedef _Alloc allocator_type;
 
@@ -91,8 +133,8 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   typedef _Tp value_type;
   typedef value_type* pointer;
   typedef const value_type* const_pointer;
-  typedef value_type* iterator;
-  typedef const value_type* const_iterator;
+  typedef _Base::_Vector_iterator iterator;
+  typedef tinySTL::const_iterator<iterator> const_iterator;
   typedef value_type& reference;
   typedef const value_type& const_reference;
   typedef size_t size_type;
@@ -212,13 +254,13 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   
   iterator begin() { return _M_impl._M_start; }
   
-  const_iterator begin() const { return _M_impl._M_start; }
+  const_iterator begin() const { return iterator(_M_impl._M_start); }
 
   const_iterator cbegin() const { return _M_impl._M_start; }
   
   iterator end() { return _M_impl._M_finish; }
   
-  const_iterator end() const { return _M_impl._M_finish; }
+  const_iterator end() const { return iterator(_M_impl._M_finish); }
 
   const_iterator cend() const { return _M_impl._M_finish; }
 
@@ -302,7 +344,7 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     { return emplace(__pos, __x); }
 
   iterator insert(const_iterator __pos, size_type __n, const _Tp& __x)
-    { return _M_insert_aux(const_cast<iterator>(__pos), __n, __x); }
+    { return _M_insert_aux(__pos.base(), __n, __x); }
   
 
   iterator insert(const_iterator __pos, std::initializer_list<_Tp> __l)
@@ -311,14 +353,14 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   template <InputIterator Iterator>
   iterator insert(const_iterator __position, Iterator __first, Iterator __last)
   {
-    iterator __pos = const_cast<iterator>(__position);
+    pointer __pos = __position.base()._M_ptr;
     if (__first == __last) return __pos;
       
     size_type __n = tinySTL::distance(__first, __last);
     const size_type __elems_before = __pos - _M_impl._M_start;
     if (size_type(_M_impl._M_end_of_storage - _M_impl._M_finish) >= __n) {
       const size_type __elems_after = _M_impl._M_finish - __pos;
-      iterator __old_finish = _M_impl._M_finish;
+      pointer __old_finish = _M_impl._M_finish;
       if (__elems_after > __n) {
         tinySTL::uninitialized_move(
           _M_impl._M_finish - __n, _M_impl._M_finish, _M_impl._M_finish);
@@ -335,15 +377,15 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     } else {
       const size_type __old_size = size();
       const size_type __len = __old_size + max(__old_size, __n);
-      iterator __new_start = _M_allocate(__len);
-      iterator __new_finish = __new_start;
+      pointer __new_start = _M_allocate(__len);
+      pointer __new_finish = __new_start;
       try {
         __new_finish = tinySTL::uninitialized_move(_M_impl._M_start, __pos, __new_start);
         __new_finish = tinySTL::uninitialized_copy(__first, __last, __new_finish);
         __new_finish = tinySTL::uninitialized_move(__pos, _M_impl._M_finish, __new_finish);
       } catch (...) {
-        tinySTL::destroy(__new_start,__new_finish);
-        _M_deallocate(__new_start,__len);
+        tinySTL::destroy(__new_start, __new_finish);
+        _M_deallocate(__new_start, __len);
         throw;
       }
       tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
@@ -362,7 +404,7 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   }
 
   iterator erase(const_iterator __position) {
-    iterator __pos = const_cast<iterator>(__position);
+    pointer __pos = __position.base()._M_ptr;
     _M_range_check(size_type(__pos - _M_impl._M_start));
     if (__pos + 1 != end())
       tinySTL::move(__pos + 1, _M_impl._M_finish, __pos);
@@ -372,8 +414,8 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   }
 
   iterator erase(const_iterator first, const_iterator last) {
-    iterator __first = const_cast<iterator>(first);
-    iterator __last = const_cast<iterator>(last);
+    pointer __first = first.base()._M_ptr;
+    pointer __last = last.base()._M_ptr;
     
     if (__first - _M_impl._M_start > this->size())
       __tiny_throw_range_error("vector");
@@ -384,7 +426,7 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
       __tiny_throw_range_error("vector");
     
     if (__last - __first > 0) {
-      iterator __i = tinySTL::move(__last, _M_impl._M_finish, __first);
+      auto __i = tinySTL::move(__last, _M_impl._M_finish, __first);
       tinySTL::destroy(__i, _M_impl._M_finish);
       _M_impl._M_finish = _M_impl._M_finish - (__last - __first);
     }
@@ -405,7 +447,7 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   void reserve(size_type __n) {
     if (capacity() < __n) {
       const size_type __old_size = size();
-      iterator __tmp = _M_allocate_and_move(__n, _M_impl._M_start, _M_impl._M_finish);
+      pointer __tmp = _M_allocate_and_move(__n, _M_impl._M_start, _M_impl._M_finish);
       tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
       _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
       _M_impl._M_start = __tmp;
@@ -421,7 +463,7 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
       _M_impl._M_start = _M_impl._M_finish = _M_impl._M_end_of_storage = 0;
     } else {
       const size_type __size = size();
-      iterator __tmp = _M_allocate_and_move(__size, _M_impl._M_start, _M_impl._M_finish);
+      pointer __tmp = _M_allocate_and_move(__size, _M_impl._M_start, _M_impl._M_finish);
       tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
       _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
       _M_impl._M_start = __tmp;
@@ -458,10 +500,10 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   }
 
   template <class _ForwardIterator>
-  iterator _M_allocate_and_copy(size_type __n, _ForwardIterator __first, 
+  pointer _M_allocate_and_copy(size_type __n, _ForwardIterator __first, 
                                                _ForwardIterator __last)
   {
-    iterator __result = _M_allocate(__n);
+    pointer __result = _M_allocate(__n);
     try {
       tinySTL::uninitialized_copy(__first, __last, __result);
       return __result;
@@ -473,10 +515,10 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   }
 
   template <class _ForwardIterator>
-  iterator _M_allocate_and_move(size_type __n, _ForwardIterator __first, 
+  pointer _M_allocate_and_move(size_type __n, _ForwardIterator __first, 
                                                _ForwardIterator __last)
   {
-    iterator __result = _M_allocate(__n);
+    pointer __result = _M_allocate(__n);
     try {
       tinySTL::uninitialized_move(__first, __last, __result);
       return __result;
@@ -507,14 +549,14 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     size_type __len = tinySTL::distance(__first, __last);
 
     if (__len > capacity()) {
-      iterator __tmp = _M_allocate_and_copy(__len, __first, __last);
+      auto __tmp = _M_allocate_and_copy(__len, __first, __last);
       tinySTL::destroy(_M_impl._M_start, _M_impl._M_finish);
       _M_deallocate(_M_impl._M_start, _M_impl._M_end_of_storage - _M_impl._M_start);
       _M_impl._M_start = __tmp;
       _M_impl._M_end_of_storage = _M_impl._M_finish = _M_impl._M_start + __len;
     }
     else if (size() >= __len) {
-      iterator __new_finish = tinySTL::copy(__first, __last, _M_impl._M_start);
+      auto __new_finish = tinySTL::copy(__first, __last, _M_impl._M_start);
       tinySTL::destroy(__new_finish, _M_impl._M_finish);
       _M_impl._M_finish = __new_finish;
     }
@@ -530,20 +572,20 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
   template <typename... _Args>
   void _M_emplace_aux(const_iterator __pos, _Args&& ...__args)
   {
-    iterator __position = const_cast<iterator>(__pos);
+    pointer __position = __pos.base()._M_ptr;
     if (_M_impl._M_finish != _M_impl._M_end_of_storage) {
       tinySTL::construct(_M_impl._M_finish, *(_M_impl._M_finish - 1));
       ++_M_impl._M_finish;
       tinySTL::move_backward(__position, _M_impl._M_finish - 2, _M_impl._M_finish - 1);
-      *__position = _Tp(std::forward<_Args>(__args)...);
+      *__position = _Tp(tinySTL::forward<_Args>(__args)...);
     } else {
       const size_type __old_size = size();
       const size_type __len = __old_size != 0 ? 2 * __old_size : 1;
-      iterator __new_start = _M_allocate(__len);
-      iterator __new_finish = __new_start;
+      pointer __new_start = _M_allocate(__len);
+      pointer __new_finish = __new_start;
       try {
         __new_finish = tinySTL::uninitialized_move(_M_impl._M_start, __position, __new_start);
-        tinySTL::construct(__new_finish, std::forward<_Args>(__args)...);
+        tinySTL::construct(__new_finish, tinySTL::forward<_Args>(__args)...);
         ++__new_finish;
         __new_finish = tinySTL::uninitialized_move(__position, _M_impl._M_finish, __new_finish);
       } catch (...) {
@@ -559,16 +601,17 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     }
   }
 
-  iterator _M_insert_aux(iterator __pos, size_type __n, 
+  iterator _M_insert_aux(iterator __position, size_type __n, 
                          const _Tp& __x, bool extent_fix = false) 
   {
-    if (__n == 0) return __pos;
+    if (__n == 0) return __position;
+    pointer __pos = __position._M_ptr;
 
     const size_type __elems_before = __pos - _M_impl._M_start;
     if (size_type(_M_impl._M_end_of_storage - _M_impl._M_finish) >= __n) {
       _Tp __x_copy = __x;
       const size_type __elems_after = _M_impl._M_finish - __pos;
-      iterator __old_finish = _M_impl._M_finish;
+      pointer __old_finish = _M_impl._M_finish;
       if (__elems_after > __n) {
         tinySTL::uninitialized_move(
           _M_impl._M_finish - __n, _M_impl._M_finish, _M_impl._M_finish);
@@ -585,8 +628,8 @@ class vector : protected _Vector_base<_Tp, _Alloc> {
     } else {
       const size_type __old_size = size();        
       const size_type __len = __old_size + (extent_fix ? __n : max(__old_size, __n));
-      iterator __new_start = _M_allocate(__len);
-      iterator __new_finish = __new_start;
+      pointer __new_start = _M_allocate(__len);
+      pointer __new_finish = __new_start;
       try {
         __new_finish = tinySTL::uninitialized_move(_M_impl._M_start, __pos, __new_start);
         __new_finish = tinySTL::uninitialized_fill_n(__new_finish, __n, __x);

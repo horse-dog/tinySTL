@@ -377,7 +377,7 @@ class forward_list
     { tinySTL::swap(_M_impl._M_header, __x._M_impl._M_header); }
 
   iterator insert_after(const_iterator __pos, _Tp&& __val)
-    { return emplace_after(__pos, std::move(__val)); }
+    { return emplace_after(__pos, tinySTL::move(__val)); }
 
   iterator insert_after(const_iterator __pos, const _Tp& __val)
     { return emplace_after(__pos, __val); }

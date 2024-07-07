@@ -16,7 +16,7 @@ class _Deque_base {
  protected:
   class _Deque_iterator {
    friend class _Deque_base;
-   template<class, class> friend class deque;
+   template <class, class> friend class deque;
    public:
     using iterator_category = tinySTL::random_access_iterator_tag;
     using value_type = _Tp;
@@ -157,6 +157,31 @@ class _Deque_base {
        const _Deque_iterator& __x)
       {
         return __x + __n;
+      }
+
+    friend constexpr bool 
+    operator<(const _Deque_iterator& __x, const _Deque_iterator& __y)
+      {
+        return __x._M_node < __y._M_node ||
+               (__x._M_node == __y._M_node && __x._M_cur < __y._M_cur);
+      }
+
+    friend constexpr bool 
+    operator>(const _Deque_iterator& __x, const _Deque_iterator& __y)
+      {
+        return __y < __x;
+      }
+
+    friend constexpr bool 
+    operator<=(const _Deque_iterator& __x, const _Deque_iterator& __y)
+      {
+        return !(__y < __x);
+      }
+
+    friend constexpr bool 
+    operator>=(const _Deque_iterator& __x, const _Deque_iterator& __y)
+      {
+        return !(__x < __y);
       }
   };
 
@@ -1224,7 +1249,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   {
     if (size() == max_size())
       __tiny_throw_length_error
-      ("cannot create std::deque larger than max_size()");
+      ("cannot create tinySTL::deque larger than max_size()");
     _M_reserve_map_at_back();
     *(_M_impl._M_finish._M_node + 1) = _M_allocate_node();
     try {
@@ -1243,7 +1268,7 @@ class deque : protected _Deque_base<_Tp, _Alloc> {
   {
     if (size() == max_size())
       __tiny_throw_length_error
-      ("cannot create std::deque larger than max_size()");
+      ("cannot create tinySTL::deque larger than max_size()");
     _M_reserve_map_at_front();
     *(_M_impl._M_start._M_node - 1) = _M_allocate_node();
     try {

@@ -74,10 +74,22 @@ struct less : binary_function<_Tp, _Tp, bool>
   { return __x < __y; }
 };
 
+struct __less {
+  template <class _T1, class _T2> bool 
+  operator()(const _T1& __x, const _T2& __y) const 
+  { return __x < __y; }
+};
+
 template <class _Tp>
 struct greater : binary_function<_Tp, _Tp, bool>
 {
   bool operator()(const _Tp& __x, const _Tp& __y) const
+  { return __x > __y; }
+};
+
+struct __greater {
+  template <class _T1, class _T2> bool 
+  operator()(const _T1& __x, const _T2& __y) const 
   { return __x > __y; }
 };
 
@@ -88,6 +100,12 @@ struct greater_equal : binary_function<_Tp, _Tp, bool>
   { return __x >= __y; }
 };
 
+struct __greater_equal {
+  template <class _T1, class _T2> bool 
+  operator()(const _T1& __x, const _T2& __y) const 
+  { return __x >= __y; }
+};
+
 template <class _Tp>
 struct less_equal : binary_function<_Tp, _Tp, bool>
 {
@@ -95,10 +113,22 @@ struct less_equal : binary_function<_Tp, _Tp, bool>
   { return __x <= __y; }
 };
 
+struct __less_equal {
+  template <class _T1, class _T2> bool 
+  operator()(const _T1& __x, const _T2& __y) const 
+  { return __x <= __y; }
+};
+
 template <class _Tp>
 struct equal_to : binary_function<_Tp, _Tp, bool>
 {
   bool operator()(const _Tp& __x, const _Tp& __y) const
+  { return __x == __y; }
+};
+
+struct __equal_to {
+  template <class _T1, class _T2> bool 
+  operator()(const _T1& __x, const _T2& __y) const 
   { return __x == __y; }
 };
 

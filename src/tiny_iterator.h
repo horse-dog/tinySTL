@@ -453,17 +453,17 @@ public:
     return __tmp;
   }
   _Self operator+(difference_type __n) const {
-    return _Self(current - __n);
+    return _Self(current + __n);
   }
   _Self& operator+=(difference_type __n) {
-    current -= __n;
+    current += __n;
     return *this;
   }
   _Self operator-(difference_type __n) const {
-    return _Self(current + __n);
+    return _Self(current - __n);
   }
   _Self& operator-=(difference_type __n) {
-    current += __n;
+    current -= __n;
     return *this;
   }
   reference operator[](difference_type __n) const { return *(*this + __n); }
@@ -597,11 +597,11 @@ public:
 
   friend difference_type
   operator-(const _Self& __x, const _Self& __y) 
-    { return __x.current - __y.current; }
+    { return __y.current - __x.current; }
 
   friend _Self
   operator+(difference_type __n, const _Self& __x) 
-    { return const_iterator(__x.current + __n); }
+    { return const_iterator(__x.current - __n); }
 };
 
 

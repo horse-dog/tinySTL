@@ -8,7 +8,7 @@ namespace tinySTL
 
 template<class, class, class, class, class> class unordered_multimap;
 
-template<class _Key, class _Val, class _Hash = std::hash<_Key>, class _Pred = tinySTL::equal_to<_Key>, class _Alloc = tinySTL::allocator<tinySTL::pair<_Key, _Val>>>
+template<class _Key, class _Val, class _Hash = tinySTL::hash<_Key>, class _Pred = tinySTL::equal_to<_Key>, class _Alloc = tinySTL::allocator<tinySTL::pair<_Key, _Val>>>
 class unordered_map {
 
 template<class, class, class, class, class> friend class unordered_map;
@@ -243,7 +243,7 @@ public:
   }
 };
 
-template<class _Key, class _Val, class _Hash = std::hash<_Key>, class _Pred = tinySTL::equal_to<_Key>, class _Alloc = tinySTL::allocator<tinySTL::pair<_Key, _Val>>>
+template<class _Key, class _Val, class _Hash = tinySTL::hash<_Key>, class _Pred = tinySTL::equal_to<_Key>, class _Alloc = tinySTL::allocator<tinySTL::pair<_Key, _Val>>>
 class unordered_multimap {
 
 template<class, class, class, class, class> friend class unordered_map;

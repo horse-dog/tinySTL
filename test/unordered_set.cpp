@@ -49,7 +49,7 @@ TEST(unordered_set, constructor) {
    */
   SUBTEST(constructor) {
     unordered_set<std::string> s = { "Hello", "Standard", "Template", "Library" };
-    EXPECT_STRING_EQ(s, [Hello, Standard, Template, Library]);
+    EXPECT_STRING_EQ(s, [Library, Template, Hello, Standard]);
   }
 
   /**

@@ -31,7 +31,8 @@ TEST(heap, pop_heap) {
 }
 
 TEST(heap, sort_heap) {
-  vector<int> vc {8, 7, 4, 3, 5, 0, 2, 1, 3};
+  vector<int> vc {1, 7, 4, 3, 5, 0, 2, 8, 3};
+  make_heap(vc.begin(), vc.end());
   sort_heap(vc.begin(), vc.end());
   EXPECT_STRING_EQ(vc, [0, 1, 2, 3, 3, 4, 5, 7, 8]);
 }

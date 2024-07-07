@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tiny_function.h"
 #include "tiny_iterator_base.h"
 
 namespace tinySTL
@@ -88,6 +89,7 @@ make_heap(_RandomAccessIterator __first, _RandomAccessIterator __last,
   typedef typename iterator_traits
   <_RandomAccessIterator>::difference_type _DistanceType;
   const _DistanceType __len = __last - __first;
+  if (__len == 0) return;
   
   // __last -1 <==> __len - 1.
   // parent(__last - 1) <==> [(__len - 1) - 1] / 2. 
@@ -119,11 +121,7 @@ inline void
 make_heap(_RandomAccessIterator __first, _RandomAccessIterator __last)
 {
   using _Value_type = typename iterator_traits<_RandomAccessIterator>::value_type;
-  tinySTL::make_heap(
-    __first, __last,
-    [](const _Value_type& __a, const _Value_type& __b)
-    { return __a < __b; }
-  );
+  tinySTL::make_heap(__first, __last, tinySTL::__less{});
 }
 
 /**
@@ -158,11 +156,7 @@ inline void
 push_heap(_RandomAccessIterator __first, _RandomAccessIterator __last)
 {
   using _Value_type = typename iterator_traits<_RandomAccessIterator>::value_type;
-  tinySTL::push_heap(
-    __first, __last,
-    [](const _Value_type& __a, const _Value_type& __b)
-    { return __a < __b; }
-  );
+  tinySTL::push_heap(__first, __last, tinySTL::__less{});
 }
 
 /**
@@ -209,11 +203,7 @@ del_heap(_RandomAccessIterator __first, _RandomAccessIterator __last,
          _Distance __index)
 {
   using _Value_type = typename iterator_traits<_RandomAccessIterator>::value_type;
-  tinySTL::del_heap(
-    __first, __last, __index,
-    [](const _Value_type& __a, const _Value_type& __b)
-    { return __a < __b; }
-  );
+  tinySTL::del_heap(__first, __last, __index, tinySTL::__less{});
 }
 
 /**
@@ -248,11 +238,7 @@ inline void
 pop_heap(_RandomAccessIterator __first, _RandomAccessIterator __last)
 {
   using _Value_type = typename iterator_traits<_RandomAccessIterator>::value_type;
-  tinySTL::pop_heap(
-    __first, __last,
-    [](const _Value_type& __a, const _Value_type& __b)
-    { return __a < __b; }
-  );
+  tinySTL::pop_heap(__first, __last, tinySTL::__less{});
 }
 
 /**
@@ -285,11 +271,7 @@ inline void
 sort_heap(_RandomAccessIterator __first, _RandomAccessIterator __last)
 {
   using _Value_type = typename iterator_traits<_RandomAccessIterator>::value_type;
-  tinySTL::sort_heap(
-    __first, __last,
-    [](const _Value_type& __a, const _Value_type& __b)
-    { return __a < __b; }
-  );
+  tinySTL::sort_heap(__first, __last, tinySTL::__less{});
 }
 
 }

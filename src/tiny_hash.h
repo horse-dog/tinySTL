@@ -1,8 +1,10 @@
 #pragma once
 
 #include "vector.h"
+#include "algorithm.h"
 #include "tiny_alloc.h"
 #include "tiny_iterator.h"
+#include "tiny_hash_fun.h"
 
 namespace tinySTL 
 {
@@ -165,13 +167,12 @@ static const unsigned long __tiny_prime_list[__tiny_num_primes] =
   1610612741ul, 3221225473ul, 4294967291ul
 };
 
-#include <algorithm> // TODO: remove.
+#include <algorithm>
 inline unsigned long __tiny_next_prime(unsigned long __n)
 {
   const unsigned long* __first = __tiny_prime_list;
   const unsigned long* __last = __tiny_prime_list + (int)__tiny_num_primes;
-  // TODO: std::lower_bound -> tinySTL::lower_bound.
-  const unsigned long* pos = std::lower_bound(__first, __last, __n);
+  const unsigned long* pos = tinySTL::lower_bound(__first, __last, __n);
   return pos == __last ? *(__last - 1) : *pos;
 }
 
@@ -385,7 +386,14 @@ protected:
   _M_insert_equal(_Arg&& __x) 
   {
     _M_ensure(_M_num_elements + 1);
-    return _M_insert_equal_noresize(__x);
+    return _M_insert_equal_noresize(tinySTL::forward<_Arg>(__x));
+  }
+
+  template <class _Arg> iterator
+  _M_insert_equal_hint(_Node* __hint, _Arg&& __x) 
+  {
+    _M_ensure(_M_num_elements + 1);
+    return _M_insert_equal_noresize_hint(__hint, tinySTL::forward<_Arg>(__x));
   }
 
   template <class _Arg> pair<iterator, bool> 
@@ -427,17 +435,42 @@ protected:
     return iterator(__tmp, this);
   }
 
+  template <class _Arg> iterator 
+  _M_insert_equal_noresize_hint(_Node* __hint, _Arg&& __obj) 
+  {
+    if (__hint != 0 && _M_equals(_M_get_key(*__hint->_M_storage.ptr()), _M_get_key(__obj))) {
+      _Node* __tmp = _M_new_node(tinySTL::forward<_Arg>(__obj));
+      const size_type __n = _M_bkt_num(*__hint->_M_storage.ptr());
+      _Node* __first = _M_buckets[__n];
+      if (__hint == __first) {
+        _M_buckets[__n] = __tmp;
+        __tmp->_M_next = __hint;
+        ++_M_num_elements;
+        return iterator(__tmp, this);
+      }
+
+      while (__first->_M_next != __hint) {
+        __first = __first->_M_next;
+      }
+      __tmp->_M_next = __hint;
+      __first->_M_next = __tmp;
+      ++_M_num_elements;
+      return iterator(__tmp, this);
+    }
+    return _M_insert_equal_noresize(tinySTL::forward<_Arg>(__obj));
+  }
+
   iterator _M_insert_unique(iterator __position, const value_type& __x) 
   { return _M_insert_unique(__x).first; }
 
   iterator _M_insert_unique(iterator __position, const value_type&& __x) 
-  { return _M_insert_unique(__x).first; }
+  { return _M_insert_unique(tinySTL::move(__x)).first; }
 
   iterator _M_insert_equal(iterator __position, const value_type& __x)
-  { return _M_insert_equal(__x); }
+  { return _M_insert_equal_hint(__position._M_cur, __x); }
 
   iterator _M_insert_equal(iterator __position, value_type&& __x)
-  { return _M_insert_equal(__x); }
+  { return _M_insert_equal_hint(__position._M_cur, tinySTL::move(__x)); }
 
 
   tinySTL::pair<iterator, bool>
