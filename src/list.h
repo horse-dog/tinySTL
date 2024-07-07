@@ -486,10 +486,28 @@ class list
       }
     }
 
-  // TODO: add comment of splices.
+
+  /**
+   * @brief move another list @p __x before @p __position . 
+   *  list @p __x will be empty after splice.
+   * 
+   * @param __position 
+   * @param __x 
+   * 
+   * @attention list @p __x should not be *this.
+   */
   void splice(const_iterator __position, list&& __x)
     { return splice(__position, __x); }
 
+  /**
+   * @brief move another list @p __x before @p __position . 
+   *  list @p __x will be empty after splice.
+   * 
+   * @param __position 
+   * @param __x 
+   * 
+   * @attention list @p __x should not be *this.
+   */
   void splice(const_iterator __position, list& __x)
     {
       if (!__x.empty()) {
@@ -499,9 +517,27 @@ class list
       }
     }
 
+  /**
+   * @brief move node at @p __i from list @p __x to current list before @p __position .
+   * 
+   * @param __position 
+   * @param __x 
+   * @param __i 
+   * 
+   * @attention if list @p __x is *this, @p __i should not same as @p __position .
+   */
   void splice(const_iterator __position, list&& __x, const_iterator __i)
     { return splice(__position, __x, __i); }
 
+  /**
+   * @brief move node at @p __i from list @p __x to current list before @p __position .
+   * 
+   * @param __position 
+   * @param __x 
+   * @param __i 
+   * 
+   * @attention if list @p __x is *this, @p __i should not same as @p __position .
+   */
   void splice(const_iterator __position, list& __x, const_iterator __i)
     {
       const_iterator __j = __i;
@@ -512,10 +548,30 @@ class list
       __x._M_impl._M_header._M_size -= 1;
     }
 
+  /**
+   * @brief move [ @p __first, @p __last ) from list @p __x to current list before @p __position .
+   * 
+   * @param __position 
+   * @param __x 
+   * @param __first 
+   * @param __last 
+   * 
+   * @attention if list @p __x is *this, @p __position should not in [ @p __first, @p __last ) .
+   */
   void splice(const_iterator __position, list&& __x, const_iterator __first,
               const_iterator __last)
     { return splice(__position, __x, __first, __last); }
 
+  /**
+   * @brief move [ @p __first, @p __last ) from list @p __x to current list before @p __position .
+   * 
+   * @param __position 
+   * @param __x 
+   * @param __first 
+   * @param __last 
+   * 
+   * @attention if list @p __x is *this, @p __position should not in [ @p __first, @p __last ) .
+   */
   void splice(const_iterator __position, list& __x, const_iterator __first,
               const_iterator __last)
     {

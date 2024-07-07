@@ -628,20 +628,55 @@ class forward_list
     return __cnt;
   }
 
-  // TODO: add comment of splices.
+  /**
+   * @brief splice @p __list to current forward_list after @p __pos .
+   *  @p __list will be empty after splice.
+   * 
+   * @param __pos 
+   * @param __list 
+   * 
+   * @attention @p __list should not be *this.
+   */
   void splice_after(const_iterator __pos, forward_list&& __list)
     { splice_after(__pos, __list); }
 
+  /**
+   * @brief splice @p __list to current forward_list after @p __pos .
+   *  @p __list will be empty after splice.
+   * 
+   * @param __pos 
+   * @param __list 
+   * 
+   * @attention @p __list should not be *this.
+   */
   void splice_after(const_iterator __pos, forward_list& __list)
     {
       if (__list.empty()) return;
       _M_splice_after(__pos.base(), __list.before_begin(), __list.end());
     }
 
+  /**
+   * @brief move element after @p __i from @p __list to current forward_list after @p __pos .
+   * 
+   * @param __pos 
+   * @param __list 
+   * @param __i 
+   * 
+   * @attention if @p __list is *this, @p __i +1 should not be @p __pos .
+   */
   void splice_after(const_iterator __pos, forward_list&& __list,
                     const_iterator __i)
     { splice_after(__pos, __list, __i); }
 
+  /**
+   * @brief move element after @p __i from @p __list to current forward_list after @p __pos .
+   * 
+   * @param __pos 
+   * @param __list 
+   * @param __i 
+   * 
+   * @attention if @p __list is *this, @p __i +1 should not be @p __pos .
+   */
   void splice_after(const_iterator __pos, forward_list& __list,
                     const_iterator __i)
     {
@@ -653,10 +688,30 @@ class forward_list
       __before_splice->_M_transfer_after(__before_first, __before_last);
     }
 
+  /**
+   * @brief move [ @p __before +1, @p __last ) from @p __list to current list after @p __pos .
+   * 
+   * @param __pos 
+   * @param __list 
+   * @param __before 
+   * @param __last 
+   * 
+   * @attention if @p __list is *this, @p __pos should not in ( @p __before , @p __last ) .
+   */
   void splice_after(const_iterator __pos, forward_list&& __list,
                     const_iterator __before, const_iterator __last)
     { splice_after(__pos, __list, __before, __last); }
 
+  /**
+   * @brief move [ @p __before +1, @p __last ) from @p __list to current list after @p __pos .
+   * 
+   * @param __pos 
+   * @param __list 
+   * @param __before 
+   * @param __last 
+   * 
+   * @attention if @p __list is *this, @p __pos should not in ( @p __before , @p __last ) .
+   */
   void splice_after(const_iterator __pos, forward_list& __list,
                     const_iterator __before, const_iterator __last)
     { _M_splice_after(__pos.base(), __before.base(), __last.base()); }
