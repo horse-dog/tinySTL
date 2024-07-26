@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <string>
 
 namespace tinySTL 
@@ -8,10 +9,15 @@ template <class _Tp> struct hash {};
 
 inline size_t __stl_hash_string(const char* __s)
 {
-  unsigned long __h = 0; 
-  for ( ; *__s; ++__s)
-    __h = 5*__h + *__s;
-  return size_t(__h);
+	unsigned long __hash = 0;
+	for (int i = 0; *__s; i++) {
+		if (i & 1) {
+			__hash ^= ~((__hash << 11) ^ (*__s++) ^ (__hash >> 5));
+		} else {
+			__hash ^= ((__hash << 7) ^ (*__s++) ^ (__hash >> 3));
+		}
+	}
+  return size_t(__hash & 0x7FFFFFFF);
 }
 
 template <> struct hash<char*>
