@@ -9,14 +9,14 @@ template <class _Tp> struct hash {};
 
 inline size_t __stl_hash_string(const char* __s)
 {
-	uint64_t __hash = 0;
-	for (int i = 0; *__s; i++) {
-		if (i & 1) {
-			__hash ^= ~((__hash << 11) ^ (*__s++) ^ (__hash >> 5));
-		} else {
-			__hash ^= ((__hash << 7) ^ (*__s++) ^ (__hash >> 3));
-		}
-	}
+  uint64_t __hash = 0;
+  for (int i = 0; *__s; i++) {
+    if (i & 1) {
+      __hash ^= ~((__hash << 11) ^ (*__s++) ^ (__hash >> 5));
+    } else {
+      __hash ^= ((__hash << 7) ^ (*__s++) ^ (__hash >> 3));
+    }
+  }
   return size_t(__hash & 0x7FFFFFFF);
 }
 
